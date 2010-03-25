@@ -39,7 +39,7 @@ ENDIF(NOT DESIRED_QT_VERSION MATCHES 4)
 INCLUDE_DIRECTORIES(
   ${QT_INCLUDE_DIR}
   )
-ADD_EXECUTABLE( perfusionkit main.cpp volumeimagewidget.cpp)
+ADD_EXECUTABLE( perfusionkit main.cpp volumeimagewidget.cpp vtkinteractorstyleprojectionview.cpp)
 TARGET_LINK_LIBRARIES ( perfusionkit
   QVTK
   ${QT_LIBRARIES}

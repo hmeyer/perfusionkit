@@ -6,13 +6,11 @@
 
 class vtkImageData;
 class vtkImageReslice;
-class vtkLookupTable;
-class vtkImageMapToColors;
+class vtkImageMapToWindowLevelColors;
 class vtkImageActor;
 class vtkRenderer;
 class vtkMatrix4x4;
-class vtkInteractorStyleImage;
-class vtkImageInteractionCallback;
+class vtkInteractorStyleProjectionView;
 
 class VolumeImageWidget : public QVTKWidget
 {
@@ -23,13 +21,11 @@ class VolumeImageWidget : public QVTKWidget
   protected:
   vtkImageData *m_image;
   vtkImageReslice *m_reslice;
-  vtkLookupTable *m_table;
-  vtkImageMapToColors *m_color;
+  vtkImageMapToWindowLevelColors *m_colormap;
   vtkImageActor *m_actor;
   vtkRenderer *m_renderer;
   vtkMatrix4x4 *m_resliceAxes;
-  vtkInteractorStyleImage *m_interactorStyle;
-  vtkImageInteractionCallback *m_interactionCallback;
+  vtkInteractorStyleProjectionView *m_interactorStyle;
 };
 
 #endif // VOLUMEIMAGEWIDGET_H
