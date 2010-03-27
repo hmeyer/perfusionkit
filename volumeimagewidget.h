@@ -12,6 +12,7 @@ class vtkRenderer;
 class vtkMatrix4x4;
 class vtkInteractorStyleProjectionView;
 
+/// QT-Widget displaying a Volume Slice
 class VolumeImageWidget : public QVTKWidget
 {
   public:
@@ -19,13 +20,13 @@ class VolumeImageWidget : public QVTKWidget
   ~VolumeImageWidget();  
   void setImage(vtkImageData *image);
   protected:
-  vtkImageData *m_image;
-  vtkImageReslice *m_reslice;
-  vtkImageMapToWindowLevelColors *m_colormap;
-  vtkImageActor *m_actor;
-  vtkRenderer *m_renderer;
-  vtkMatrix4x4 *m_resliceAxes;
-  vtkInteractorStyleProjectionView *m_interactorStyle;
+  vtkImageData *m_image; ///< volume image data to be displayed - set by setImage()
+  vtkImageReslice *m_reslice; ///< vtkImageAlgorithm to reslice the image
+  vtkImageMapToWindowLevelColors *m_colormap; ///< used to apply Window and Level
+  vtkImageActor *m_actor; ///< vtkActor which actually displays the resliced volume
+  vtkRenderer *m_renderer; ///< the used renderer
+  vtkMatrix4x4 *m_reslicePlaneTransform; ///< Tranformation Matrix for the Reslicing Plane
+  vtkInteractorStyleProjectionView *m_interactorStyle; ///< special InteractorStyle for Projected Volumes
 };
 
 #endif // VOLUMEIMAGEWIDGET_H

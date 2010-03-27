@@ -1,10 +1,7 @@
 #include "volumeimagewidget.h"
-
-
 #include "vtkMatrix4x4.h"
 #include "vtkinteractorstyleprojectionview.h"
 #include "vtkCommand.h"
-
 #include "vtkImageReslice.h"
 #include "vtkImageMapToWindowLevelColors.h"
 #include "vtkImageActor.h"
@@ -12,12 +9,14 @@
 #include "vtkImageData.h"
 #include "vtkRenderWindow.h"
 
+/** Default Constructor.
+Nothing fancy - just basic setup */
 VolumeImageWidget::VolumeImageWidget():
   m_reslice(vtkImageReslice::New()),
   m_colormap(vtkImageMapToWindowLevelColors::New()),
   m_actor(vtkImageActor::New()),
   m_renderer(vtkRenderer::New()),
-  m_resliceAxes(vtkMatrix4x4::New()),
+  m_reslicePlaneTransform(vtkMatrix4x4::New()),
   m_interactorStyle(vtkInteractorStyleProjectionView::New())
 {
   m_reslice->SetOutputDimensionality(2);
@@ -34,64 +33,26 @@ VolumeImageWidget::VolumeImageWidget():
 
   // Set up the interaction
   m_interactorStyle->SetImageMapToWindowLevelColors( m_colormap );
-  m_interactorStyle->SetOrientationMatrix( m_resliceAxes );
-  m_interactorStyle->SetActor( m_actor );
-  m_interactorStyle->SetImageReslice( m_reslice );
-  
+  m_interactorStyle->SetOrientationMatrix( m_reslicePlaneTransform );
 
   vtkRenderWindowInteractor *interactor = this->GetInteractor();
   interactor->SetInteractorStyle(m_interactorStyle);
-
-//  m_interactionCallback->SetImageReslice(m_reslice);
-//  m_interactionCallback->SetInteractor(interactor);
-
-//  m_interactorStyle->AddObserver(vtkCommand::MouseMoveEvent, m_interactionCallback);
-//  m_interactorStyle->AddObserver(vtkCommand::LeftButtonPressEvent, m_interactionCallback);
-//  m_interactorStyle->AddObserver(vtkCommand::LeftButtonReleaseEvent, m_interactionCallback);
-  
-  
-    // Matrices for axial, coronal, sagittal, oblique view orientations
-    //static double axialElements[16] = {
-    //         1, 0, 0, 0,
-    //         0, 1, 0, 0,
-    //         0, 0, 1, 0,
-    //         0, 0, 0, 1 };
-
-    static double coronalElements[16] = {
-	    1, 0, 0, 0,
-	    0, 0, 1, 0,
-	    0, 1, 0, 0,
-	    0, 0, 0, 1 };
-
-    // static double sagittalElements[16] = {
-    // 	0, 0,-1, 0,
-    // 	1, 0, 0, 0,
-    // 	0,-1, 0, 0,
-    // 	0, 0, 0, 1 };
-
-    //static double obliqueElements[16] = {
-    //         1, 0, 0, 0,
-    //         0, 0.866025, -0.5, 0,
-    //         0, 0.5, 0.866025, 0,
-    //         0, 0, 0, 1 };  
-    
-    // Set the slice orientation
-    m_resliceAxes->DeepCopy(coronalElements);
-    m_reslice->SetResliceAxes(m_resliceAxes);
+  m_reslice->SetResliceAxes(m_reslicePlaneTransform);
 }
 
+/** Destructor*/
 VolumeImageWidget::~VolumeImageWidget() {
   this->hide();
   m_renderer->Delete();
   m_actor->Delete();
   m_colormap->Delete();
   m_reslice->Delete();
-  m_resliceAxes->Delete();
+  m_reslicePlaneTransform->Delete();
   m_interactorStyle->Delete();
 }
 
-
-void VolumeImageWidget::setImage(vtkImageData *image) {
+/** Volume Setter*/
+void VolumeImageWidget::setImage(vtkImageData *image/**<[in] Volume (3D) Image with one component*/) {
   if (!image) {
     m_image = NULL;
     vtkRenderWindow *window = this->GetRenderWindow();
@@ -114,9 +75,9 @@ void VolumeImageWidget::setImage(vtkImageData *image) {
     center[2] = origin[2] + spacing[2] * 0.5 * (extent[4] + extent[5]); 
     
     // Set the point through which to slice
-    m_resliceAxes->SetElement(0, 3, center[0]);
-    m_resliceAxes->SetElement(1, 3, center[1]);
-    m_resliceAxes->SetElement(2, 3, center[2]);
+    m_reslicePlaneTransform->SetElement(0, 3, center[0]);
+    m_reslicePlaneTransform->SetElement(1, 3, center[1]);
+    m_reslicePlaneTransform->SetElement(2, 3, center[2]);
 
     m_reslice->SetInput( m_image );
 
