@@ -8,7 +8,7 @@
 #include <vtkTextProperty.h>
 #include <vtkImageReslice.h>
 #include <vtkImageData.h>
-#include "vtkRenderWindowInteractor.h"
+#include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 
 #include <string>
@@ -176,7 +176,7 @@ void vtkInteractorStyleProjectionView::OnMouseMove()
     bool restrict = restrictAction();
     if (restrict) {
       dx = x - m_initialState.mousePosition[0];
-      dy = y - m_initialState.mousePosition[0];
+      dy = y - m_initialState.mousePosition[1];
       if (abs(dx) > abs(dy)) dy = 0; else dx = 0;
     }
    
@@ -245,6 +245,9 @@ void vtkInteractorStyleProjectionView::updateDisplay(void) {
     updateRenderExtent();
   }
 */  
+  if (this->AutoAdjustCameraClippingRange) {
+    updateRenderer();
+  }
   this->GetInteractor()->Render();
 }
 

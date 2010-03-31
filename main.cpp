@@ -1,8 +1,10 @@
 #include "itkImage.h"
 #include "itkImageFileReader.h"
+#include "itkFlipImageFilter.h"
 #include "itkImageToVTKImageFilter.h"
 
-#include "volumeimagewidget.h"
+#include "multiplanarreformatwidget.h"
+#include "volumeprojectionwidget.h"
 #include <QSplitter>
 #include <QApplication>
 
@@ -13,23 +15,34 @@ int main( int argc, char **argv ) {
   
   typedef itk::Image< signed short,3 >            ImageType;
   typedef itk::ImageFileReader< ImageType >         ReaderType;
+  typedef itk::FlipImageFilter< ImageType > 		FlipFilterType;
   typedef itk::ImageToVTKImageFilter< ImageType >   ConnectorType;
-  ReaderType::Pointer reader = ReaderType::New();
+  
+  ImageType::Pointer itkimage;
+  {
+    ReaderType::Pointer reader = ReaderType::New();
+    reader->SetFileName( argv[1] );
+    reader->Update();
+    FlipFilterType::Pointer flip = FlipFilterType::New();
+    flip->SetInput( reader->GetOutput() );
+    itkimage = flip->GetOutput();
+    itkimage->Update();
+  }
+  
   ConnectorType::Pointer connector = ConnectorType::New();
-  reader->SetFileName( argv[1] );
-  connector->SetInput( reader->GetOutput() );
+  connector->SetInput( itkimage );
 
   QApplication app(argc, argv);
 
   
   QSplitter *splitter = new QSplitter;
      
-  VolumeImageWidget volImageWidget;
+  MultiPlanarReformatWidget volImageWidget;
   volImageWidget.setImage( connector->GetOutput() );
   volImageWidget.show();
   splitter->addWidget( &volImageWidget );
 
-  VolumeImageWidget volImageWidget2;
+  VolumeProjectionWidget volImageWidget2;
   volImageWidget2.setImage( connector->GetOutput() );
   volImageWidget2.show();
   splitter->addWidget( &volImageWidget2 );

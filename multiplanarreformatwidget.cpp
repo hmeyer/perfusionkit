@@ -1,4 +1,4 @@
-#include "volumeimagewidget.h"
+#include "multiplanarreformatwidget.h"
 #include "vtkMatrix4x4.h"
 #include "vtkinteractorstyleprojectionview.h"
 #include "vtkCommand.h"
@@ -11,7 +11,7 @@
 
 /** Default Constructor.
 Nothing fancy - just basic setup */
-VolumeImageWidget::VolumeImageWidget():
+MultiPlanarReformatWidget::MultiPlanarReformatWidget():
   m_reslice(vtkImageReslice::New()),
   m_colormap(vtkImageMapToWindowLevelColors::New()),
   m_actor(vtkImageActor::New()),
@@ -41,7 +41,7 @@ VolumeImageWidget::VolumeImageWidget():
 }
 
 /** Destructor*/
-VolumeImageWidget::~VolumeImageWidget() {
+MultiPlanarReformatWidget::~MultiPlanarReformatWidget() {
   this->hide();
   m_renderer->Delete();
   m_actor->Delete();
@@ -52,7 +52,7 @@ VolumeImageWidget::~VolumeImageWidget() {
 }
 
 /** Volume Setter*/
-void VolumeImageWidget::setImage(vtkImageData *image/**<[in] Volume (3D) Image with one component*/) {
+void MultiPlanarReformatWidget::setImage(vtkImageData *image/**<[in] Volume (3D) Image with one component*/) {
   if (!image) {
     m_image = NULL;
     vtkRenderWindow *window = this->GetRenderWindow();

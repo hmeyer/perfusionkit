@@ -13,11 +13,11 @@ class vtkMatrix4x4;
 class vtkInteractorStyleProjectionView;
 
 /// QT-Widget displaying a Volume Slice
-class VolumeImageWidget : public QVTKWidget
+class MultiPlanarReformatWidget : public QVTKWidget
 {
   public:
-  VolumeImageWidget();  
-  ~VolumeImageWidget();  
+  MultiPlanarReformatWidget();  
+  ~MultiPlanarReformatWidget();  
   void setImage(vtkImageData *image);
   protected:
   vtkImageData *m_image; ///< volume image data to be displayed - set by setImage()
