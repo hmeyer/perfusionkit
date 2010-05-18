@@ -6,6 +6,8 @@
 
 class vtkImageData;
 class VolumeProjectionWidget;
+class MultiPlanarReformatWidget;
+class QSplitter;
 
 class MainWindow : public QMainWindow
 {
@@ -40,6 +42,8 @@ class MainWindow : public QMainWindow
      
      
      VolumeProjectionWidget *volImageWidget;
+     MultiPlanarReformatWidget *mprWidget;
+     QSplitter *splitter;
 };
 
 

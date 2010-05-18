@@ -2,10 +2,18 @@
 #include "mainwindow.h"
  
 #include "volumeprojectionwidget.h"
+#include "multiplanarreformatwidget.h"
+#include <QSplitter>
+
 
 MainWindow::MainWindow() {
   volImageWidget = new VolumeProjectionWidget;
-  setCentralWidget( volImageWidget );
+  mprWidget = new MultiPlanarReformatWidget;
+  splitter = new QSplitter;
+  splitter->addWidget( mprWidget );
+  splitter->addWidget( volImageWidget );
+
+  setCentralWidget( splitter );
 
   createActions();
   createMenus();
@@ -16,11 +24,14 @@ MainWindow::MainWindow() {
 }
 
 MainWindow::~MainWindow() {
+  delete splitter;
+  delete mprWidget;
   delete volImageWidget;
 }
 
 
 void MainWindow::setImage(vtkImageData *image) {
+  mprWidget->setImage( image );
   volImageWidget->setImage( image );
 }
 
