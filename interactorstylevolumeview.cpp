@@ -324,8 +324,6 @@ void InteractorStyleVolumeView::WindowLevel() {
     float newW = (1.0 - dw / 100.0) * m_rayCastMapper->GetFinalColorWindow();
     float newL = (1.0 - dl / 100.0) * m_rayCastMapper->GetFinalColorLevel();
     
-    cerr << "new window/level: " << newW << " , " << newL << endl;
-    
     m_rayCastMapper->SetFinalColorWindow( newW );
     m_rayCastMapper->SetFinalColorLevel( newL );
     this->Interactor->Render();

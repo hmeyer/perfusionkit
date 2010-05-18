@@ -19,6 +19,11 @@ class VolumeProjectionWidget : public QVTKWidget
   VolumeProjectionWidget();  
   ~VolumeProjectionWidget();  
   void setImage(vtkImageData *image);
+  double getCameraDistance(void);
+  void setCameraDistance(double dist);
+  double getEyeAngle(void);
+  void setEyeAngle(double ang);
+  void toggleStereo(void);
   protected:
   vtkImageData *m_image; ///< volume image data to be displayed - set by setImage()
   vtkVolume *m_volume; ///< vtkVolume which actually displays the projected volume

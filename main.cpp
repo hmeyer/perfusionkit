@@ -3,9 +3,7 @@
 #include "itkFlipImageFilter.h"
 #include "itkImageToVTKImageFilter.h"
 
-#include "multiplanarreformatwidget.h"
-#include "volumeprojectionwidget.h"
-#include <QSplitter>
+#include "mainwindow.h"
 #include <QApplication>
 
 using namespace std;
@@ -33,24 +31,16 @@ int main( int argc, char **argv ) {
   connector->SetInput( itkimage );
 
   QApplication app(argc, argv);
-
+  MainWindow window;
+  window.setImage( connector->GetOutput() );
+  window.show();
+/*
   
-  QSplitter *splitter = new QSplitter;
-     
-  MultiPlanarReformatWidget volImageWidget;
+  VolumeProjectionWidget volImageWidget;
   volImageWidget.setImage( connector->GetOutput() );
   volImageWidget.show();
-  splitter->addWidget( &volImageWidget );
-
-  VolumeProjectionWidget volImageWidget2;
-  volImageWidget2.setImage( connector->GetOutput() );
-  volImageWidget2.show();
-  splitter->addWidget( &volImageWidget2 );
-
-  splitter->show();
-
+*/
   app.exec();
   
   return 0;
 }
-

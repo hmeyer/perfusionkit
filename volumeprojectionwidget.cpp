@@ -1,6 +1,6 @@
 #include "volumeprojectionwidget.h"
 
-#include <vtkRenderer.h>
+#include <vtkOpenGLRenderer.h>
 #include <vtkImageData.h>
 #include <vtkRenderWindow.h>
 
@@ -16,7 +16,7 @@
 Nothing fancy - just basic setup */
 VolumeProjectionWidget::VolumeProjectionWidget():
   m_volume(vtkVolume::New()),
-  m_renderer(vtkRenderer::New()),
+  m_renderer(vtkOpenGLRenderer::New()),
 //  m_interactorStyle(vtkInteractorStyleProjectionView::New()),
   m_interactorStyle(InteractorStyleVolumeView::New()),
   m_volumeMapper(vtkFixedPointVolumeRayCastMapper::New()),
@@ -88,3 +88,45 @@ void VolumeProjectionWidget::setImage(vtkImageData *image/**<[in] Volume (3D) Im
     window->AddRenderer(m_renderer);
   }
 }
+
+
+/** Get the distance between Camera and Focal Point*/
+double VolumeProjectionWidget::getCameraDistance(void) {
+  return m_renderer->GetActiveCamera()->GetDistance();
+}
+
+/** Set the distance between Camera and Focal Point*/
+void VolumeProjectionWidget::setCameraDistance(double dist) {
+  double oldDist = m_renderer->GetActiveCamera()->GetDistance();
+  double f = dist / oldDist;
+  double *fp = m_renderer->GetActiveCamera()->GetFocalPoint();
+  double *cp = m_renderer->GetActiveCamera()->GetPosition();
+  m_renderer->GetActiveCamera()->SetPosition( 
+    fp[0] + (cp[0] - fp[0]) * f,
+    fp[1] + (cp[1] - fp[1]) * f,
+    fp[2] + (cp[2] - fp[2]) * f);
+    
+  GetRenderWindow()->Render();
+}
+
+/** Get the Eye Angle for Stereo-Projections*/
+double VolumeProjectionWidget::getEyeAngle(void) {
+  return m_renderer->GetActiveCamera()->GetEyeAngle();
+}
+
+/** Set the Eye Angle for Stereo-Projections*/
+void VolumeProjectionWidget::setEyeAngle(double ang) {
+  m_renderer->GetActiveCamera()->SetEyeAngle( ang );
+  if (GetRenderWindow()->GetStereoRender()) 
+    GetRenderWindow()->Render();
+}
+
+void VolumeProjectionWidget::toggleStereo(void) {
+  if (GetRenderWindow()->GetStereoRender()) 
+    GetRenderWindow()->StereoRenderOff();
+  else 
+    GetRenderWindow()->StereoRenderOn();
+
+  GetRenderWindow()->Render();
+}
+

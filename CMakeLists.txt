@@ -2,7 +2,6 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT( perfusionkit )
 
-MESSAGE( "VTK_DIR: ${VTK_DIR}" )
 FIND_PACKAGE ( VTK )
 IF ( VTK_FOUND )
       INCLUDE( ${USE_VTK_FILE} )
@@ -33,13 +32,17 @@ IF(NOT DESIRED_QT_VERSION MATCHES 4)
 	MESSAGE(FATAL_ERROR "Need QT Version >= 4 build into VTK")
 ENDIF(NOT DESIRED_QT_VERSION MATCHES 4)
 
+SET ( QVTKMocHeaders
+    mainwindow.h
+    )
 
+QT4_WRAP_CPP ( MOCSrcs ${QVTKMocHeaders} )
                            
 
 INCLUDE_DIRECTORIES(
-  ${QT_INCLUDE_DIR}
+  ${QT_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR}
   )
-ADD_EXECUTABLE( perfusionkit interactorstylevolumeview.cpp main.cpp multiplanarreformatwidget.cpp vtkinteractorstyleprojectionview.cpp volumeprojectionwidget.cpp)
+ADD_EXECUTABLE( perfusionkit main.cpp mainwindow.cpp interactorstylevolumeview.cpp multiplanarreformatwidget.cpp vtkinteractorstyleprojectionview.cpp volumeprojectionwidget.cpp ${MOCSrcs})
 TARGET_LINK_LIBRARIES ( perfusionkit
   QVTK
   ${QT_LIBRARIES}
