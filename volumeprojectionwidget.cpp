@@ -56,8 +56,12 @@ VolumeProjectionWidget::VolumeProjectionWidget():
 //  m_interactorStyle->SetOrientationMatrix( m_projectionTransform );
 
   vtkRenderWindowInteractor *interactor = this->GetInteractor();
-  interactor->SetInteractorStyle( m_interactorStyle );  
+  interactor->SetInteractorStyle( m_interactorStyle );
   
+  GetRenderWindow()->SetStereoTypeToAnaglyph();
+  GetRenderWindow()->SetAnaglyphColorSaturation(0.0);
+  int anaglyphColorMask[] = {2,5}; 
+  GetRenderWindow()->SetAnaglyphColorMask( anaglyphColorMask );
 }
 
 /** Destructor*/
@@ -124,7 +128,7 @@ void VolumeProjectionWidget::setEyeAngle(double ang) {
 void VolumeProjectionWidget::toggleStereo(void) {
   if (GetRenderWindow()->GetStereoRender()) 
     GetRenderWindow()->StereoRenderOff();
-  else 
+  else
     GetRenderWindow()->StereoRenderOn();
 
   GetRenderWindow()->Render();
