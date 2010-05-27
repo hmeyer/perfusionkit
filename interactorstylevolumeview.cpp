@@ -288,6 +288,10 @@ bool InteractorStyleVolumeView::updateRestricted() {
 
 void InteractorStyleVolumeView::Rotate()
 {
+  if (this->CurrentRenderer == NULL)
+    {
+    return;
+    }
   vtkRenderWindowInteractor *rwi = this->Interactor;
 
   int dx = rwi->GetEventPosition()[0] - rwi->GetLastEventPosition()[0];
@@ -314,6 +318,10 @@ void InteractorStyleVolumeView::StartWindowLevel()
 }
 
 void InteractorStyleVolumeView::WindowLevel() {
+  if (this->CurrentRenderer == NULL)
+    {
+    return;
+    }
   if (!m_rayCastMapper) return;
   vtkRenderWindowInteractor *rwi = this->Interactor;
 

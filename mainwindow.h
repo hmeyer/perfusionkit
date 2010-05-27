@@ -3,47 +3,48 @@
 
 #include <QMainWindow>
 #include <QObject>
+#include "ui_MainWindow.h"
+#include "dicomimagelistmodel.h"
+#include <vector>
+#include <auto_ptr.h>
 
 class vtkImageData;
 class VolumeProjectionWidget;
 class MultiPlanarReformatWidget;
 class QSplitter;
+class DicomSelectorDialog;
 
-class MainWindow : public QMainWindow
+
+
+
+class MainWindow : public QMainWindow, private Ui_MainWindow
 {
   Q_OBJECT
   
   public:
     MainWindow();
     ~MainWindow();
-    void setImage(vtkImageData *image);
+    void setImage(const vtkImageData *image);
+    void setFiles(const QStringList &names);
+    
 
- private slots:
-     void open();
-     void setDistance();  
-     void setEyeAngle();
-     void toggleStereo();
-     void about();
+ public slots:
+      void on_actionOpenDirectory_triggered();
+      void on_actionOpenFile_triggered();
+      void on_actionExit_triggered();
+      void on_actionAbout_triggered();
+     
+      void on_actionStereoDistance_triggered();
+      void on_actionStereoEyeAngle_triggered();
+      void on_actionStereoAnaglyph_triggered();
+      void on_actionStereoInterlaced_triggered();
+      void on_actionStereoOff_triggered();
+      void on_viewButton_clicked();
 
  private:
-     void createActions();
-     void createMenus();
-
-     QMenu *fileMenu;
-     QMenu *viewMenu;
-     QMenu *helpMenu;
-     
-     QAction *openAct;
-     QAction *exitAct;
-     QAction *setDistanceAct;
-     QAction *setEyeAngleAct;
-     QAction *toggleStereoAct;
-     QAction *aboutAct;
-     
-     
-     VolumeProjectionWidget *volImageWidget;
-     MultiPlanarReformatWidget *mprWidget;
-     QSplitter *splitter;
+  typedef std::auto_ptr<DicomSelectorDialog> DicomSelectorDialogPtr;
+  void loadDicomData(DicomSelectorDialogPtr dicomSelector);
+  DicomImageListModel imageModel;
 };
 
 

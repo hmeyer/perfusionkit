@@ -1,5 +1,5 @@
-#ifndef MAXIMUMINTENSITYVOLUMEWIDGET_H
-#define MAXIMUMINTENSITYVOLUMEWIDGET_H
+#ifndef VOLUMEPROJECTIONWIDGET_H
+#define VOLUMEPROJECTIONWIDGET_H
 
 #include <GUISupport/Qt/QVTKWidget.h>
 
@@ -16,14 +16,19 @@ class vtkPiecewiseFunction;
 class VolumeProjectionWidget : public QVTKWidget
 {
   public:
-  VolumeProjectionWidget();  
+  enum {
+    Anaglyph,
+    Interlaced,
+    Off
+  } StereoMode;
+  VolumeProjectionWidget(QWidget* parent = NULL, Qt::WFlags f = 0);
   ~VolumeProjectionWidget();  
   void setImage(vtkImageData *image);
   double getCameraDistance(void);
   void setCameraDistance(double dist);
   double getEyeAngle(void);
   void setEyeAngle(double ang);
-  void toggleStereo(void);
+  void setStereoMode(int mode);
   protected:
   vtkImageData *m_image; ///< volume image data to be displayed - set by setImage()
   vtkVolume *m_volume; ///< vtkVolume which actually displays the projected volume
@@ -35,4 +40,4 @@ class VolumeProjectionWidget : public QVTKWidget
   vtkPiecewiseFunction *m_grayTransferFunction;
 };
 
-#endif // MAXIMUMINTENSITYVOLUMEWIDGET_H
+#endif // VOLUMEPROJECTIONWIDGET_H

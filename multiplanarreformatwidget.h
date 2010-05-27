@@ -1,5 +1,5 @@
-#ifndef VOLUMEIMAGEWIDGET_H
-#define VOLUMEIMAGEWIDGET_H
+#ifndef MULTIPLANARREFORMATWIDGET_H
+#define MULTIPLANARREFORMATWIDGET_H
 
 #include <GUISupport/Qt/QVTKWidget.h>
 
@@ -16,7 +16,7 @@ class vtkInteractorStyleProjectionView;
 class MultiPlanarReformatWidget : public QVTKWidget
 {
   public:
-  MultiPlanarReformatWidget();  
+  MultiPlanarReformatWidget(QWidget* parent = NULL, Qt::WFlags f = 0);
   ~MultiPlanarReformatWidget();  
   void setImage(vtkImageData *image);
   protected:
@@ -29,4 +29,4 @@ class MultiPlanarReformatWidget : public QVTKWidget
   vtkInteractorStyleProjectionView *m_interactorStyle; ///< special InteractorStyle for Projected Volumes
 };
 
-#endif // VOLUMEIMAGEWIDGET_H
+#endif // MULTIPLANARREFORMATWIDGET_H

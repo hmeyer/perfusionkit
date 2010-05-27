@@ -1,108 +1,110 @@
 #include <QtGui>
 #include "mainwindow.h"
- 
-#include "volumeprojectionwidget.h"
-#include "multiplanarreformatwidget.h"
-#include <QSplitter>
+#include "dicomselectordialog.h"
 
 
 MainWindow::MainWindow() {
-  volImageWidget = new VolumeProjectionWidget;
-  mprWidget = new MultiPlanarReformatWidget;
-  splitter = new QSplitter;
-  splitter->addWidget( mprWidget );
-  splitter->addWidget( volImageWidget );
-
-  setCentralWidget( splitter );
-
-  createActions();
-  createMenus();
-  
-  setWindowTitle(tr("Volume Visualizer"));
-  setMinimumSize(200, 200);
-  resize(480, 320);  
+  setupUi( this );
+  treeView->setModel( &imageModel );
+  progressBar->hide();
 }
 
 MainWindow::~MainWindow() {
-  delete splitter;
-  delete mprWidget;
-  delete volImageWidget;
 }
 
 
-void MainWindow::setImage(vtkImageData *image) {
-  mprWidget->setImage( image );
-  volImageWidget->setImage( image );
+void MainWindow::setImage(const vtkImageData *image) {
+  vtkImageData *non_const_image = const_cast<vtkImageData*>( image );
+  mprView->setImage( non_const_image );
+  volumeView->setImage( non_const_image );
 }
 
-void MainWindow::createActions()
-{
-     openAct = new QAction(tr("&Open..."), this);
-     openAct->setShortcuts(QKeySequence::Open);
-     openAct->setStatusTip(tr("Open a dicom file"));
-     connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
-     
-     exitAct = new QAction(tr("E&xit"), this);
-     exitAct->setStatusTip(tr("Exit the application"));
-     connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
-
-
-     setDistanceAct = new QAction(tr("D&istance"), this);
-     setDistanceAct->setStatusTip(tr("Set Viewer Distance"));
-     connect(setDistanceAct, SIGNAL(triggered()), this, SLOT(setDistance()));
-
-     setEyeAngleAct = new QAction(tr("E&ye Angle"), this);
-     setEyeAngleAct->setStatusTip(tr("Set Viewer 3D-Eye Angle"));
-     connect(setEyeAngleAct, SIGNAL(triggered()), this, SLOT(setEyeAngle()));
-
-     toggleStereoAct = new QAction(tr("T&oggle Stereo"), this);
-     toggleStereoAct->setStatusTip(tr("Toggle Stereo View"));
-     connect(toggleStereoAct, SIGNAL(triggered()), this, SLOT(toggleStereo()));
-     
-     aboutAct = new QAction(tr("&About"), this);
-     aboutAct->setStatusTip(tr("Show the application's About box"));
-     connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
+void MainWindow::on_actionAbout_triggered() {
+     QMessageBox::about(this, tr("About Perfusionkit"),
+             tr("App for Perfusion Analysis"));
 }
 
-void MainWindow::createMenus() {
-  fileMenu = menuBar()->addMenu(tr("&File"));
-  fileMenu->addAction(openAct);
-  fileMenu->addSeparator();
-  fileMenu->addAction(exitAct);
-
-  viewMenu = menuBar()->addMenu(tr("&View"));
-  viewMenu->addAction(setDistanceAct);
-  viewMenu->addAction(setEyeAngleAct);
-  viewMenu->addAction(toggleStereoAct);
-
-  helpMenu = menuBar()->addMenu(tr("&Help"));
-  helpMenu->addAction(aboutAct);
+void MainWindow::on_actionExit_triggered() {
+  qApp->exit();
 }
 
-void MainWindow::about() {
-     QMessageBox::about(this, tr("About Volume Visualizer"),
-             tr("App for Stereo-Demos "));
+void MainWindow::setFiles(const QStringList &names) {
+  DicomSelectorDialogPtr selectDialog( new DicomSelectorDialog( this ) );
+  selectDialog->setFilesOrDirectories( names );
+  loadDicomData( selectDialog );
 }
 
-void MainWindow::open() {
+void MainWindow::on_actionOpenFile_triggered() {
+  QStringList fnames = QFileDialog::getOpenFileNames(
+                         this,
+                         tr("Select one or more files to open"),
+                         ".",
+                         "", 0, QFileDialog::ReadOnly|QFileDialog::HideNameFilterDetails);
+			 QString a;
+			 std::string x;
+			 x = a.toStdString();
+  setFiles( fnames );
 }
 
-void MainWindow::setDistance() {
-  double dist = volImageWidget->getCameraDistance();
+void MainWindow::on_actionOpenDirectory_triggered() {
+  QString fname = QFileDialog::getExistingDirectory(
+                         this,
+                         tr("Select directoy to open"),
+                         ".",
+                         QFileDialog::ShowDirsOnly|QFileDialog::ReadOnly);
+  DicomSelectorDialogPtr selectDialog( new DicomSelectorDialog( this ) );
+  selectDialog->setFileOrDirectory( fname );
+  loadDicomData( selectDialog );
+}
+
+void MainWindow::loadDicomData(DicomSelectorDialogPtr dicomSelector) {
+  dicomSelector->exec();
+  DicomImageListModel::Pointer loadedImages = dicomSelector->getSelectedImageDataList();
+  imageModel.appendDicomImageList( *loadedImages );
+}
+
+
+void MainWindow::on_actionStereoDistance_triggered() {
+  double dist = volumeView->getCameraDistance();
   bool ok;
   dist = QInputDialog::getDouble(this, tr("Camera Distance"),
     tr("New Camera Distance:"), dist, 1e-3, 1e5, 2, &ok);  
-  if (ok) volImageWidget->setCameraDistance( dist );
+  if (ok) volumeView->setCameraDistance( dist );
 }
 
-void MainWindow::setEyeAngle() {
-  double ang = volImageWidget->getEyeAngle();
+void MainWindow::on_actionStereoEyeAngle_triggered() {
+  double ang = volumeView->getEyeAngle();
   bool ok;
   ang = QInputDialog::getDouble(this, tr("Stereo Eye Angle"),
     tr("New Eye Angle:"), ang, 1e-3, 90, 2, &ok);  
-  if (ok) volImageWidget->setEyeAngle( ang );
+  if (ok) volumeView->setEyeAngle( ang );
 }
 
-void MainWindow::toggleStereo() {
-  volImageWidget->toggleStereo();
+void MainWindow::on_actionStereoAnaglyph_triggered() {
+  actionStereoAnaglyph->setChecked(true);
+  actionStereoInterlaced->setChecked(false);
+  actionStereoOff->setChecked(false);
+  volumeView->setStereoMode( VolumeProjectionWidget::Anaglyph );
+}
+
+void MainWindow::on_actionStereoInterlaced_triggered() {
+  actionStereoAnaglyph->setChecked(false);
+  actionStereoInterlaced->setChecked(true);
+  actionStereoOff->setChecked(false);
+  volumeView->setStereoMode( VolumeProjectionWidget::Interlaced );
+}
+
+void MainWindow::on_actionStereoOff_triggered() {
+  actionStereoAnaglyph->setChecked(false);
+  actionStereoInterlaced->setChecked(false);
+  actionStereoOff->setChecked(true);
+  volumeView->setStereoMode( VolumeProjectionWidget::Off );
+}
+void MainWindow::on_viewButton_clicked() {
+  QItemSelectionModel *selectionModel = treeView->selectionModel();
+  if (selectionModel == NULL) return;
+  QModelIndexList selectedRows = selectionModel->selectedRows();
+  if (selectedRows.size() != 1) return;
+  vtkImageData const *image = imageModel.getItem( selectedRows[0] ).getVTKImage();
+  setImage( image );
 }

@@ -11,7 +11,8 @@
 
 /** Default Constructor.
 Nothing fancy - just basic setup */
-MultiPlanarReformatWidget::MultiPlanarReformatWidget():
+MultiPlanarReformatWidget::MultiPlanarReformatWidget(QWidget* parent, Qt::WFlags f):
+  QVTKWidget(parent, f),
   m_reslice(vtkImageReslice::New()),
   m_colormap(vtkImageMapToWindowLevelColors::New()),
   m_actor(vtkImageActor::New()),
@@ -57,7 +58,10 @@ void MultiPlanarReformatWidget::setImage(vtkImageData *image/**<[in] Volume (3D)
     m_image = NULL;
     vtkRenderWindow *window = this->GetRenderWindow();
     window->RemoveRenderer( m_renderer );
+    this->update();
   } else {
+    vtkRenderWindow *window = this->GetRenderWindow();
+    window->RemoveRenderer( m_renderer );
     m_image = image;
     m_image->UpdateInformation();
     int extent[6];
@@ -80,8 +84,7 @@ void MultiPlanarReformatWidget::setImage(vtkImageData *image/**<[in] Volume (3D)
     m_reslicePlaneTransform->SetElement(2, 3, center[2]);
 
     m_reslice->SetInput( m_image );
-
-    vtkRenderWindow *window = this->GetRenderWindow();
     window->AddRenderer(m_renderer);
+    this->update();
   }
 }

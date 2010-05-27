@@ -14,7 +14,8 @@
 
 /** Default Constructor.
 Nothing fancy - just basic setup */
-VolumeProjectionWidget::VolumeProjectionWidget():
+VolumeProjectionWidget::VolumeProjectionWidget(QWidget* parent, Qt::WFlags f):
+  QVTKWidget( parent, f),
   m_volume(vtkVolume::New()),
   m_renderer(vtkOpenGLRenderer::New()),
 //  m_interactorStyle(vtkInteractorStyleProjectionView::New()),
@@ -82,14 +83,16 @@ void VolumeProjectionWidget::setImage(vtkImageData *image/**<[in] Volume (3D) Im
     m_image = NULL;
     vtkRenderWindow *window = this->GetRenderWindow();
     window->RemoveRenderer( m_renderer );
+    this->update();
   } else {
+    vtkRenderWindow *window = this->GetRenderWindow();
+    window->RemoveRenderer( m_renderer );
     m_image = image;
     m_image->UpdateInformation();
 
     m_volumeMapper->SetInput( m_image );
-
-    vtkRenderWindow *window = this->GetRenderWindow();
     window->AddRenderer(m_renderer);
+    this->update();
   }
 }
 
@@ -125,12 +128,20 @@ void VolumeProjectionWidget::setEyeAngle(double ang) {
     GetRenderWindow()->Render();
 }
 
-void VolumeProjectionWidget::toggleStereo(void) {
-  if (GetRenderWindow()->GetStereoRender()) 
-    GetRenderWindow()->StereoRenderOff();
-  else
-    GetRenderWindow()->StereoRenderOn();
 
+void VolumeProjectionWidget::setStereoMode(int mode) {
+  int anaglyphColorMask[] = {2,5}; 
+  switch(mode) {
+    case int(Anaglyph):	GetRenderWindow()->SetStereoTypeToAnaglyph();
+			GetRenderWindow()->SetAnaglyphColorSaturation(0.0);
+			GetRenderWindow()->SetAnaglyphColorMask( anaglyphColorMask );
+			GetRenderWindow()->StereoRenderOn();
+			break;
+    case int(Interlaced):	GetRenderWindow()->SetStereoTypeToInterlaced();
+			GetRenderWindow()->StereoRenderOn();
+			break;
+    default: GetRenderWindow()->StereoRenderOff(); break;
+  }
   GetRenderWindow()->Render();
 }
 
