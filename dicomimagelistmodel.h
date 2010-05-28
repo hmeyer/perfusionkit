@@ -52,6 +52,7 @@ class DicomImageListModel : public QAbstractItemModel {
     static const DicomTagListType dicomSelectorFields;
 
   private:
+    class ReaderProgress;
     typedef std::list< ListItem > SeriesListType;
     SeriesListType::iterator findByUID( const std::string &seriesUID);
     int columnCount(const QModelIndex &) const;

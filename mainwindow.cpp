@@ -1,12 +1,11 @@
-#include <QtGui>
 #include "mainwindow.h"
+#include <QtGui>
 #include "dicomselectordialog.h"
 
 
 MainWindow::MainWindow() {
   setupUi( this );
   treeView->setModel( &imageModel );
-  progressBar->hide();
 }
 
 MainWindow::~MainWindow() {
@@ -105,6 +104,9 @@ void MainWindow::on_viewButton_clicked() {
   if (selectionModel == NULL) return;
   QModelIndexList selectedRows = selectionModel->selectedRows();
   if (selectedRows.size() != 1) return;
-  vtkImageData const *image = imageModel.getItem( selectedRows[0] ).getVTKImage();
+  on_treeView_doubleClicked( selectedRows[0] );
+}
+void MainWindow::on_treeView_doubleClicked(const QModelIndex &index) {
+  vtkImageData const *image = imageModel.getItem( index ).getVTKImage();
   setImage( image );
 }

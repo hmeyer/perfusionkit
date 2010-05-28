@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT( perfusionkit )
 
-FIND_PATH(MYLIBS itkbasics.h ../myLibs ../../myLibs)
+#FIND_PATH(MYLIBS itkbasics.h ../myLibs ../../myLibs)
 
 FIND_PACKAGE ( VTK )
 IF ( VTK_FOUND )
@@ -45,14 +45,14 @@ SET( PerfusionkitSrc
   vtkinteractorstyleprojectionview.cpp 
   volumeprojectionwidget.cpp 
   dicomselectordialog.cpp
-  ${MYLIBS}/itkbasics.cpp
+#  ${MYLIBS}/itkbasics.cpp
   dicomimagelistmodel.cpp
 )
 
 INCLUDE_DIRECTORIES(
   ${QT_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
-  ${MYLIBS}
+#  ${MYLIBS}
 )
 
 SET( UIS MainWindow.ui DicomSelectDialog.ui )

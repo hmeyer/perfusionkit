@@ -40,6 +40,7 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
       void on_actionStereoInterlaced_triggered();
       void on_actionStereoOff_triggered();
       void on_viewButton_clicked();
+      void on_treeView_doubleClicked(const QModelIndex &index);
 
  private:
   typedef std::auto_ptr<DicomSelectorDialog> DicomSelectorDialogPtr;

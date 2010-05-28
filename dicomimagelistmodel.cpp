@@ -4,7 +4,9 @@
 #include <boost/assign.hpp>
 #include <boost/bind.hpp>
 #include <itkMetaDataObject.h>
-#include "itkbasics.h"
+#include <itkGDCMImageIO.h>
+#include <itkImageSeriesReader.h>
+#include <QProgressDialog>
 
 
 struct DicomImageListModel::ListItem::ListItem_impl {
@@ -31,13 +33,52 @@ const vtkImageData *DicomImageListModel::ListItem::getVTKImage(void) const {
   return impl->connector->GetOutput();
 }
 
+
+class DicomImageListModel::ReaderProgress : public itk::Command {
+  public: 
+    typedef ReaderProgress Self;
+    typedef itk::Command Superclass;
+    typedef itk::SmartPointer<Self> Pointer;
+    typedef itk::ImageSeriesReader< DicomImageListModel::ImageType > ReaderType;
+    itkNewMacro( Self );
+  protected:
+    const static int progressScale = 10000;
+    ReaderProgress(QWidget *parent=0):
+      progressDialog(tr("Loading Volume..."), tr("Abort"), 0, progressScale, parent) {
+	  progressDialog.setCancelButton(0);
+	  progressDialog.setMinimumDuration(1000);
+          progressDialog.setWindowModality(Qt::WindowModal);
+      };
+    void Execute( itk::Object *caller, const itk::EventObject &event) {
+      Execute((const itk::Object*)caller, event);
+    }
+    void Execute( const itk::Object *caller, const itk::EventObject &event) {
+      const ReaderType *reader = dynamic_cast<const ReaderType *>(caller);
+      progressDialog.setValue( reader->GetProgress() * progressScale );
+    }
+    QProgressDialog progressDialog;
+};
+
 DicomImageListModel::ImageType::ConstPointer DicomImageListModel::ListItem::getITKImage() const {
   if (itkImage.IsNull()) {
-    itkBasic::ReaderType::Pointer imageReader = itkBasic::ReaderType::New();
-    itkBasic::FileNamesContainer fc;
+    typedef ReaderProgress::ReaderType ReaderType;
+    ReaderType::Pointer imageReader = ReaderType::New();
+    ReaderType::FileNamesContainer fc;
     fc.assign( fnList.begin(), fnList.end() );
     ListItem *nonconst_this = const_cast< ListItem *>( this );
-    nonconst_this->itkImage = itkBasic::getDicomSerie( fc, imageReader );
+
+    itk::GDCMImageIO::Pointer gdcmImageIO = itk::GDCMImageIO::New();
+    imageReader->SetImageIO( gdcmImageIO );
+    imageReader->SetFileNames(fc);
+    ReaderProgress::Pointer progressor = ReaderProgress::New();
+    imageReader->AddObserver(itk::AnyEvent(), progressor);
+    try {
+	    imageReader->Update();
+    }catch( itk::ExceptionObject & excep ) {
+	    std::cerr << "Exception caught !" << std::endl;
+	    std::cerr << excep << std::endl;
+    }
+    nonconst_this->itkImage = imageReader->GetOutput();
     nonconst_this->dict = *((*imageReader->GetMetaDataDictionaryArray())[0]);
   }
   DicomImageListModel::ImageType::ConstPointer result;

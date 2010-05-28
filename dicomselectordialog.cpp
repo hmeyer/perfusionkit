@@ -23,7 +23,8 @@ void DicomSelectorDialog::exec() {
   typedef itk::ImageFileReader< DicomImageListModel::ImageType >  ReaderType;
   int index = 0;
   {
-    QProgressDialog indexProgress("Indexing Files...", "Abort", 2, fileNames.size(), this);
+    QProgressDialog indexProgress(tr("Indexing Files..."), tr("Abort"), 0, fileNames.size(), this);
+    indexProgress.setMinimumDuration(1000);
     indexProgress.setWindowModality(Qt::WindowModal);
     while( index < fileNames.size() ) {
       indexProgress.setValue(index);
@@ -55,7 +56,8 @@ void DicomSelectorDialog::exec() {
   }
   fileNames.removeDuplicates();
   {
-    QProgressDialog metaReadProgress("Reading MetaData...", "Abort", 2, fileNames.size(), this);
+    QProgressDialog metaReadProgress(tr("Reading MetaData..."), tr("Abort"), 0, fileNames.size(), this);
+    metaReadProgress.setMinimumDuration(1000);
     metaReadProgress.setWindowModality(Qt::WindowModal);
     for(int i = 0; i < fileNames.size(); i++) {
       metaReadProgress.setValue(i);
