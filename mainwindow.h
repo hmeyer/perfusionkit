@@ -4,7 +4,7 @@
 #include <QMainWindow>
 #include <QObject>
 #include "ui_MainWindow.h"
-#include "dicomimagelistmodel.h"
+#include "ctimagetreemodel.h"
 #include <vector>
 #include <auto_ptr.h>
 
@@ -39,13 +39,15 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
       void on_actionStereoAnaglyph_triggered();
       void on_actionStereoInterlaced_triggered();
       void on_actionStereoOff_triggered();
-      void on_viewButton_clicked();
-      void on_treeView_doubleClicked(const QModelIndex &index);
+      void on_actionLoadAllSeries_triggered();
+      void treeViewSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
+      void treeViewContextMenu(const QPoint &pos);
 
  private:
   typedef std::auto_ptr<DicomSelectorDialog> DicomSelectorDialogPtr;
   void loadDicomData(DicomSelectorDialogPtr dicomSelector);
-  DicomImageListModel imageModel;
+  CTImageTreeModel imageModel;
+  static const CTImageTreeItem::DicomTagListType CTModelHeaderFields;
 };
 
 

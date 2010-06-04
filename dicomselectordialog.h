@@ -5,8 +5,7 @@
 #include "ui_DicomSelectDialog.h"
 #include <boost/shared_ptr.hpp>
 #include <boost/assign.hpp>
-#include "dicomimagelistmodel.h"
-
+#include "ctimagetreemodel.h"
 
 class DicomSelectorDialog : public QDialog, private Ui_DicomSelectDialog
 {
@@ -14,14 +13,15 @@ class DicomSelectorDialog : public QDialog, private Ui_DicomSelectDialog
   DicomSelectorDialog(QWidget * parent = 0, Qt::WindowFlags f = 0);
   void setFileOrDirectory( const QString &name ) { fileNames.clear(); fileNames.push_back( name ); }
   void setFilesOrDirectories( const QStringList &names ) { fileNames = names; }
-  DicomImageListModel::Pointer getSelectedImageDataList(void);
+  void getSelectedImageDataList(CTImageTreeModel &other) const;
   
   virtual void exec();
   virtual void reject();
   
   private:
-  DicomImageListModel dicomModel;
+  CTImageTreeModel ctImageModel;
   QStringList fileNames;
+  static const CTImageTreeItem::DicomTagListType HeaderFields;
 };
 
 

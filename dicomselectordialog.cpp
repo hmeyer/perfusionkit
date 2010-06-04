@@ -1,16 +1,30 @@
 #include "dicomselectordialog.h"
 #include <QFileSystemModel>
 #include <QProgressDialog>
+#include <QPushButton>
 #include <boost/filesystem.hpp>
+#include <boost/assign.hpp>
 #include <vector>
 #include <utility>
 #include <list>
 #include <itkImageFileReader.h>
+#include "imagedefinitions.h"
+#include "ctimagetreeitem.h"
 
-
+const CTImageTreeItem::DicomTagListType DicomSelectorDialog::HeaderFields = boost::assign::list_of
+  (CTImageTreeItem::DicomTagType("Patient Name", "0010|0010"))
+  (CTImageTreeItem::DicomTagType("#Slices",CTImageTreeItem::getNumberOfFramesTag()))
+  (CTImageTreeItem::DicomTagType("AcquisitionDatetime","0008|002a"))
+  (CTImageTreeItem::DicomTagType("SeriesDate","0008|0021"))
+  (CTImageTreeItem::DicomTagType("SeriesTime","0008|0031"))
+  (CTImageTreeItem::DicomTagType("Date of Birth","0010|0030"))
+  (CTImageTreeItem::DicomTagType("Series Description","0008|103e"));
+  
 DicomSelectorDialog::DicomSelectorDialog(QWidget * parent, Qt::WindowFlags f):
-  QDialog( parent, f ) {
+  QDialog( parent, f ), ctImageModel(HeaderFields) {
   setupUi( this );
+  buttonBox->button( QDialogButtonBox::Open )->setAutoDefault(true);
+  buttonBox->button( QDialogButtonBox::Cancel)->setAutoDefault(false);
 }
 
 void DicomSelectorDialog::reject() {
@@ -20,8 +34,8 @@ void DicomSelectorDialog::reject() {
 
 
 void DicomSelectorDialog::exec() {
-  typedef itk::ImageFileReader< DicomImageListModel::ImageType >  ReaderType;
-  int index = 0;
+  typedef itk::ImageFileReader< CTImageType >  ReaderType;
+  int index = 0; bool canceled = false;
   {
     QProgressDialog indexProgress(tr("Indexing Files..."), tr("Abort"), 0, fileNames.size(), this);
     indexProgress.setMinimumDuration(1000);
@@ -36,9 +50,11 @@ void DicomSelectorDialog::exec() {
 	pathList.push_back( fpath );
 	indexProgress.setMaximum(fileNames.size() + pathList.size());
 	while( !pathList.isEmpty() ) {
+	  if (indexProgress.wasCanceled()) break;
 	  boost::filesystem::path currentPath = pathList.takeFirst();
 	  for ( boost::filesystem::directory_iterator itr( currentPath );
 	    itr != end_itr; ++itr ) {
+	      if (indexProgress.wasCanceled()) break;
 	      if ( boost::filesystem::is_directory(itr->status()) ) {
 		pathList.push_back( itr->path() );
 		indexProgress.setMaximum(fileNames.size() + pathList.size());
@@ -53,9 +69,10 @@ void DicomSelectorDialog::exec() {
 	index++;
       }
     }
+    canceled = indexProgress.wasCanceled();
   }
   fileNames.removeDuplicates();
-  {
+  if (!canceled ) {
     QProgressDialog metaReadProgress(tr("Reading MetaData..."), tr("Abort"), 0, fileNames.size(), this);
     metaReadProgress.setMinimumDuration(1000);
     metaReadProgress.setWindowModality(Qt::WindowModal);
@@ -68,7 +85,7 @@ void DicomSelectorDialog::exec() {
 	  ReaderType::Pointer reader = ReaderType::New();
 	  reader->SetFileName( fpath.string() );
 	  reader->GenerateOutputInformation();
-	  dicomModel.appendFilename( reader->GetMetaDataDictionary(), fpath.string() );
+	  ctImageModel.appendFilename( reader->GetMetaDataDictionary(), fpath.string() );
 	} catch (itk::ImageFileReaderException &ifrExep) {
 	} catch (itk::ExceptionObject & excep) {
 	  std::cerr << "Exception caught !" << std::endl;
@@ -77,20 +94,18 @@ void DicomSelectorDialog::exec() {
       }
     }
   }
-  if (!dicomModel.rowCount(QModelIndex())) return;
-  treeView->setModel( &dicomModel );
+  if (ctImageModel.rowCount(QModelIndex())==0) return;
+  treeView->setModel( &ctImageModel );
   treeView->selectAll();
-  for(unsigned int t=0; t < DicomImageListModel::dicomSelectorFields.size(); t++) treeView->resizeColumnToContents(t);
+  for(unsigned int t=0; t < HeaderFields.size(); t++) treeView->resizeColumnToContents(t);
   QDialog::exec();
 }
 
-DicomImageListModel::Pointer DicomSelectorDialog::getSelectedImageDataList(void) {
-  DicomImageListModel::Pointer result( new DicomImageListModel );
+void DicomSelectorDialog::getSelectedImageDataList(CTImageTreeModel &other) const {
   QItemSelectionModel *selectionModel = treeView->selectionModel();
-  if (selectionModel == NULL) return result;
+  if (selectionModel == NULL) return;
   QModelIndexList selectedIndexes = selectionModel->selectedRows();
   for(QModelIndexList::const_iterator it = selectedIndexes.begin(); it != selectedIndexes.end(); it++) {
-    result->appendItem( dicomModel.getItem(*it) );
+    other.insertItemCopy( ctImageModel.getItem(*it) );
   }
-  return result;
 }

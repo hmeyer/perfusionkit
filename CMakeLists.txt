@@ -37,7 +37,7 @@ IF(NOT DESIRED_QT_VERSION MATCHES 4)
 ENDIF(NOT DESIRED_QT_VERSION MATCHES 4)
 
 
-SET( PerfusionkitSrc 
+SET( PerfusionkitSrc ctimagetreemodel.cpp ctimagetreeitem.cpp binaryimagetreeitem.cpp itkvtktreeitem.cpp treeitem.cpp 
   main.cpp 
   mainwindow.cpp 
   interactorstylevolumeview.cpp 
@@ -46,7 +46,7 @@ SET( PerfusionkitSrc
   volumeprojectionwidget.cpp 
   dicomselectordialog.cpp
 #  ${MYLIBS}/itkbasics.cpp
-  dicomimagelistmodel.cpp
+ 
 )
 
 INCLUDE_DIRECTORIES(
@@ -61,6 +61,7 @@ QT4_WRAP_UI( UIHeaders ${UIS} )
 
 SET ( QVTKMocHeaders
     mainwindow.h
+    ctimagetreemodel.h
     )
 
 QT4_WRAP_CPP( MOCSrcs ${QVTKMocHeaders} )

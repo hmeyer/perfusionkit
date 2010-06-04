@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1000</width>
-    <height>600</height>
+    <height>601</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,7 +15,7 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+    <item row="0" column="1">
      <widget class="QTabWidget" name="tabWidget">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -86,11 +86,11 @@
     </property>
     <addaction name="actionAbout"/>
    </widget>
-   <widget class="QMenu" name="menuView">
+   <widget class="QMenu" name="menuStereo">
     <property name="title">
      <string>Stereo</string>
     </property>
-    <widget class="QMenu" name="menuStereo">
+    <widget class="QMenu" name="menuStereoMode">
      <property name="title">
       <string>Stereo Mode</string>
      </property>
@@ -100,17 +100,25 @@
     </widget>
     <addaction name="actionStereoDistance"/>
     <addaction name="actionStereoEyeAngle"/>
-    <addaction name="menuStereo"/>
+    <addaction name="menuStereoMode"/>
    </widget>
-   <widget class="QMenu" name="menuView_2">
+   <widget class="QMenu" name="menuView">
     <property name="title">
      <string>View</string>
     </property>
     <addaction name="actionSeriesSelector"/>
+    <addaction name="actionSegmentationToolbar"/>
+   </widget>
+   <widget class="QMenu" name="menuSeries">
+    <property name="title">
+     <string>Series</string>
+    </property>
+    <addaction name="actionLoadAllSeries"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuView_2"/>
+   <addaction name="menuSeries"/>
    <addaction name="menuView"/>
+   <addaction name="menuStereo"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -128,26 +136,32 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QPushButton" name="viewButton">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
+       <property name="contextMenuPolicy">
+        <enum>Qt::CustomContextMenu</enum>
        </property>
-       <property name="text">
-        <string>View</string>
-       </property>
-       <property name="autoDefault">
-        <bool>false</bool>
+       <property name="sortingEnabled">
+        <bool>true</bool>
        </property>
       </widget>
      </item>
     </layout>
    </widget>
+  </widget>
+  <widget class="QToolBar" name="toolBarSegmentation">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionNewSegmentation"/>
+   <addaction name="actionPaint1"/>
+   <addaction name="actionPaint2"/>
+   <addaction name="actionPaint3"/>
+   <addaction name="actionErase"/>
   </widget>
   <action name="actionAbout">
    <property name="text">
@@ -235,6 +249,74 @@
     <string>SeriesSelector</string>
    </property>
   </action>
+  <action name="actionNewSegmentation">
+   <property name="text">
+    <string>new Segmentation</string>
+   </property>
+   <property name="toolTip">
+    <string>create a new Segmentation</string>
+   </property>
+  </action>
+  <action name="actionSegmentationToolbar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Segmentation Toolbar</string>
+   </property>
+  </action>
+  <action name="actionPaint1">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Paint 1</string>
+   </property>
+   <property name="toolTip">
+    <string>paint with small size pen</string>
+   </property>
+  </action>
+  <action name="actionPaint2">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Paint 2</string>
+   </property>
+   <property name="toolTip">
+    <string>paint with medium size pen</string>
+   </property>
+  </action>
+  <action name="actionPaint3">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Paint 3</string>
+   </property>
+   <property name="toolTip">
+    <string>paint with large size pen</string>
+   </property>
+  </action>
+  <action name="actionErase">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>erase</string>
+   </property>
+   <property name="toolTip">
+    <string>erase instead painting</string>
+   </property>
+  </action>
+  <action name="actionLoadAllSeries">
+   <property name="text">
+    <string>Load All</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -248,6 +330,10 @@
    <header>volumeprojectionwidget.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>treeView</tabstop>
+  <tabstop>tabWidget</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
@@ -279,6 +365,22 @@
     <hint type="destinationlabel">
      <x>-1</x>
      <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionSegmentationToolbar</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>toolBarSegmentation</receiver>
+   <slot>setVisible(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>499</x>
+     <y>37</y>
     </hint>
    </hints>
   </connection>

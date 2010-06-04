@@ -1,11 +1,21 @@
 #include "mainwindow.h"
 #include <QtGui>
 #include "dicomselectordialog.h"
+#include <boost/assign.hpp>
 
 
-MainWindow::MainWindow() {
+const CTImageTreeItem::DicomTagListType MainWindow::CTModelHeaderFields = boost::assign::list_of
+  (CTImageTreeItem::DicomTagType("Patient Name", "0010|0010"))
+  (CTImageTreeItem::DicomTagType("#Slices",CTImageTreeItem::getNumberOfFramesTag()))
+  (CTImageTreeItem::DicomTagType("AcquisitionDatetime","0008|002a"));
+
+MainWindow::MainWindow():imageModel(CTModelHeaderFields) {
   setupUi( this );
   treeView->setModel( &imageModel );
+  connect( treeView->selectionModel(), SIGNAL( selectionChanged(const QItemSelection &, const QItemSelection &) ),
+		    this, SLOT( treeViewSelectionChanged(const QItemSelection &, const QItemSelection &) ) );
+  connect( treeView, SIGNAL( customContextMenuRequested(const QPoint &) ),
+		    this, SLOT( treeViewContextMenu(const QPoint &) ) );
 }
 
 MainWindow::~MainWindow() {
@@ -58,8 +68,7 @@ void MainWindow::on_actionOpenDirectory_triggered() {
 
 void MainWindow::loadDicomData(DicomSelectorDialogPtr dicomSelector) {
   dicomSelector->exec();
-  DicomImageListModel::Pointer loadedImages = dicomSelector->getSelectedImageDataList();
-  imageModel.appendDicomImageList( *loadedImages );
+  dicomSelector->getSelectedImageDataList(imageModel);
 }
 
 
@@ -99,14 +108,36 @@ void MainWindow::on_actionStereoOff_triggered() {
   actionStereoOff->setChecked(true);
   volumeView->setStereoMode( VolumeProjectionWidget::Off );
 }
-void MainWindow::on_viewButton_clicked() {
-  QItemSelectionModel *selectionModel = treeView->selectionModel();
-  if (selectionModel == NULL) return;
-  QModelIndexList selectedRows = selectionModel->selectedRows();
-  if (selectedRows.size() != 1) return;
-  on_treeView_doubleClicked( selectedRows[0] );
+void MainWindow::on_actionLoadAllSeries_triggered() {
+  imageModel.loadAllImages();
 }
-void MainWindow::on_treeView_doubleClicked(const QModelIndex &index) {
-  vtkImageData const *image = imageModel.getItem( index ).getVTKImage();
-  setImage( image );
+void MainWindow::treeViewSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected) {
+  if (selected.size()) {
+    vtkImageData const *image = dynamic_cast<CTImageTreeItem*>(&imageModel.getItem( selected.first().topLeft() ))->getVTKImage();
+    setImage( image );
+  } else setImage( NULL );
+}
+void MainWindow::treeViewContextMenu(const QPoint &pos) {
+  QModelIndex idx = treeView->indexAt(pos);
+  if (idx.isValid() && !idx.parent().isValid()) {
+    QMenu cm;
+    
+    QSignalMapper delMapper;
+    QAction* delAction = cm.addAction("&Delete");
+    delMapper.setMapping(delAction, idx.row());
+    connect( delAction, SIGNAL( triggered() ),
+      &delMapper, SLOT( map()  ) );
+    connect( &delMapper, SIGNAL( mapped(int) ),
+      &imageModel, SLOT( removeRow(int)  ) );
+
+    QSignalMapper addSegMapper;
+    QAction* addSegAction = cm.addAction("&Add Segment");
+    addSegMapper.setMapping(addSegAction, idx.row());
+    connect( addSegAction, SIGNAL( triggered() ),
+      &addSegMapper, SLOT( map()  ) );
+    connect( &addSegMapper, SIGNAL( mapped(int) ),
+      &imageModel, SLOT( addSegment(int) ) );
+
+    cm.exec(treeView->mapToGlobal(pos));
+  }
 }
