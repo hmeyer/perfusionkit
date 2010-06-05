@@ -1,10 +1,14 @@
 #include "ctimagetreeitem.h"
+#include "binaryimagetreeitem.h"
 #include <itkMetaDataObject.h>
 #include <QApplication>
+#include <QInputDialog>
 #include <QPalette>
 #include <boost/assign.hpp>
+#include <itkCastImageFilter.h>
 
-CTImageTreeItem::CTImageTreeItem(const TreeItem * parent, const DicomTagListType &headerFields, const itk::MetaDataDictionary &_dict )
+
+CTImageTreeItem::CTImageTreeItem(const TreeItem * parent, DicomTagListPointer headerFields, const itk::MetaDataDictionary &_dict )
   :BaseClass(parent),HeaderFields(headerFields),dict(_dict) {
     getUIDFromDict(dict, itemUID);
 }
@@ -23,10 +27,10 @@ bool CTImageTreeItem::setData(int column, const QVariant& value) {
 
 QVariant CTImageTreeItem::data(int column, int role) const {
   if (role == Qt::DisplayRole) {
-    if (column < 0 || column >= int(HeaderFields.size())) return QVariant::Invalid;
-    if (HeaderFields[ column ].second == getNumberOfFramesTag()) return getNumberOfSlices();
+    if (column < 0 || column >= int(HeaderFields->size())) return QVariant::Invalid;
+    if ((*HeaderFields)[ column ].second == getNumberOfFramesTag()) return getNumberOfSlices();
     std::string val;
-    itk::ExposeMetaData( dict, HeaderFields[ column ].second, val );
+    itk::ExposeMetaData( dict, (*HeaderFields)[ column ].second, val );
     return QString::fromStdString( val );
   } else if (role == Qt::ForegroundRole) {
     if (itkImage.IsNull()) return QApplication::palette().midlight();
@@ -37,7 +41,7 @@ QVariant CTImageTreeItem::data(int column, int role) const {
 }
 
 int CTImageTreeItem::columnCount() const {
-  return HeaderFields.size();
+  return HeaderFields->size();
 }
 
 int CTImageTreeItem::getNumberOfSlices() const {
@@ -139,5 +143,23 @@ const std::string &CTImageTreeItem::getSOPInstanceUIDTag() {
 const std::string &CTImageTreeItem::getSeriesInstanceUIDTag() {
   const static std::string SeriesInstanceUIDTag("0020|000e");
   return SeriesInstanceUIDTag;
+}
+
+bool CTImageTreeItem::generateSegment(void) {
+  typedef itk::CastImageFilter< CTImageType, BinaryImageType> CastFilterType;
+  
+  bool ok;
+  QString segName = QInputDialog::getText(NULL, QObject::tr("Segment Name"),
+				      QObject::tr("Name:"), QLineEdit::Normal,
+				      QObject::tr("Unnamed Segment"), &ok);
+  BinaryImageType::Pointer seg;
+  if (ok && !segName.isEmpty()) {
+    CastFilterType::Pointer caster = CastFilterType::New();
+    caster->SetInput( getITKImage() );
+    caster->Update();
+    seg = caster->GetOutput();
+  }
+  insertChild(new BinaryImageTreeItem(this, seg, segName));
+  return true;
 }
 

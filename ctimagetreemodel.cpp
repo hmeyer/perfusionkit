@@ -1,13 +1,15 @@
 #include "ctimagetreemodel.h"
 #include <QProgressDialog>
+#include <boost/make_shared.hpp>
 
-CTImageTreeModel::CTImageTreeModel(const CTImageTreeItem::DicomTagListType &header, QObject *parent)
-  : QAbstractItemModel(parent), CTImageTreeItem( NULL, header ) {
+CTImageTreeModel::CTImageTreeModel(const DicomTagList &header, QObject *parent)
+  : QAbstractItemModel(parent), TreeItem( NULL) {
+    HeaderFields = boost::make_shared<DicomTagList>(header);
 }
 
 CTImageTreeModel::~CTImageTreeModel() {}
 
-QVariant CTImageTreeModel::data(int role) const {
+QVariant CTImageTreeModel::data(int column, int role) const {
   return QVariant::Invalid;
 }
 
@@ -15,10 +17,14 @@ QVariant CTImageTreeModel::data(const QModelIndex &index, int role) const {
   return getItem(index).data( index.column(), role );
 }
 
+bool CTImageTreeModel::hasChildren ( const QModelIndex & parent) const {
+  return (getItem(parent).childCount() > 0);
+}
+
 QVariant CTImageTreeModel::headerData(int section, Qt::Orientation orientation, int role) const {
   if (role == Qt::DisplayRole) {
-    if ( section < 0 || section >= int(HeaderFields.size()) ) return QVariant::Invalid;
-    return QString::fromStdString(HeaderFields[section].first);
+    if ( section < 0 || section >= int(HeaderFields->size()) ) return QVariant::Invalid;
+    return QString::fromStdString((*HeaderFields)[section].first);
   } else {
     return QVariant::Invalid;
   }  
@@ -83,7 +89,7 @@ const TreeItem &CTImageTreeModel::getItem(const QModelIndex &index) const {
 
 void CTImageTreeModel::appendFilename( const itk::MetaDataDictionary &dict, const std::string &fname) {
   std::string iUID;
-  getUIDFromDict( dict, iUID );
+  CTImageTreeItem::getUIDFromDict( dict, iUID );
   if (iUID.empty()) return;
   bool found = false;
   CTImageTreeItem *c;
@@ -111,6 +117,28 @@ void CTImageTreeModel::insertItemCopy(const TreeItem& item) {
   endInsertRows();
 }
 
+bool CTImageTreeModel::removeCTImage(int srow) {
+  unsigned int row = static_cast<unsigned int>(srow);
+  if (row < childCount()) {
+    beginRemoveRows(QModelIndex(), row, row);
+    bool result = removeChildren( row, 1 );
+    endRemoveRows();
+    return result;
+  }
+  return false;
+}
+
+bool CTImageTreeModel::createSegment(int srow) {
+  unsigned int row = static_cast<unsigned int>(srow);
+  if (row < childCount()) {
+    beginInsertRows(createIndex(row, 0, this), row, row);
+    bool result = dynamic_cast<CTImageTreeItem&>(child(row)).generateSegment();
+    endInsertRows();
+    return result;
+  }
+  return false;
+}
+
 
 void CTImageTreeModel::loadAllImages(void) {
   const int progressScale = 10000;
@@ -119,7 +147,7 @@ void CTImageTreeModel::loadAllImages(void) {
   progressDialog.setWindowModality(Qt::WindowModal);
   const int scalePerVolume = progressScale/childCount();
   for(unsigned int i=0; i < childCount(); i++) {
-    dynamic_cast<CTImageTreeItem*>(&child(i))->getVTKImage(&progressDialog, scalePerVolume, scalePerVolume*i );
+    dynamic_cast<CTImageTreeItem&>(child(i)).getVTKImage(&progressDialog, scalePerVolume, scalePerVolume*i );
     if (progressDialog.wasCanceled()) break;
   }
 }

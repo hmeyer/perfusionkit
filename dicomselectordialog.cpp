@@ -11,7 +11,7 @@
 #include "imagedefinitions.h"
 #include "ctimagetreeitem.h"
 
-const CTImageTreeItem::DicomTagListType DicomSelectorDialog::HeaderFields = boost::assign::list_of
+const CTImageTreeItem::DicomTagList DicomSelectorDialog::HeaderFields = boost::assign::list_of
   (CTImageTreeItem::DicomTagType("Patient Name", "0010|0010"))
   (CTImageTreeItem::DicomTagType("#Slices",CTImageTreeItem::getNumberOfFramesTag()))
   (CTImageTreeItem::DicomTagType("AcquisitionDatetime","0008|002a"))

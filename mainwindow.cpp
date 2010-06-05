@@ -4,7 +4,7 @@
 #include <boost/assign.hpp>
 
 
-const CTImageTreeItem::DicomTagListType MainWindow::CTModelHeaderFields = boost::assign::list_of
+const CTImageTreeItem::DicomTagList MainWindow::CTModelHeaderFields = boost::assign::list_of
   (CTImageTreeItem::DicomTagType("Patient Name", "0010|0010"))
   (CTImageTreeItem::DicomTagType("#Slices",CTImageTreeItem::getNumberOfFramesTag()))
   (CTImageTreeItem::DicomTagType("AcquisitionDatetime","0008|002a"));
@@ -113,8 +113,11 @@ void MainWindow::on_actionLoadAllSeries_triggered() {
 }
 void MainWindow::treeViewSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected) {
   if (selected.size()) {
-    vtkImageData const *image = dynamic_cast<CTImageTreeItem*>(&imageModel.getItem( selected.first().topLeft() ))->getVTKImage();
-    setImage( image );
+    QModelIndex idx = selected.first().topLeft();
+    if (idx.isValid()) {
+      vtkImageData const *image = dynamic_cast<VTKTreeItem&>(imageModel.getItem( idx )).getVTKImage();
+      setImage( image );
+    }
   } else setImage( NULL );
 }
 void MainWindow::treeViewContextMenu(const QPoint &pos) {
@@ -128,7 +131,7 @@ void MainWindow::treeViewContextMenu(const QPoint &pos) {
     connect( delAction, SIGNAL( triggered() ),
       &delMapper, SLOT( map()  ) );
     connect( &delMapper, SIGNAL( mapped(int) ),
-      &imageModel, SLOT( removeRow(int)  ) );
+      &imageModel, SLOT( removeCTImage(int)  ) );
 
     QSignalMapper addSegMapper;
     QAction* addSegAction = cm.addAction("&Add Segment");
@@ -136,7 +139,7 @@ void MainWindow::treeViewContextMenu(const QPoint &pos) {
     connect( addSegAction, SIGNAL( triggered() ),
       &addSegMapper, SLOT( map()  ) );
     connect( &addSegMapper, SIGNAL( mapped(int) ),
-      &imageModel, SLOT( addSegment(int) ) );
+      &imageModel, SLOT( createSegment(int) ) );
 
     cm.exec(treeView->mapToGlobal(pos));
   }

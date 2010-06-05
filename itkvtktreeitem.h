@@ -1,7 +1,7 @@
 #ifndef ITKVTKTREEITEM_H
 #define ITKVTKTREEITEM_H
 
-#include <treeitem.h>
+#include <vtktreeitem.h>
 #include <itkImageToVTKImageFilter.h>
 #include <itkCommand.h>
 #include <itkImageSeriesReader.h>
@@ -14,12 +14,12 @@
 #include <boost/bind.hpp>
 
 template< class TImage >
-class ITKVTKTreeItem : public TreeItem {
+class ITKVTKTreeItem : public VTKTreeItem {
   public:
     typedef TImage ImageType;
-    ITKVTKTreeItem(const TreeItem * parent=NULL): TreeItem(parent) {}
+    ITKVTKTreeItem(const TreeItem * parent=NULL, const typename TImage::Pointer itkI = typename TImage::Pointer()): VTKTreeItem(parent), itkImage(itkI) {}
     virtual typename TImage::Pointer getITKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0);
-    vtkImageData *getVTKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) {
+    virtual vtkImageData *getVTKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) {
       if (connector.IsNull()) {
 	connector = ConnectorType::New();
 	connector->SetInput( getITKImage(progress, progressScale, progressBase) );

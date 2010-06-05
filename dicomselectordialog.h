@@ -21,7 +21,7 @@ class DicomSelectorDialog : public QDialog, private Ui_DicomSelectDialog
   private:
   CTImageTreeModel ctImageModel;
   QStringList fileNames;
-  static const CTImageTreeItem::DicomTagListType HeaderFields;
+  static const CTImageTreeItem::DicomTagList HeaderFields;
 };
 
 

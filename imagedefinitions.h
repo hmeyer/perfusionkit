@@ -5,7 +5,8 @@
 
 const unsigned int ImageDimension = 3;
 
-typedef bool BinaryPixelType;
+//typedef bool BinaryPixelType;
+typedef unsigned char BinaryPixelType;
 typedef itk::Image< BinaryPixelType, ImageDimension> BinaryImageType;
 
 typedef signed short CTPixelType;

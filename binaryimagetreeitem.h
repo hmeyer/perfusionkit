@@ -11,7 +11,7 @@
 class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
   public:
     typedef ITKVTKTreeItem< BinaryImageType > BaseClass;
-    BinaryImageTreeItem(const TreeItem * parent);
+    BinaryImageTreeItem(const TreeItem * parent, BinaryImageType::Pointer itkImage, const QString &name);
     virtual TreeItem *clone(const TreeItem *clonesParent=NULL) const;
     virtual int columnCount() const;
     virtual QVariant data(int c, int role = Qt::DisplayRole) const;

@@ -47,7 +47,7 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
   typedef std::auto_ptr<DicomSelectorDialog> DicomSelectorDialogPtr;
   void loadDicomData(DicomSelectorDialogPtr dicomSelector);
   CTImageTreeModel imageModel;
-  static const CTImageTreeItem::DicomTagListType CTModelHeaderFields;
+  static const CTImageTreeItem::DicomTagList CTModelHeaderFields;
 };
 
 
