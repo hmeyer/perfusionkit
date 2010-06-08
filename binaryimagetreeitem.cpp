@@ -13,11 +13,10 @@ TreeItem *BinaryImageTreeItem::clone(const TreeItem *clonesParent) const {
 }
 
 int BinaryImageTreeItem::columnCount() const {
-  std::cerr << "wants columnCount: gets:1 - btw - name:" << name.toStdString() << std::endl;
   return 1;
 }
 QVariant BinaryImageTreeItem::data(int c, int role) const {
-  if (c==0 && Qt::DisplayRole) { std::cerr << "wants name: gets:" << name.toStdString() << std::endl; return name; }
+  if (c==0 && role==Qt::DisplayRole) return name;
   else return QVariant::Invalid;
 }
 bool BinaryImageTreeItem::setData(int c, const QVariant &value) {

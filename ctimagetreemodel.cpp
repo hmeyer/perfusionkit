@@ -30,6 +30,13 @@ QVariant CTImageTreeModel::headerData(int section, Qt::Orientation orientation, 
   }  
 }
 
+void CTImageTreeModel::sort(int column, Qt::SortOrder order) {
+  sortChildren(column, order == Qt::AscendingOrder);
+  dataChanged(createIndex(0, 0, this), 
+	      createIndex(childCount()-1, static_cast<const TreeItem*>(this)->columnCount()-1, this));
+}
+
+
 QModelIndex CTImageTreeModel::index(int row, int column, const QModelIndex &parent) const {
   const TreeItem &childItem = getItem(parent).child(row);
   try {
@@ -134,6 +141,7 @@ bool CTImageTreeModel::createSegment(int srow) {
     beginInsertRows(createIndex(row, 0, this), row, row);
     bool result = dynamic_cast<CTImageTreeItem&>(child(row)).generateSegment();
     endInsertRows();
+    dataChanged(createIndex(row, 0, this), createIndex(row, 0, this));
     return result;
   }
   return false;

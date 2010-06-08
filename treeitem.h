@@ -21,6 +21,7 @@ class TreeItem : boost::noncopyable {
     virtual TreeItem *clone(const TreeItem *clonesParent=NULL) const = 0;
     virtual int columnCount() const = 0;
     virtual QVariant data(int column, int role = Qt::DisplayRole) const = 0;
+    void sortChildren( int column, bool ascending=true );
     bool insertChild(TreeItem *child, unsigned int position);
     bool insertChild(TreeItem *child);
     const TreeItem *parent() const;

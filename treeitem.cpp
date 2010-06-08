@@ -1,4 +1,6 @@
 #include "treeitem.h"
+#include "boost/bind.hpp"
+#include <iostream>
 
 TreeItem::TreeItem(const TreeItem * parent):parentItem(parent) {
 }
@@ -27,6 +29,32 @@ const TreeItem &TreeItem::child(unsigned int number) const {
 
 unsigned int TreeItem::childCount() const {
   return childItems.size();
+}
+
+class TreeItemCompareFunctor {
+  int col;
+  bool descending;
+  public:
+    typedef TreeItem first_argument_type;
+    typedef TreeItem second_argument_type;
+    typedef bool result_type;
+  TreeItemCompareFunctor(int column, bool ascending=true):col(column),descending(!ascending) {};
+  bool operator()(const TreeItem &x, const TreeItem &y) const {
+    const QVariant dx = x.data(col);
+    const QVariant dy = y.data(col);
+    bool okx, oky;
+    int ix = dx.toInt(&okx);
+    int iy = dy.toInt(&oky);
+    if (okx && oky) {
+      return descending ^ (ix < iy);
+    }
+    return descending ^ (dx.toString() < dy.toString());
+  }
+};
+
+void TreeItem::sortChildren( int column, bool ascending ) {
+  childItems.sort(
+    TreeItemCompareFunctor( column, ascending ) );
 }
 
 bool TreeItem::insertChild(TreeItem *child) {

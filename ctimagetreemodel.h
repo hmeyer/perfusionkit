@@ -21,6 +21,7 @@ class CTImageTreeModel : public QAbstractItemModel, private TreeItem {
     
     QVariant data(const QModelIndex &index, int role) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
+    void sort ( int column, Qt::SortOrder order = Qt::AscendingOrder );
 
 
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
