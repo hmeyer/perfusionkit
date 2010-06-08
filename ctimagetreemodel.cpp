@@ -68,9 +68,7 @@ int CTImageTreeModel::columnCount(const QModelIndex &parent) const {
 }
 
 Qt::ItemFlags CTImageTreeModel::flags(const QModelIndex &index) const {
-  if (!index.isValid())
-    return Qt::NoItemFlags;
-  return Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable;  
+  return getItem(index).flags(index.column());
 }
 
 bool CTImageTreeModel::setData(const QModelIndex &index, const QVariant &value, int role) {
@@ -138,10 +136,9 @@ bool CTImageTreeModel::removeCTImage(int srow) {
 bool CTImageTreeModel::createSegment(int srow) {
   unsigned int row = static_cast<unsigned int>(srow);
   if (row < childCount()) {
-    beginInsertRows(createIndex(row, 0, this), row, row);
+    beginInsertRows(createIndex(0, 0, &child(row)), row, row);
     bool result = dynamic_cast<CTImageTreeItem&>(child(row)).generateSegment();
     endInsertRows();
-    dataChanged(createIndex(row, 0, this), createIndex(row, 0, this));
     return result;
   }
   return false;

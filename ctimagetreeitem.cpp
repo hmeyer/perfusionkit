@@ -40,6 +40,11 @@ QVariant CTImageTreeItem::data(int column, int role) const {
   }
 }
 
+Qt::ItemFlags CTImageTreeItem::flags(int column) const {
+    if (column < 0 || column >= int(HeaderFields->size())) return Qt::NoItemFlags;
+    return Qt::ItemIsEnabled | Qt::ItemIsSelectable;  
+}
+
 int CTImageTreeItem::columnCount() const {
   return HeaderFields->size();
 }

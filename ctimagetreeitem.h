@@ -19,6 +19,7 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     virtual TreeItem *clone(const TreeItem *clonesParent=NULL) const;
     virtual bool setData(int column, const QVariant& value);
     virtual QVariant data(int column, int role = Qt::DisplayRole) const;
+    virtual Qt::ItemFlags flags(int column) const;
     virtual int columnCount() const;
     const std::string &getUID() { return itemUID; }
     void appendFileName( const std::string &fn ) { fnList.insert( fn ); }

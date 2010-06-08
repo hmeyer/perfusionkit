@@ -93,3 +93,7 @@ int TreeItem::childNumber() const {
 bool TreeItem::setData(int column, const QVariant &value) {
   return false;
 }
+
+Qt::ItemFlags TreeItem::flags(int column) const {
+  return Qt::NoItemFlags;
+}
