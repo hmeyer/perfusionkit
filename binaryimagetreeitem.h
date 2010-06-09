@@ -11,10 +11,10 @@
 class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
   public:
     typedef ITKVTKTreeItem< BinaryImageType > BaseClass;
-    BinaryImageTreeItem(const TreeItem * parent, BinaryImageType::Pointer itkImage, const QString &name);
-    virtual TreeItem *clone(const TreeItem *clonesParent=NULL) const;
+    BinaryImageTreeItem(TreeItem * parent, BinaryImageType::Pointer itkImage, const QString &name);
+    virtual TreeItem *clone(TreeItem *clonesParent=NULL) const;
     virtual int columnCount() const;
-    virtual QVariant data(int c, int role = Qt::DisplayRole) const;
+    virtual QVariant do_getData_DisplayRole(int c) const;
     virtual Qt::ItemFlags flags(int column) const;
     virtual bool setData(int c, const QVariant &value);
     const QString &getName() const { return name; }

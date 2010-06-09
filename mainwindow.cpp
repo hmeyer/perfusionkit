@@ -111,6 +111,37 @@ void MainWindow::on_actionStereoOff_triggered() {
 void MainWindow::on_actionLoadAllSeries_triggered() {
   imageModel.loadAllImages();
 }
+
+void MainWindow::on_treeView_doubleClicked(const QModelIndex &index) {
+  if (index.isValid()) {
+    TreeItem &item = imageModel.getItem( index );
+    VTKTreeItem *CTItem = NULL;
+    VTKTreeItem *SegItem = NULL;
+    try {
+      if (item.depth() == 1) {
+	CTItem = dynamic_cast<VTKTreeItem*>(&item);
+      } else if (item.depth() == 2) {
+	SegItem = dynamic_cast<VTKTreeItem*>(&item);
+	CTItem = dynamic_cast<VTKTreeItem*>(item.parent());
+      }
+      if (CTItem != selectedCTImage) {
+//	selectedCTImage
+//	imageModel.clearAllActive();
+	
+	if (CTItem) {
+	  setImage( CTItem->getVTKImage() );
+//	  imageModel.setActive(CTItem);
+	} else setImage( NULL );
+      }
+      
+    } catch(...) {
+      selectedCTImage = NULL;
+      selectedSegments.clear();
+      setImage( NULL );
+    }
+  }
+}
+
 void MainWindow::treeViewSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected) {
   if (selected.size()) {
     QModelIndex idx = selected.first().topLeft();
@@ -120,27 +151,32 @@ void MainWindow::treeViewSelectionChanged(const QItemSelection & selected, const
     }
   } else setImage( NULL );
 }
+
+
 void MainWindow::treeViewContextMenu(const QPoint &pos) {
   QModelIndex idx = treeView->indexAt(pos);
-  if (idx.isValid() && !idx.parent().isValid()) {
-    QMenu cm;
-    
-    QSignalMapper delMapper;
-    QAction* delAction = cm.addAction("&Delete");
-    delMapper.setMapping(delAction, idx.row());
-    connect( delAction, SIGNAL( triggered() ),
-      &delMapper, SLOT( map()  ) );
-    connect( &delMapper, SIGNAL( mapped(int) ),
-      &imageModel, SLOT( removeCTImage(int)  ) );
+  if (idx.isValid()) {
+    TreeItem &item = imageModel.getItem(idx);
+    if ( item.depth() == 1 ) {
+      QMenu cm;
+      
+      QSignalMapper delMapper;
+      QAction* delAction = cm.addAction("&Delete");
+      delMapper.setMapping(delAction, idx.row());
+      connect( delAction, SIGNAL( triggered() ),
+	&delMapper, SLOT( map()  ) );
+      connect( &delMapper, SIGNAL( mapped(int) ),
+	&imageModel, SLOT( removeCTImage(int)  ) );
 
-    QSignalMapper addSegMapper;
-    QAction* addSegAction = cm.addAction("&Add Segment");
-    addSegMapper.setMapping(addSegAction, idx.row());
-    connect( addSegAction, SIGNAL( triggered() ),
-      &addSegMapper, SLOT( map()  ) );
-    connect( &addSegMapper, SIGNAL( mapped(int) ),
-      &imageModel, SLOT( createSegment(int) ) );
+      QSignalMapper addSegMapper;
+      QAction* addSegAction = cm.addAction("&Add Segment");
+      addSegMapper.setMapping(addSegAction, idx.row());
+      connect( addSegAction, SIGNAL( triggered() ),
+	&addSegMapper, SLOT( map()  ) );
+      connect( &addSegMapper, SIGNAL( mapped(int) ),
+	&imageModel, SLOT( createSegment(int) ) );
 
-    cm.exec(treeView->mapToGlobal(pos));
+      cm.exec(treeView->mapToGlobal(pos));
+    }
   }
 }

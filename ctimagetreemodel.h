@@ -6,8 +6,7 @@
 #include <string>
 #include <vector>
 
-
-class CTImageTreeModel : public QAbstractItemModel, private TreeItem {
+class CTImageTreeModel : public QAbstractItemModel {
   Q_OBJECT
   public:
     typedef CTImageTreeItem::DicomTagListPointer DicomTagListPointer;
@@ -15,10 +14,6 @@ class CTImageTreeModel : public QAbstractItemModel, private TreeItem {
     CTImageTreeModel(const DicomTagList &header, QObject *parent = 0);
     ~CTImageTreeModel();
 
-    virtual QVariant data(int column, int role) const;
-    virtual TreeItem *clone(const TreeItem*) const {throw TreeTrouble();return NULL;}
-    virtual int columnCount() const {return HeaderFields->size();}
-    
     QVariant data(const QModelIndex &index, int role) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
     void sort ( int column, Qt::SortOrder order = Qt::AscendingOrder );
@@ -39,14 +34,24 @@ class CTImageTreeModel : public QAbstractItemModel, private TreeItem {
     void loadAllImages(void);
     const TreeItem &getItem(const QModelIndex &index) const;
     TreeItem &getItem(const QModelIndex &index);
+/*    
+    bool isActive(const TreeItem *item) const;
+    void setActive(const TreeItem *item, bool active = true);
+    void clearAllActive(void);
+*/    
+    friend class TreeItem;
+    friend class CTImageTreeItem;
     
   public slots:
     bool removeCTImage(int srow);
     bool createSegment(int srow);
 
   private:
+    void emitLayoutAboutToBeChanged() { emit layoutAboutToBeChanged(); }
+    void emitLayoutChanged() { emit layoutChanged(); }
     QModelIndex createIndex(int r, int c, const TreeItem*p) const;
     DicomTagListPointer HeaderFields;
+    TreeItem rootItem;
 };
 
 #endif // CTIMAGETREEMODEL_H

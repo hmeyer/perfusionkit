@@ -39,7 +39,7 @@ void DicomSelectorDialog::exec() {
   {
     QProgressDialog indexProgress(tr("Indexing Files..."), tr("Abort"), 0, fileNames.size(), this);
     indexProgress.setMinimumDuration(1000);
-    indexProgress.setWindowModality(Qt::WindowModal);
+    indexProgress.setWindowModality(Qt::ApplicationModal);
     while( index < fileNames.size() ) {
       indexProgress.setValue(index);
       if (indexProgress.wasCanceled()) break;
@@ -75,7 +75,7 @@ void DicomSelectorDialog::exec() {
   if (!canceled ) {
     QProgressDialog metaReadProgress(tr("Reading MetaData..."), tr("Abort"), 0, fileNames.size(), this);
     metaReadProgress.setMinimumDuration(1000);
-    metaReadProgress.setWindowModality(Qt::WindowModal);
+    metaReadProgress.setWindowModality(Qt::ApplicationModal);
     for(int i = 0; i < fileNames.size(); i++) {
       metaReadProgress.setValue(i);
       if (metaReadProgress.wasCanceled()) break;

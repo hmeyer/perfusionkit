@@ -40,6 +40,7 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
       void on_actionStereoInterlaced_triggered();
       void on_actionStereoOff_triggered();
       void on_actionLoadAllSeries_triggered();
+      void on_treeView_doubleClicked(const QModelIndex &index);
       void treeViewSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
       void treeViewContextMenu(const QPoint &pos);
 
@@ -47,6 +48,9 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
   typedef std::auto_ptr<DicomSelectorDialog> DicomSelectorDialogPtr;
   void loadDicomData(DicomSelectorDialogPtr dicomSelector);
   CTImageTreeModel imageModel;
+  VTKTreeItem *selectedCTImage;
+  typedef std::set< VTKTreeItem* > VTKTreeItemContainer;
+  VTKTreeItemContainer selectedSegments;
   static const CTImageTreeItem::DicomTagList CTModelHeaderFields;
 };
 

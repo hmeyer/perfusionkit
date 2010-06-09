@@ -1,13 +1,12 @@
 #include "binaryimagetreeitem.h"
 
 
-BinaryImageTreeItem::BinaryImageTreeItem(const TreeItem * parent, BinaryImageType::Pointer itkImage, const QString &name)
+BinaryImageTreeItem::BinaryImageTreeItem(TreeItem * parent, BinaryImageType::Pointer itkImage, const QString &name)
   :BaseClass(parent, itkImage), name(name) {
 }
 
-TreeItem *BinaryImageTreeItem::clone(const TreeItem *clonesParent) const {
-  if (clonesParent==NULL) clonesParent = parent();
-  BinaryImageTreeItem *c = new BinaryImageTreeItem( clonesParent, itkImage, name );
+TreeItem *BinaryImageTreeItem::clone(TreeItem *clonesParent) const {
+  BinaryImageTreeItem *c = new BinaryImageTreeItem(clonesParent, itkImage, name );
   cloneChildren(c);
   return c;
 }
@@ -15,8 +14,8 @@ TreeItem *BinaryImageTreeItem::clone(const TreeItem *clonesParent) const {
 int BinaryImageTreeItem::columnCount() const {
   return 1;
 }
-QVariant BinaryImageTreeItem::data(int c, int role) const {
-  if (c==0 && role==Qt::DisplayRole) return name;
+QVariant BinaryImageTreeItem::do_getData_DisplayRole(int c) const {
+  if (c==0) return name;
   else return QVariant::Invalid;
 }
 

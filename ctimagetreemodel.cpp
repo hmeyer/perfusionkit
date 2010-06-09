@@ -1,21 +1,14 @@
 #include "ctimagetreemodel.h"
 #include <QProgressDialog>
+#include <QApplication>
 #include <boost/make_shared.hpp>
 
 CTImageTreeModel::CTImageTreeModel(const DicomTagList &header, QObject *parent)
-  : QAbstractItemModel(parent), TreeItem( NULL) {
+  : QAbstractItemModel(parent), rootItem( this ) {
     HeaderFields = boost::make_shared<DicomTagList>(header);
 }
 
 CTImageTreeModel::~CTImageTreeModel() {}
-
-QVariant CTImageTreeModel::data(int column, int role) const {
-  return QVariant::Invalid;
-}
-
-QVariant CTImageTreeModel::data(const QModelIndex &index, int role) const {
-  return getItem(index).data( index.column(), role );
-}
 
 bool CTImageTreeModel::hasChildren ( const QModelIndex & parent) const {
   return (getItem(parent).childCount() > 0);
@@ -31,9 +24,7 @@ QVariant CTImageTreeModel::headerData(int section, Qt::Orientation orientation, 
 }
 
 void CTImageTreeModel::sort(int column, Qt::SortOrder order) {
-  sortChildren(column, order == Qt::AscendingOrder);
-  dataChanged(createIndex(0, 0, this), 
-	      createIndex(childCount()-1, static_cast<const TreeItem*>(this)->columnCount()-1, this));
+  rootItem.sortChildren(column, order == Qt::AscendingOrder);
 }
 
 
@@ -53,7 +44,7 @@ QModelIndex CTImageTreeModel::parent(const QModelIndex &index) const {
   const TreeItem &childItem = getItem(index);
   const TreeItem *parentItem = childItem.parent();
 
-  if (parentItem == this || parentItem == NULL)
+  if (parentItem == &rootItem || parentItem == NULL)
       return QModelIndex();
 
   return createIndex(parentItem->childNumber(), 0, parentItem);
@@ -64,11 +55,17 @@ int CTImageTreeModel::rowCount(const QModelIndex &parent) const {
 }
 
 int CTImageTreeModel::columnCount(const QModelIndex &parent) const {
-  return getItem(parent).columnCount();
+//  const TreeItem *parentItem = &getItem(parent);
+//  if (parentItem != &rootItem) return parentItem->columnCount();
+  return HeaderFields->size();
 }
 
 Qt::ItemFlags CTImageTreeModel::flags(const QModelIndex &index) const {
   return getItem(index).flags(index.column());
+}
+
+QVariant CTImageTreeModel::data(const QModelIndex &index, int role) const {
+  return getItem(index).data(index.column(), role);
 }
 
 bool CTImageTreeModel::setData(const QModelIndex &index, const QVariant &value, int role) {
@@ -81,7 +78,7 @@ TreeItem &CTImageTreeModel::getItem(const QModelIndex &index) {
     TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
     if (item) return *item;
   }
-  return *this;
+  return rootItem;
 }
 
 const TreeItem &CTImageTreeModel::getItem(const QModelIndex &index) const {
@@ -89,8 +86,29 @@ const TreeItem &CTImageTreeModel::getItem(const QModelIndex &index) const {
     TreeItem *item = static_cast<TreeItem*>(index.internalPointer());
     if (item) return *item;
   }
-  return *this;
+  return rootItem;
 }
+/*
+bool CTImageTreeModel::isActive(const TreeItem *item) const {
+  ItemPointerContainer::const_iterator it = activeItems.find( item );
+  if (it != activeItems.end()) return true;
+  return false;
+}
+
+void CTImageTreeModel::setActive(const TreeItem *item, bool active) {
+  if (active) activeItems.insert(item);
+  else activeItems.erase(item);
+  dataChanged(createIndex(0,0,item),createIndex(0,item->columnCount()-1,item));
+}
+
+void CTImageTreeModel::clearAllActive(void) {
+  ItemPointerContainer t;
+  std::swap(t, activeItems);
+  for(ItemPointerContainer::const_iterator it = t.begin(); it!=t.end(); ++it) {
+    dataChanged(createIndex(0, 0, *it), createIndex(0, (*it)->columnCount()-1, *it) );
+  }
+}
+*/
 
 void CTImageTreeModel::appendFilename( const itk::MetaDataDictionary &dict, const std::string &fname) {
   std::string iUID;
@@ -98,36 +116,29 @@ void CTImageTreeModel::appendFilename( const itk::MetaDataDictionary &dict, cons
   if (iUID.empty()) return;
   bool found = false;
   CTImageTreeItem *c;
-  int cc = childCount();
+  int cc = rootItem.childCount();
   for(int i=0; i < cc; i++) {
-    c = dynamic_cast<CTImageTreeItem*>(&child(i));
+    c = dynamic_cast<CTImageTreeItem*>(&rootItem.child(i));
     if (c->getUID() == iUID) {
       found = true;
       break;
     }
   }
   if (!found) {
-    c = new CTImageTreeItem( this, HeaderFields, dict );
-    beginInsertRows(QModelIndex(),cc,cc);
-    insertChild(c);
-    endInsertRows();
+    c = new CTImageTreeItem( &rootItem, HeaderFields, dict );
+    rootItem.insertChild(c);
   }
   c->appendFileName(fname);
 }
 
 void CTImageTreeModel::insertItemCopy(const TreeItem& item) {
-  int cc = childCount();
-  beginInsertRows(QModelIndex(),cc,cc);
-  insertChild(item.clone(this));
-  endInsertRows();
+  rootItem.insertChild(item.clone(&rootItem));
 }
 
 bool CTImageTreeModel::removeCTImage(int srow) {
   unsigned int row = static_cast<unsigned int>(srow);
-  if (row < childCount()) {
-    beginRemoveRows(QModelIndex(), row, row);
-    bool result = removeChildren( row, 1 );
-    endRemoveRows();
+  if (row < rootItem.childCount()) {
+    bool result = rootItem.removeChildren( row );
     return result;
   }
   return false;
@@ -135,29 +146,26 @@ bool CTImageTreeModel::removeCTImage(int srow) {
 
 bool CTImageTreeModel::createSegment(int srow) {
   unsigned int row = static_cast<unsigned int>(srow);
-  if (row < childCount()) {
-    beginInsertRows(createIndex(0, 0, &child(row)), row, row);
-    bool result = dynamic_cast<CTImageTreeItem&>(child(row)).generateSegment();
-    endInsertRows();
-    return result;
+  if (row < rootItem.childCount()) {
+    return dynamic_cast<CTImageTreeItem&>(rootItem.child(row)).generateSegment();
   }
   return false;
 }
-
 
 void CTImageTreeModel::loadAllImages(void) {
   const int progressScale = 10000;
   QProgressDialog progressDialog(tr("Loading Volumes..."), tr("Abort"), 0, progressScale);
   progressDialog.setMinimumDuration(1000);
   progressDialog.setWindowModality(Qt::WindowModal);
-  const int scalePerVolume = progressScale/childCount();
-  for(unsigned int i=0; i < childCount(); i++) {
-    dynamic_cast<CTImageTreeItem&>(child(i)).getVTKImage(&progressDialog, scalePerVolume, scalePerVolume*i );
+  const int scalePerVolume = progressScale/rootItem.childCount();
+  for(unsigned int i=0; i < rootItem.childCount(); i++) {
+    dynamic_cast<CTImageTreeItem&>(rootItem.child(i)).getVTKImage(&progressDialog, scalePerVolume, scalePerVolume*i );
     if (progressDialog.wasCanceled()) break;
   }
 }
 
  
 QModelIndex CTImageTreeModel::createIndex(int r, int c, const TreeItem*p) const {
+  if (p == &rootItem) return QModelIndex();
   return QAbstractItemModel::createIndex(r, c, const_cast<TreeItem*>(p));
 }

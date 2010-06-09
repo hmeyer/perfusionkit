@@ -8,7 +8,7 @@ class vtkImageData;
 class VTKTreeItem : public TreeItem
 {
   public:
-  VTKTreeItem(const TreeItem * parent=NULL): TreeItem(parent) {}
+  VTKTreeItem(TreeItem * parent): TreeItem(parent) {}
   virtual vtkImageData *getVTKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) = 0;
 };
 

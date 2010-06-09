@@ -14,14 +14,16 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     typedef std::pair< const std::string, const std::string > DicomTagType;
     typedef std::vector< DicomTagType > DicomTagList;
     typedef boost::shared_ptr< const DicomTagList > DicomTagListPointer;
-    CTImageTreeItem(const TreeItem * parent, DicomTagListPointer headerFields, const itk::MetaDataDictionary &_dict=itk::MetaDataDictionary());
+    CTImageTreeItem(TreeItem * parent, DicomTagListPointer headerFields, const itk::MetaDataDictionary &_dict=itk::MetaDataDictionary());
 
-    virtual TreeItem *clone(const TreeItem *clonesParent=NULL) const;
+    virtual TreeItem *clone(TreeItem *clonesParent=NULL) const;
     virtual bool setData(int column, const QVariant& value);
-    virtual QVariant data(int column, int role = Qt::DisplayRole) const;
+    virtual QVariant do_getData_DisplayRole(int column) const;
+    virtual QVariant do_getData_ForegroundRole(int column) const;
     virtual Qt::ItemFlags flags(int column) const;
     virtual int columnCount() const;
-    const std::string &getUID() { return itemUID; }
+    virtual const std::string &getUID() const { return itemUID; }
+    
     void appendFileName( const std::string &fn ) { fnList.insert( fn ); }
     
     bool generateSegment(void);

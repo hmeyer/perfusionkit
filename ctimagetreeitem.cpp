@@ -1,20 +1,21 @@
 #include "ctimagetreeitem.h"
 #include "binaryimagetreeitem.h"
 #include <itkMetaDataObject.h>
-#include <QApplication>
-#include <QInputDialog>
 #include <QPalette>
+#include <QInputDialog>
+#include <QApplication>
 #include <boost/assign.hpp>
 #include <itkCastImageFilter.h>
+#include "ctimagetreemodel.h"
 
 
-CTImageTreeItem::CTImageTreeItem(const TreeItem * parent, DicomTagListPointer headerFields, const itk::MetaDataDictionary &_dict )
+CTImageTreeItem::CTImageTreeItem(TreeItem * parent, DicomTagListPointer headerFields, const itk::MetaDataDictionary &_dict )
   :BaseClass(parent),HeaderFields(headerFields),dict(_dict) {
     getUIDFromDict(dict, itemUID);
 }
 
-TreeItem *CTImageTreeItem::clone(const TreeItem *clonesParent) const {
-  if (clonesParent==NULL) clonesParent = parent();
+TreeItem *CTImageTreeItem::clone(TreeItem *clonesParent) const {
+  if (clonesParent==NULL) clonesParent = const_cast<TreeItem*>(parent());
   CTImageTreeItem *c = new CTImageTreeItem( clonesParent, HeaderFields, dict );
   c->fnList = fnList;
   cloneChildren(c);
@@ -25,20 +26,19 @@ bool CTImageTreeItem::setData(int column, const QVariant& value) {
   return false;
 }
 
-QVariant CTImageTreeItem::data(int column, int role) const {
-  if (role == Qt::DisplayRole) {
-    if (column < 0 || column >= int(HeaderFields->size())) return QVariant::Invalid;
-    if ((*HeaderFields)[ column ].second == getNumberOfFramesTag()) return getNumberOfSlices();
-    std::string val;
-    itk::ExposeMetaData( dict, (*HeaderFields)[ column ].second, val );
-    return QString::fromStdString( val );
-  } else if (role == Qt::ForegroundRole) {
-    if (itkImage.IsNull()) return QApplication::palette().midlight();
-    else return QVariant::Invalid;
-  } else {
-    return QVariant::Invalid;
-  }
+QVariant CTImageTreeItem::do_getData_DisplayRole(int column) const {
+  if (column < 0 || column >= int(HeaderFields->size())) return QVariant::Invalid;
+  if ((*HeaderFields)[ column ].second == getNumberOfFramesTag()) return getNumberOfSlices();
+  std::string val;
+  itk::ExposeMetaData( dict, (*HeaderFields)[ column ].second, val );
+  return QString::fromStdString( val );
 }
+
+QVariant CTImageTreeItem::do_getData_ForegroundRole(int column) const {
+  if (itkImage.IsNull()) return QApplication::palette().midlight();
+  return QVariant::Invalid;
+}
+
 
 Qt::ItemFlags CTImageTreeItem::flags(int column) const {
     if (column < 0 || column >= int(HeaderFields->size())) return Qt::NoItemFlags;
@@ -95,7 +95,7 @@ class CTImageTreeItem::ReaderProgress : public itk::Command {
 	progressDialog = progressDialog_scpd.get();
 	progressDialog->setCancelButton(0);
 	progressDialog->setMinimumDuration(1000);
-	progressDialog->setWindowModality(Qt::WindowModal);
+	progressDialog->setWindowModality(Qt::ApplicationModal);
       }
       return progressDialog;
     }
@@ -106,7 +106,7 @@ class CTImageTreeItem::ReaderProgress : public itk::Command {
 };
 
 
-CTImageTreeItem::ImageType::Pointer  CTImageTreeItem::getITKImage(QProgressDialog *progress, int progressScale, int progressBase) {
+CTImageTreeItem::ImageType::Pointer CTImageTreeItem::getITKImage(QProgressDialog *progress, int progressScale, int progressBase) {
   if (itkImage.IsNull()) {
     typedef ReaderProgress::ReaderType ReaderType;
     ReaderType::Pointer imageReader = ReaderType::New();
@@ -126,6 +126,7 @@ CTImageTreeItem::ImageType::Pointer  CTImageTreeItem::getITKImage(QProgressDialo
 	    std::cerr << excep << std::endl;
     }
     itkImage = imageReader->GetOutput();
+    model->dataChanged(model->createIndex(childNumber(),0,this),model->createIndex(childNumber(),columnCount()-1,this));
   }
   return itkImage;
 }
