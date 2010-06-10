@@ -1,13 +1,17 @@
 #include "multiplanarreformatwidget.h"
-#include "vtkMatrix4x4.h"
-#include "vtkinteractorstyleprojectionview.h"
-#include "vtkCommand.h"
-#include "vtkImageReslice.h"
-#include "vtkImageMapToWindowLevelColors.h"
-#include "vtkImageActor.h"
-#include "vtkRenderer.h"
-#include "vtkImageData.h"
-#include "vtkRenderWindow.h"
+#include <vtkMatrix4x4.h>
+#include <vtkinteractorstyleprojectionview.h>
+#include <vtkCommand.h>
+#include <vtkImageReslice.h>
+#include <vtkImageMapToWindowLevelColors.h>
+#include <vtkImageMapToColors.h>
+#include <vtkScalarsToColors.h>
+#include <vtkImageActor.h>
+#include <vtkRenderer.h>
+#include <vtkImageData.h>
+#include <vtkRenderWindow.h>
+#include <algorithm>
+#include <boost/bind.hpp>
 
 /** Default Constructor.
 Nothing fancy - just basic setup */
@@ -23,9 +27,8 @@ MultiPlanarReformatWidget::MultiPlanarReformatWidget(QWidget* parent, Qt::WFlags
   m_reslice->SetOutputDimensionality(2);
   m_reslice->SetBackgroundLevel(-1000);
   m_reslice->SetInterpolationModeToLinear();
-
-  m_colormap->SetWindow(400);
-  m_colormap->SetLevel(50);
+  
+  m_colormap->SetOutputFormatToRGB();
 
   m_colormap->SetInputConnection(m_reslice->GetOutputPort());
 
@@ -54,7 +57,7 @@ MultiPlanarReformatWidget::~MultiPlanarReformatWidget() {
 
 /** Volume Setter*/
 void MultiPlanarReformatWidget::setImage(vtkImageData *image/**<[in] Volume (3D) Image with one component*/) {
-  if (!image) {
+  if (image==NULL) {
     m_image = NULL;
     vtkRenderWindow *window = this->GetRenderWindow();
     window->RemoveRenderer( m_renderer );
@@ -85,6 +88,29 @@ void MultiPlanarReformatWidget::setImage(vtkImageData *image/**<[in] Volume (3D)
 
     m_reslice->SetInput( m_image );
     window->AddRenderer(m_renderer);
+    this->update();
+  }
+}
+
+
+void MultiPlanarReformatWidget::addBinaryOverlay(vtkImageData *image, const unsigned char *color) {
+  if (std::find_if( m_overlays.begin(), m_overlays.end(), 
+    boost::bind( &vtkBinaryImageOverlay::getImage, _1 ) == boost::ref( image ) ) 
+      == m_overlays.end() ) {
+    vtkBinaryImageOverlay *overlay = new vtkBinaryImageOverlay( image, m_reslicePlaneTransform, color);
+    m_renderer->AddActor(overlay->getActor());
+    m_overlays.insert( overlay );
+    this->update();
+  }
+}
+
+void MultiPlanarReformatWidget::removeBinaryOverlay(vtkImageData *image) {
+  BinaryImageOverlayContainer::iterator it;
+  if ((it = std::find_if( m_overlays.begin(), m_overlays.end(), 
+    boost::bind( &vtkBinaryImageOverlay::getImage, _1 ) == boost::ref( image ) ) )
+      != m_overlays.end() ) {
+    m_renderer->RemoveActor( it->getActor() );
+    m_overlays.erase(it);
     this->update();
   }
 }

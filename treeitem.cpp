@@ -46,6 +46,7 @@ QVariant TreeItem::data(int column, int role) const {
     case Qt::DisplayRole: return do_getData_DisplayRole( column );
     case Qt::FontRole: return do_getData_FontRole( column );
     case Qt::ForegroundRole: return do_getData_ForegroundRole( column );
+    case Qt::BackgroundRole: return do_getData_BackgroundRole( column );
   }
   return QVariant::Invalid;
 }
@@ -149,7 +150,7 @@ TreeItem *TreeItem::parent() {
 bool TreeItem::removeChildren(unsigned int position, unsigned int count) {
   if (position + count > childItems.size())
     return false;
-  model->beginRemoveRows(model->createIndex(0,0,this), position, position+count-1);
+  model->beginRemoveRows(model->createIndex(position,0,this), position, position+count-1);
   for (unsigned int row = 0; row < count; ++row)
     childItems.release( childItems.begin() + position );
   model->endRemoveRows();
@@ -171,4 +172,23 @@ bool TreeItem::setData(int column, const QVariant &value) {
 
 Qt::ItemFlags TreeItem::flags(int column) const {
   return Qt::NoItemFlags;
+}
+
+void TreeItem::setActive(bool act) {
+  if (active==act) return;
+  active = act;
+  model->dataChanged(
+    getIndex(0),
+    getIndex(columnCount()-1));
+}
+
+QModelIndex TreeItem::getIndex(int column) {
+  return model->createIndex(childNumber(),column,parentItem);
+}
+
+
+void TreeItem::clearActiveDown(void) {
+  setActive(false);
+  for(ChildListType::iterator i = childItems.begin(); i != childItems.end(); ++i)
+    i->clearActiveDown();
 }

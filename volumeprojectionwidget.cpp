@@ -79,7 +79,7 @@ VolumeProjectionWidget::~VolumeProjectionWidget() {
 
 /** Volume Setter*/
 void VolumeProjectionWidget::setImage(vtkImageData *image/**<[in] Volume (3D) Image with one component*/) {
-  if (!image) {
+  if (image==NULL) {
     m_image = NULL;
     vtkRenderWindow *window = this->GetRenderWindow();
     window->RemoveRenderer( m_renderer );

@@ -29,12 +29,10 @@ void CTImageTreeModel::sort(int column, Qt::SortOrder order) {
 
 
 QModelIndex CTImageTreeModel::index(int row, int column, const QModelIndex &parent) const {
-  const TreeItem &childItem = getItem(parent).child(row);
-  try {
-      return createIndex(row, column, &childItem);
-  } catch( TreeItem::TreeTrouble &e ) {
-    return QModelIndex();  
-  }
+  const TreeItem &pItem = getItem(parent);
+  if (row >= int(pItem.childCount())) row = pItem.childCount()-1;
+  const TreeItem &childItem = pItem.child(row);
+  return createIndex(row, column, &childItem);
 }
 
 QModelIndex CTImageTreeModel::parent(const QModelIndex &index) const {
@@ -166,6 +164,6 @@ void CTImageTreeModel::loadAllImages(void) {
 
  
 QModelIndex CTImageTreeModel::createIndex(int r, int c, const TreeItem*p) const {
-  if (p == &rootItem) return QModelIndex();
+  if (p == NULL || p == &rootItem) return QModelIndex();
   return QAbstractItemModel::createIndex(r, c, const_cast<TreeItem*>(p));
 }

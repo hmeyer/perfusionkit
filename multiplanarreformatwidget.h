@@ -2,15 +2,20 @@
 #define MULTIPLANARREFORMATWIDGET_H
 
 #include <GUISupport/Qt/QVTKWidget.h>
+#include <boost/ptr_container/ptr_set.hpp>
+#include "vtkbinaryimageoverlay.h"
 
 
 class vtkImageData;
 class vtkImageReslice;
 class vtkImageMapToWindowLevelColors;
+class vtkImageMapToColors;
+class vtkBinaryImageToColor;
 class vtkImageActor;
 class vtkRenderer;
 class vtkMatrix4x4;
 class vtkInteractorStyleProjectionView;
+
 
 /// QT-Widget displaying a Volume Slice
 class MultiPlanarReformatWidget : public QVTKWidget
@@ -19,7 +24,11 @@ class MultiPlanarReformatWidget : public QVTKWidget
   MultiPlanarReformatWidget(QWidget* parent = NULL, Qt::WFlags f = 0);
   ~MultiPlanarReformatWidget();  
   void setImage(vtkImageData *image);
+  void addBinaryOverlay(vtkImageData *image, const unsigned char *color);
+  void removeBinaryOverlay(vtkImageData *image);
   protected:
+  typedef boost::ptr_set< vtkBinaryImageOverlay > BinaryImageOverlayContainer;
+  BinaryImageOverlayContainer m_overlays;
   vtkImageData *m_image; ///< volume image data to be displayed - set by setImage()
   vtkImageReslice *m_reslice; ///< vtkImageAlgorithm to reslice the image
   vtkImageMapToWindowLevelColors *m_colormap; ///< used to apply Window and Level

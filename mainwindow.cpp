@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include <QtGui>
 #include "dicomselectordialog.h"
+#include "binaryimagetreeitem.h"
 #include <boost/assign.hpp>
 
 
@@ -9,11 +10,9 @@ const CTImageTreeItem::DicomTagList MainWindow::CTModelHeaderFields = boost::ass
   (CTImageTreeItem::DicomTagType("#Slices",CTImageTreeItem::getNumberOfFramesTag()))
   (CTImageTreeItem::DicomTagType("AcquisitionDatetime","0008|002a"));
 
-MainWindow::MainWindow():imageModel(CTModelHeaderFields) {
+MainWindow::MainWindow():imageModel(CTModelHeaderFields),selectedCTImage(NULL) {
   setupUi( this );
   treeView->setModel( &imageModel );
-  connect( treeView->selectionModel(), SIGNAL( selectionChanged(const QItemSelection &, const QItemSelection &) ),
-		    this, SLOT( treeViewSelectionChanged(const QItemSelection &, const QItemSelection &) ) );
   connect( treeView, SIGNAL( customContextMenuRequested(const QPoint &) ),
 		    this, SLOT( treeViewContextMenu(const QPoint &) ) );
 }
@@ -22,11 +21,38 @@ MainWindow::~MainWindow() {
 }
 
 
-void MainWindow::setImage(const vtkImageData *image) {
-  vtkImageData *non_const_image = const_cast<vtkImageData*>( image );
-  mprView->setImage( non_const_image );
-  volumeView->setImage( non_const_image );
+void MainWindow::setImage(VTKTreeItem *imageItem) {
+  vtkImageData *vtkImage = NULL;
+  if (imageItem != NULL)
+    vtkImage = imageItem->getVTKImage();
+  if (imageItem != selectedCTImage) {
+    selectedSegments.clear();
+    // TODO: clear mprViews Segements
+    
+    mprView->setImage( vtkImage );
+    volumeView->setImage( vtkImage );
+    if (selectedCTImage != NULL) selectedCTImage->clearActiveDown();
+    selectedCTImage = imageItem;
+    if (selectedCTImage != NULL) selectedCTImage->setActive();
+  }
 }
+
+void MainWindow::segmentShow( BinaryImageTreeItem *segItem ) {
+  if (segItem) {
+    mprView->addBinaryOverlay( segItem->getVTKImage(), segItem->getColor() );
+    selectedSegments.insert( segItem );
+    segItem->setActive();
+  }
+}
+
+void MainWindow::segmentHide( BinaryImageTreeItem *segItem ) {
+  if (segItem) {
+    mprView->removeBinaryOverlay( segItem->getVTKImage() );
+    selectedSegments.erase( segItem );
+    segItem->setActive(false);
+  }
+}
+
 
 void MainWindow::on_actionAbout_triggered() {
      QMessageBox::about(this, tr("About Perfusionkit"),
@@ -108,50 +134,55 @@ void MainWindow::on_actionStereoOff_triggered() {
   actionStereoOff->setChecked(true);
   volumeView->setStereoMode( VolumeProjectionWidget::Off );
 }
+
 void MainWindow::on_actionLoadAllSeries_triggered() {
   imageModel.loadAllImages();
 }
+
+
 
 void MainWindow::on_treeView_doubleClicked(const QModelIndex &index) {
   if (index.isValid()) {
     TreeItem &item = imageModel.getItem( index );
     VTKTreeItem *CTItem = NULL;
-    VTKTreeItem *SegItem = NULL;
+    BinaryImageTreeItem *SegItem = NULL;
     try {
       if (item.depth() == 1) {
 	CTItem = dynamic_cast<VTKTreeItem*>(&item);
       } else if (item.depth() == 2) {
-	SegItem = dynamic_cast<VTKTreeItem*>(&item);
+	SegItem = dynamic_cast<BinaryImageTreeItem*>(&item);
 	CTItem = dynamic_cast<VTKTreeItem*>(item.parent());
       }
       if (CTItem != selectedCTImage) {
-//	selectedCTImage
-//	imageModel.clearAllActive();
-	
 	if (CTItem) {
-	  setImage( CTItem->getVTKImage() );
-//	  imageModel.setActive(CTItem);
+	  if (selectedCTImage) selectedCTImage->setActive(false);
+	  setImage( CTItem );
+	  selectedCTImage = CTItem;
+	  selectedCTImage->setActive();
 	} else setImage( NULL );
       }
-      
+      if (SegItem) {
+	if (selectedSegments.find( SegItem )==selectedSegments.end()) {
+	  segmentShow( SegItem );
+	} else {
+	  segmentHide( SegItem );
+	}
+      }
     } catch(...) {
-      selectedCTImage = NULL;
       selectedSegments.clear();
       setImage( NULL );
     }
   }
 }
 
-void MainWindow::treeViewSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected) {
-  if (selected.size()) {
-    QModelIndex idx = selected.first().topLeft();
-    if (idx.isValid()) {
-      vtkImageData const *image = dynamic_cast<VTKTreeItem&>(imageModel.getItem( idx )).getVTKImage();
-      setImage( image );
-    }
-  } else setImage( NULL );
+void MainWindow::removeCTImage(int number) {
+  TreeItem &remitem = imageModel.getItem( imageModel.index( number, 0 ) );
+  VTKTreeItem *remitemPtr = dynamic_cast<VTKTreeItem*>(&remitem);
+  if (selectedCTImage == remitemPtr) {
+    setImage(NULL);
+  }
+  imageModel.removeCTImage(number);
 }
-
 
 void MainWindow::treeViewContextMenu(const QPoint &pos) {
   QModelIndex idx = treeView->indexAt(pos);
@@ -166,7 +197,7 @@ void MainWindow::treeViewContextMenu(const QPoint &pos) {
       connect( delAction, SIGNAL( triggered() ),
 	&delMapper, SLOT( map()  ) );
       connect( &delMapper, SIGNAL( mapped(int) ),
-	&imageModel, SLOT( removeCTImage(int)  ) );
+	this, SLOT( removeCTImage(int)  ) );
 
       QSignalMapper addSegMapper;
       QAction* addSegAction = cm.addAction("&Add Segment");

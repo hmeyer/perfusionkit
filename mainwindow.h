@@ -13,6 +13,7 @@ class VolumeProjectionWidget;
 class MultiPlanarReformatWidget;
 class QSplitter;
 class DicomSelectorDialog;
+class BinaryImageTreeItem;
 
 
 
@@ -24,7 +25,6 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
   public:
     MainWindow();
     ~MainWindow();
-    void setImage(const vtkImageData *image);
     void setFiles(const QStringList &names);
     
 
@@ -41,16 +41,21 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
       void on_actionStereoOff_triggered();
       void on_actionLoadAllSeries_triggered();
       void on_treeView_doubleClicked(const QModelIndex &index);
-      void treeViewSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
       void treeViewContextMenu(const QPoint &pos);
+      void removeCTImage(int number);
 
  private:
   typedef std::auto_ptr<DicomSelectorDialog> DicomSelectorDialogPtr;
   void loadDicomData(DicomSelectorDialogPtr dicomSelector);
+  void setImage(VTKTreeItem *imageItem);
+  void segmentShow( BinaryImageTreeItem *segItem );
+  void segmentHide( BinaryImageTreeItem *segItem );
+
+  
   CTImageTreeModel imageModel;
   VTKTreeItem *selectedCTImage;
-  typedef std::set< VTKTreeItem* > VTKTreeItemContainer;
-  VTKTreeItemContainer selectedSegments;
+  typedef std::set< BinaryImageTreeItem* > SegmentItemContainer;
+  SegmentItemContainer selectedSegments;
   static const CTImageTreeItem::DicomTagList CTModelHeaderFields;
 };
 

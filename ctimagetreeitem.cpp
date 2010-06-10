@@ -126,7 +126,7 @@ CTImageTreeItem::ImageType::Pointer CTImageTreeItem::getITKImage(QProgressDialog
 	    std::cerr << excep << std::endl;
     }
     itkImage = imageReader->GetOutput();
-    model->dataChanged(model->createIndex(childNumber(),0,this),model->createIndex(childNumber(),columnCount()-1,this));
+    model->dataChanged(model->createIndex(childNumber(),0,parent()),model->createIndex(childNumber(),columnCount()-1,parent()));
   }
   return itkImage;
 }

@@ -37,7 +37,7 @@ IF(NOT DESIRED_QT_VERSION MATCHES 4)
 ENDIF(NOT DESIRED_QT_VERSION MATCHES 4)
 
 
-SET( PerfusionkitSrc vtktreeitem.cpp ctimagetreemodel.cpp ctimagetreeitem.cpp binaryimagetreeitem.cpp itkvtktreeitem.cpp treeitem.cpp 
+SET( PerfusionkitSrc vtkbinaryimagetocolor.cpp vtkbinaryimageoverlay.cpp vtktreeitem.cpp ctimagetreemodel.cpp ctimagetreeitem.cpp binaryimagetreeitem.cpp itkvtktreeitem.cpp treeitem.cpp 
   main.cpp 
   mainwindow.cpp 
   interactorstylevolumeview.cpp 

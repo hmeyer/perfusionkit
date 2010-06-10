@@ -7,6 +7,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <string>
+#include <QAbstractItemModel>
 
 class CTImageTreeModel;
 
@@ -27,6 +28,7 @@ class TreeItem : boost::noncopyable {
     
     virtual QVariant do_getData_DisplayRole(int column) const { return QVariant::Invalid; }
     virtual QVariant do_getData_ForegroundRole(int column) const { return QVariant::Invalid; }
+    virtual QVariant do_getData_BackgroundRole(int column) const { return QVariant::Invalid; }
     virtual QVariant do_getData_FontRole(int column) const;
     
     virtual Qt::ItemFlags flags(int column) const;
@@ -42,8 +44,13 @@ class TreeItem : boost::noncopyable {
     int childNumber() const;
     virtual bool setData(int column, const QVariant &value);
     CTImageTreeModel *getModel(void) { return model; }
+    void clearActiveDown(void);
+    bool isActive(void) const { return active; }
+    void setActive(bool act=true);
+    void toggleActive(void) { setActive(!active); }
     
   protected:
+    QModelIndex getIndex(int column=0);
     CTImageTreeModel *model;
   private:
     typedef boost::ptr_vector<TreeItem> ChildListType;
