@@ -27,11 +27,32 @@ class ITKVTKTreeItem : public VTKTreeItem {
       connector->Update();
       return connector->GetOutput();
     }
+    void drawSphere( float x, float y, float z );
   protected:
-    typename TImage::Pointer itkImage;
+    typename ImageType::Pointer itkImage;
     typedef itk::ImageToVTKImageFilter< ImageType >   ConnectorType;
     typename ConnectorType::Pointer connector;
 };
+
+
+
+template< class TImage >
+void ITKVTKTreeItem<TImage>::drawSphere( float x, float y, float z ) {
+  typename ImageType::IndexType idx;
+  typename ImageType::PointType point;
+  point[0] = x;point[1] = y;point[2] = z;
+  itkImage->TransformPhysicalPointToIndex(point, idx);
+  std::cerr << __FUNCTION__ << "[" << x << " ," << y << " ," << z << "] idx:[" << idx[0] << " , " << idx[1] << " , " << idx[2] << "]" << std::endl;
+  static bool i = true;
+//  if (i) { i=false;itkImage->FillBuffer(0);}
+  if (itkImage->GetBufferedRegion().IsInside(idx)) {
+    std::cerr << "pixel before:" << int(itkImage->GetPixel(idx)) << std::endl;
+    itkImage->SetPixel(idx, 255);
+    std::cerr << "pixel after:" << int(itkImage->GetPixel(idx)) << std::endl;
+  }
+  getVTKImage()->Update();
+}
+
 
 template< class TImage >
 typename TImage::Pointer  ITKVTKTreeItem<TImage>::getITKImage(QProgressDialog *progress, int progressScale, int progressBase) {

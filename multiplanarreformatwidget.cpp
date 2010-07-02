@@ -13,6 +13,9 @@
 #include <algorithm>
 #include <boost/bind.hpp>
 
+
+#include <vtkCamera.h>
+
 /** Default Constructor.
 Nothing fancy - just basic setup */
 MultiPlanarReformatWidget::MultiPlanarReformatWidget(QWidget* parent, Qt::WFlags f):
@@ -42,17 +45,12 @@ MultiPlanarReformatWidget::MultiPlanarReformatWidget(QWidget* parent, Qt::WFlags
   vtkRenderWindowInteractor *interactor = this->GetInteractor();
   interactor->SetInteractorStyle(m_interactorStyle);
   m_reslice->SetResliceAxes(m_reslicePlaneTransform);
+  m_reslice->SetOutputDimensionality(2);
 }
 
 /** Destructor*/
 MultiPlanarReformatWidget::~MultiPlanarReformatWidget() {
   this->hide();
-  m_renderer->Delete();
-  m_actor->Delete();
-  m_colormap->Delete();
-  m_reslice->Delete();
-  m_reslicePlaneTransform->Delete();
-  m_interactorStyle->Delete();
 }
 
 /** Volume Setter*/
@@ -89,28 +87,42 @@ void MultiPlanarReformatWidget::setImage(vtkImageData *image/**<[in] Volume (3D)
     m_reslice->SetInput( m_image );
     window->AddRenderer(m_renderer);
     this->update();
+    
+    int ex[6];
+    m_reslice->GetOutputExtent(ex);
+    std::cerr << "outputExtent:" << ex[0] << " ," << ex[1] << " ," << ex[2] << " ," << ex[3] << " ," << ex[4] << " ," << ex[5] << std::endl;
+    int xres = 1000;
+    int yres = 1000;
+    m_reslice->SetOutputExtent(0,xres,0,yres,0,0);
+    m_reslice->SetOutputOrigin(-xres/2.0,-yres/2.0,0);
+    m_reslice->SetOutputSpacing(1,1,1);
+    m_reslice->GetOutputExtent(ex);
+    std::cerr << "outputExtent:" << ex[0] << " ," << ex[1] << " ," << ex[2] << " ," << ex[3] << " ," << ex[4] << " ," << ex[5] << std::endl;
+    m_actor->Print(std::cerr);
+    m_renderer->Print( std::cerr );
+      
   }
 }
 
 
-void MultiPlanarReformatWidget::addBinaryOverlay(vtkImageData *image, const unsigned char *color) {
-  if (std::find_if( m_overlays.begin(), m_overlays.end(), 
-    boost::bind( &vtkBinaryImageOverlay::getImage, _1 ) == boost::ref( image ) ) 
-      == m_overlays.end() ) {
-    vtkBinaryImageOverlay *overlay = new vtkBinaryImageOverlay( image, m_reslicePlaneTransform, color);
-    m_renderer->AddActor(overlay->getActor());
-    m_overlays.insert( overlay );
+void MultiPlanarReformatWidget::addBinaryOverlay(vtkImageData *image, const unsigned char *color, const ActionDispatch &dispatch) {
+  if (m_overlays.find( image ) == m_overlays.end() ) {
+    boost::shared_ptr< vtkBinaryImageOverlay > overlay(
+     new vtkBinaryImageOverlay( m_renderer, m_interactorStyle, dispatch, image, m_reslicePlaneTransform, color) );
+    m_overlays.insert( OverlayMapType::value_type( image, overlay ) );
     this->update();
   }
 }
 
 void MultiPlanarReformatWidget::removeBinaryOverlay(vtkImageData *image) {
-  BinaryImageOverlayContainer::iterator it;
-  if ((it = std::find_if( m_overlays.begin(), m_overlays.end(), 
-    boost::bind( &vtkBinaryImageOverlay::getImage, _1 ) == boost::ref( image ) ) )
-      != m_overlays.end() ) {
-    m_renderer->RemoveActor( it->getActor() );
-    m_overlays.erase(it);
-    this->update();
+  m_overlays.erase(image);
+  this->update();
+}
+
+void MultiPlanarReformatWidget::activateOverlayAction(vtkImageData *image) {
+  OverlayMapType::iterator it = m_overlays.find( image );
+  if (it != m_overlays.end()) {
+    it->second->activateAction();
   }
 }
+

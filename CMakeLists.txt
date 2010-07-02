@@ -18,7 +18,8 @@ ELSE(ITK_FOUND)
   MESSAGE(FATAL_ERROR "Cannot build without ITK.  Please set ITK_DIR.")
 ENDIF( ITK_FOUND )
 
-find_package(Boost REQUIRED filesystem)
+FIND_PACKAGE(Boost 1.40.0 REQUIRED COMPONENTS filesystem signals)
+INCLUDE( ${Boost_INCLUDE_DIR} )
 
 # use what QVTK built with
 SET(QT_MOC_EXECUTABLE ${VTK_QT_MOC_EXECUTABLE} CACHE FILEPATH "")
@@ -57,20 +58,20 @@ INCLUDE_DIRECTORIES(
 
 SET( UIS MainWindow.ui DicomSelectDialog.ui )
 
-QT4_WRAP_UI( UIHeaders ${UIS} )
+QT4_WRAP_UI( PerfusionkitSrc ${UIS} )
 
 SET ( QVTKMocHeaders
     mainwindow.h
     ctimagetreemodel.h
     )
 
-QT4_WRAP_CPP( MOCSrcs ${QVTKMocHeaders} )
+QT4_WRAP_CPP( PerfusionkitSrc ${QVTKMocHeaders} )
 
-SET_SOURCE_FILES_PROPERTIES(${PerfusionkitSrc} PROPERTIES
-                            OBJECT_DEPENDS "${UIHeaders}")
+#SET_SOURCE_FILES_PROPERTIES(${PerfusionkitSrc} PROPERTIES
+#                            OBJECT_DEPENDS "${UIHeaders}")
 
-                           
-
+                         
+MESSAGE(${Boost_LIBRARIES})
 
 ADD_EXECUTABLE( perfusionkit ${PerfusionkitSrc} ${MOCSrcs})
 TARGET_LINK_LIBRARIES ( perfusionkit

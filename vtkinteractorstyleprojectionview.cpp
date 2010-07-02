@@ -13,6 +13,11 @@
 
 #include <string>
 #include <iostream>
+#include <boost/bind.hpp>
+#include <boost/lambda/lambda.hpp>
+
+#include <vtkRenderWindow.h>
+#include <vtkRendererCollection.h>
 
 using namespace std;
 
@@ -26,8 +31,7 @@ vtkStandardNewMacro(vtkInteractorStyleProjectionView);
 
 /// default Constructor
 vtkInteractorStyleProjectionView::vtkInteractorStyleProjectionView():
-  m_interAction(ActionNone),
-  m_leftButtonAction(ActionSlice),
+  ActionNone(-1),
   m_stateRButton(false),
   m_stateLButton(false),
   m_stateMButton(false),
@@ -40,7 +44,45 @@ vtkInteractorStyleProjectionView::vtkInteractorStyleProjectionView():
   UseTimers = 1;
   SetLMBHint(0);
   m_initialState.orientation = vtkMatrix4x4::New();
+  resetActions();
 }
+
+void vtkInteractorStyleProjectionView::resetActions() {
+  ActionFirst = ActionSlice = addAction("Slice", boost::bind(&vtkInteractorStyleProjectionView::Slice, this, _2), false );
+  ActionRotate = addAction("Rotate", boost::bind(&vtkInteractorStyleProjectionView::Rotate, this, _1, _2), true );
+  ActionSpin = addAction("Spin", boost::bind(&vtkInteractorStyleProjectionView::Spin, this, _1), false );
+  ActionZoom = addAction("Zoom", boost::bind(&vtkInteractorStyleProjectionView::Zoom, this, _2 ), false );
+  ActionPan = addAction("Pan", boost::bind(&vtkInteractorStyleProjectionView::Pan, this, _1, _2), true );
+  ActionWindowLevel = addAction("Window/Level", boost::bind(&vtkInteractorStyleProjectionView::WindowLevelDelta, this, _1, _2), true );
+  m_leftButtonAction = ActionSlice;
+  m_interAction = ActionNone;
+}
+
+
+int vtkInteractorStyleProjectionView::addAction(const std::string &label, const ActionSignal::slot_type &slot, bool restricted) {
+  return addAction(ActionDispatch( label, slot, restricted ) );
+}
+  
+int vtkInteractorStyleProjectionView::addAction(const ActionDispatch &action) {
+  int index = -1;
+  if (m_actionList.size()) index = (m_actionList.end()--)->first;
+  index++;
+  m_actionList.insert( ActionListType::value_type( index, action ) );
+  return index;
+}
+
+void vtkInteractorStyleProjectionView::removeAction(int action) {
+  m_actionList.erase( action );
+}
+
+void vtkInteractorStyleProjectionView::activateAction(int action) {
+  ActionListType::iterator it = m_actionList.find( action );
+  if (it != m_actionList.end()) {
+    m_leftButtonAction = action;
+    updateLMBHint();
+  }
+}
+
 
 /// Destructor
 vtkInteractorStyleProjectionView::~vtkInteractorStyleProjectionView() {
@@ -70,6 +112,7 @@ bool vtkInteractorStyleProjectionView::GetEventPosition( int &x/**<[out]*/, int 
 
 /** Save the state of the Display in order to enable Restricted Actions and ActionCancles*/
 void vtkInteractorStyleProjectionView::saveDisplayState(void) {
+  restriction = None;
   if (m_imageMapToWindowLevelColors) {
     m_initialState.window = m_imageMapToWindowLevelColors->GetWindow();
     m_initialState.level = m_imageMapToWindowLevelColors->GetLevel();
@@ -94,24 +137,18 @@ void vtkInteractorStyleProjectionView::dipatchActions() {
 
 /** Cycles through all vtkInteractorStyleProjectionView::InterAction. */
 void vtkInteractorStyleProjectionView::CycleLeftButtonAction() {
-  m_leftButtonAction = static_cast<InterAction>(m_leftButtonAction + 1);
-  if (m_leftButtonAction >= ActionLast)
-    m_leftButtonAction = ActionFirst;
+  ActionListType::iterator it = m_actionList.find( m_leftButtonAction );
+  it++;
+  if (it == m_actionList.end())
+    it = m_actionList.begin();
+  m_leftButtonAction = it->first;
   updateLMBHint();
 }
 
 /** Updated the Hint for the Left Mouse Button and starts Animation to fade the hint. */
 void vtkInteractorStyleProjectionView::updateLMBHint() {
-  switch( m_leftButtonAction ) {
-    case ActionNone:		SetLMBHint(1, "None"); break;
-    case ActionSlice:		SetLMBHint(1, "Slice"); break;
-    case ActionRotate:		SetLMBHint(1, "Rotate"); break;
-    case ActionSpin:		SetLMBHint(1, "Spin"); break;
-    case ActionZoom:		SetLMBHint(1, "Zoom"); break;
-    case ActionPan:		SetLMBHint(1, "Pan"); break;
-    case ActionWindowLevel:	SetLMBHint(1, "Window/Level"); break;
-    default:;
-  } 
+  if (m_leftButtonAction != ActionNone)
+    SetLMBHint(1, m_actionList[ m_leftButtonAction ].label);
   m_leftMBHintAlpha = 2;
   if (AnimState != VTKIS_ANIM_ON) StartAnimate();
   updateDisplay();
@@ -128,7 +165,7 @@ void vtkInteractorStyleProjectionView::updateRenderer() {
   @param [in] alpha alpha value (opacity) 0 means invisible, alpha > 1 is clipped to 1
   @param [in] text optional, set new text
   */
-void vtkInteractorStyleProjectionView::SetLMBHint( float alpha, const char *text ) {
+void vtkInteractorStyleProjectionView::SetLMBHint( float alpha, const std::string &text ) {
   if ( !m_leftMBHint ) {
     updateRenderer();
     vtkRenderer *ren = GetCurrentRenderer();
@@ -138,7 +175,7 @@ void vtkInteractorStyleProjectionView::SetLMBHint( float alpha, const char *text
     }
   }
   if (m_leftMBHint) {
-    if (text) m_leftMBHint->SetInput(text);
+    if (!text.empty()) m_leftMBHint->SetInput(text.c_str());
     if (alpha <= 0) m_leftMBHint->SetVisibility(false);
     else {
       if (alpha > 1) alpha = 1;
@@ -152,15 +189,9 @@ void vtkInteractorStyleProjectionView::SetLMBHint( float alpha, const char *text
 
 /** Restrict the Action to major Axis?*/
 bool vtkInteractorStyleProjectionView::restrictAction() { 
-  switch( m_interAction ) {
-    case ActionSpin:
-    case ActionZoom: return false;
-    default:
-        if (this->Interactor)
-	  return this->Interactor->GetControlKey();
-	else 
-	  return false;
-  }
+  if (m_actionList[m_interAction].restricted  && this->Interactor)
+    return this->Interactor->GetControlKey();
+  return false;
 }
 
 
@@ -173,39 +204,60 @@ void vtkInteractorStyleProjectionView::OnMouseMove()
     if (!GetEventPosition(x,y) || !GetEventPosition(ox,oy,true)) return;
     int dx = x - ox;
     int dy = y - oy;
-    bool restrict = restrictAction();
-    if (restrict) {
-      dx = x - m_initialState.mousePosition[0];
+    
+    if (restriction == XOnly) {
       dy = y - m_initialState.mousePosition[1];
-      if (abs(dx) > abs(dy)) dy = 0; else dx = 0;
+    } else if (restriction == YOnly) {
+      dx = x - m_initialState.mousePosition[0];
     }
-   
-    switch( m_interAction ) {
-      case ActionWindowLevel: WindowLevelDelta( dx, dy, restrict ); return;
-      case ActionSlice: Slice( dx, dy, restrict ); return;
-      case ActionRotate: Rotate( -dx, dy, restrict ); return;
-      case ActionSpin: Spin( dx ); return;
-      case ActionZoom: Zoom( dy ); return;
-      case ActionPan: Pan( dx, dy, restrict ); return;
-      default:     cerr << __FILE__ << "[" << __LINE__ << "]:" << __FUNCTION__ << ": Action=" << m_interAction << endl; return;
+    
+    double coord[4];
+    if (restrictAction()) {
+      int odx = x - m_initialState.mousePosition[0];
+      int ody = y - m_initialState.mousePosition[1];
+      if (abs(odx) > abs(ody)) {
+	restriction = XOnly;
+	dy -= y - m_initialState.mousePosition[1]; 
+      } else {
+	restriction = YOnly;
+	dx -= x - m_initialState.mousePosition[0];
+      }
+    } else {
+      vtkRenderer *ren = //this->GetCurrentRenderer();
+      GetInteractor()->GetRenderWindow()->GetRenderers()->GetFirstRenderer();
+      if (ren) {
+	ren->SetDisplayPoint( x, y, 0);// 0.38 );
+	ren->DisplayToWorld();
+	ren->GetWorldPoint( coord );
+	m_orientation->MultiplyPoint(coord, coord);
+      }
     }
+    (*m_actionList[m_interAction].sig)( dx, dy, coord[0], coord[1], coord[2]);
+    vtkTransform *newTransform = vtkTransform::New();
+    newTransform->PreMultiply();
+    newTransform->SetMatrix( m_orientation );
+    newTransform->Translate(0, 0, 1);
+    newTransform->Translate(0, 0, -1);
+    newTransform->GetMatrix( m_orientation );
+    newTransform->Delete();
+    updateDisplay();
   }
 }
 
 /** Slice forward */
 void vtkInteractorStyleProjectionView::OnMouseWheelForward() {
   vtkInteractorStyle::OnMouseWheelForward();
-  Slice(0, 1);
+  Slice(1);
 }
 
 /** Slice backward */
 void vtkInteractorStyleProjectionView::OnMouseWheelBackward() {
   vtkInteractorStyle::OnMouseWheelBackward();
-  Slice(0, -1);
+  Slice(-1);
 }
 
 /** Pan the viewed Object */
-void vtkInteractorStyleProjectionView::Pan( int dx/**<[in]*/, int dy/**<[in]*/, bool fromInitial/**<[in] do it from initial State?*/) {
+void vtkInteractorStyleProjectionView::Pan( int dx/**<[in]*/, int dy/**<[in]*/) {
   if (m_orientation) {
     updateRenderer();
     vtkRenderer *ren = this->GetCurrentRenderer();
@@ -226,10 +278,7 @@ void vtkInteractorStyleProjectionView::Pan( int dx/**<[in]*/, int dy/**<[in]*/, 
 
       vtkTransform *newTransform = vtkTransform::New();
       newTransform->PreMultiply();
-      if (fromInitial)
-	newTransform->SetMatrix( m_initialState.orientation );
-      else
-	newTransform->SetMatrix( m_orientation );
+      newTransform->SetMatrix( m_orientation );
       newTransform->Translate( zero[0] - d[0], zero[1] - d[1], 0 );
       newTransform->GetMatrix( m_orientation );
       newTransform->Delete();
@@ -280,16 +329,13 @@ void vtkInteractorStyleProjectionView::Spin( int angle/**<[in] in degrees*/) {
 }
 
 /** rotate the viewed object around axes perpendicular to the viewing direction*/
-void vtkInteractorStyleProjectionView::Rotate( int theta/**<[in] angle around vertical axis*/, int phi/**<[in] angle around horizontal axis*/, bool fromInitial/**<[in] do it from initial State?*/) {
+void vtkInteractorStyleProjectionView::Rotate( int theta/**<[in] angle around vertical axis*/, int phi/**<[in] angle around horizontal axis*/) {
   if (m_orientation) {
     vtkTransform *newTransform = vtkTransform::New();
     newTransform->PreMultiply();
-    if (fromInitial)
-      newTransform->SetMatrix( m_initialState.orientation );
-    else
-      newTransform->SetMatrix( m_orientation );
+    newTransform->SetMatrix( m_orientation );
     newTransform->RotateX( phi );
-    newTransform->RotateY( theta );
+    newTransform->RotateY( -theta );
     newTransform->GetMatrix( m_orientation );
     newTransform->Delete();
     updateDisplay();
@@ -297,14 +343,11 @@ void vtkInteractorStyleProjectionView::Rotate( int theta/**<[in] angle around ve
 }
 
 /** slice the viewed object */
-void vtkInteractorStyleProjectionView::Slice( int dthickness/**<unused*/, int dpos/**<[in] delta in position perpendicular to the viewing direction*/, bool fromInitial/**<[in] do it from initial State?*/ ) {
+void vtkInteractorStyleProjectionView::Slice(int dpos/**<[in] delta in position perpendicular to the viewing direction*/) {
   if (m_orientation) {
     vtkTransform *newTransform = vtkTransform::New();
     newTransform->PreMultiply();
-    if (fromInitial)
-      newTransform->SetMatrix( m_initialState.orientation );
-    else
-      newTransform->SetMatrix( m_orientation );
+    newTransform->SetMatrix( m_orientation );
     newTransform->Translate(0, 0, dpos* m_sliceIncrement);
     newTransform->GetMatrix( m_orientation );
     newTransform->Delete();
@@ -313,15 +356,10 @@ void vtkInteractorStyleProjectionView::Slice( int dthickness/**<unused*/, int dp
 }
 
 /** change Window and Level */
-void vtkInteractorStyleProjectionView::WindowLevelDelta( int dw/**<[in] delta window*/, int dl/**<[in] delta level*/, bool fromInitial/**<[in] do it from initial State?*/  ) {
+void vtkInteractorStyleProjectionView::WindowLevelDelta( int dw/**<[in] delta window*/, int dl/**<[in] delta level*/) {
   if (m_imageMapToWindowLevelColors  && (dw || dl)) {
-    if (fromInitial) {
-      dw += m_initialState.window;
-      dl += m_initialState.level;
-    } else {
       dw += m_imageMapToWindowLevelColors->GetWindow();
       dl += m_imageMapToWindowLevelColors->GetLevel();
-    }
     if (dw) m_imageMapToWindowLevelColors->SetWindow(dw);
     if (dl) m_imageMapToWindowLevelColors->SetLevel(dl);
     updateDisplay();

@@ -5,6 +5,7 @@
 #include <imagedefinitions.h>
 #include <string>
 #include <boost/shared_ptr.hpp>
+#include "binaryimagetreeitem.h"
 
 
 class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
@@ -26,7 +27,7 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     
     void appendFileName( const std::string &fn ) { fnList.insert( fn ); }
     
-    bool generateSegment(void);
+    BinaryImageTreeItem *generateSegment(void);
     
     static const std::string &getNumberOfFramesTag();
     static const std::string &getSeriesInstanceUIDTag();

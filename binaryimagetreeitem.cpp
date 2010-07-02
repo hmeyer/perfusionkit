@@ -41,6 +41,7 @@ bool BinaryImageTreeItem::setData(int c, const QVariant &value) {
   return false;
 }
 
+
 void BinaryImageTreeItem::createRandomColor() {
   static boost::mt19937 rng;
   static boost::uniform_int<> rainbow(0,256*6);

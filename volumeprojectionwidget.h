@@ -1,7 +1,7 @@
 #ifndef VOLUMEPROJECTIONWIDGET_H
 #define VOLUMEPROJECTIONWIDGET_H
 
-#include <GUISupport/Qt/QVTKWidget.h>
+#include <QVTKWidget.h>
 
 class vtkImageData;
 class vtkVolume;

@@ -26,9 +26,9 @@ void MainWindow::setImage(VTKTreeItem *imageItem) {
   if (imageItem != NULL)
     vtkImage = imageItem->getVTKImage();
   if (imageItem != selectedCTImage) {
-    selectedSegments.clear();
-    // TODO: clear mprViews Segements
-    
+    for(DisplayedSegmentContainer::const_iterator it = displayedSegments.begin(); it != displayedSegments.end(); it++) {
+      segmentHide( *it );
+    }
     mprView->setImage( vtkImage );
     volumeView->setImage( vtkImage );
     if (selectedCTImage != NULL) selectedCTImage->clearActiveDown();
@@ -39,20 +39,55 @@ void MainWindow::setImage(VTKTreeItem *imageItem) {
 
 void MainWindow::segmentShow( BinaryImageTreeItem *segItem ) {
   if (segItem) {
-    mprView->addBinaryOverlay( segItem->getVTKImage(), segItem->getColor() );
-    selectedSegments.insert( segItem );
+    if (segItem->parent() != selectedCTImage) {
+      setImage(dynamic_cast<VTKTreeItem*>(segItem->parent()));
+    }
+    ActionDispatch overlayAction(std::string("draw sphere on ") + segItem->getName().toStdString(), boost::bind(&BinaryImageTreeItem::drawSphere, segItem, _3, _4, _5), false );
+    mprView->addBinaryOverlay( segItem->getVTKImage(), segItem->getColor(), overlayAction);
+    displayedSegments.insert( segItem );
     segItem->setActive();
   }
 }
 
 void MainWindow::segmentHide( BinaryImageTreeItem *segItem ) {
   if (segItem) {
-    mprView->removeBinaryOverlay( segItem->getVTKImage() );
-    selectedSegments.erase( segItem );
+    DisplayedSegmentContainer::const_iterator it = displayedSegments.find( segItem );
+    if (it != displayedSegments.end()) {
+      mprView->removeBinaryOverlay( segItem->getVTKImage() );
+    }
+    displayedSegments.erase( it );
     segItem->setActive(false);
   }
 }
 
+void MainWindow::on_buttonDraw_clicked() {
+  QModelIndexList selectedIndex = treeView->selectionModel()->selectedRows();
+  if (selectedIndex.size() != 1) {
+    QMessageBox::information(this,tr("Draw Error"),tr("Select one volume to edit"));
+    return;
+  }
+  if (selectedIndex[0].isValid()) {
+    TreeItem *item = &imageModel.getItem( selectedIndex[0] );
+    if (typeid(*item) == typeid(CTImageTreeItem)) {
+      CTImageTreeItem *ctitem = dynamic_cast<CTImageTreeItem*>(item);
+      if (ctitem != selectedCTImage)
+	setImage( ctitem );
+      if (ctitem->childCount() == 0) {
+	item = ctitem->generateSegment();
+      } else if (ctitem->childCount()==1) {
+	item = &ctitem->child(0);
+      } else {
+	QMessageBox::information(this,tr("Draw Error"),tr("Choose the segment to edit"));
+	return;
+      }
+    }
+    if (typeid(*item) == typeid(BinaryImageTreeItem)) {
+      BinaryImageTreeItem *seg = dynamic_cast<BinaryImageTreeItem*>(item);
+      segmentShow(seg);
+      mprView->activateOverlayAction(seg->getVTKImage());
+    }
+  }
+}
 
 void MainWindow::on_actionAbout_triggered() {
      QMessageBox::about(this, tr("About Perfusionkit"),
@@ -144,33 +179,19 @@ void MainWindow::on_actionLoadAllSeries_triggered() {
 void MainWindow::on_treeView_doubleClicked(const QModelIndex &index) {
   if (index.isValid()) {
     TreeItem &item = imageModel.getItem( index );
-    VTKTreeItem *CTItem = NULL;
-    BinaryImageTreeItem *SegItem = NULL;
-    try {
-      if (item.depth() == 1) {
-	CTItem = dynamic_cast<VTKTreeItem*>(&item);
-      } else if (item.depth() == 2) {
-	SegItem = dynamic_cast<BinaryImageTreeItem*>(&item);
-	CTItem = dynamic_cast<VTKTreeItem*>(item.parent());
+    if (typeid(item) == typeid(CTImageTreeItem)) {
+      if (&item == selectedCTImage) {
+	setImage( NULL );
+      } else {
+	setImage( dynamic_cast<CTImageTreeItem*>(&item) );
       }
-      if (CTItem != selectedCTImage) {
-	if (CTItem) {
-	  if (selectedCTImage) selectedCTImage->setActive(false);
-	  setImage( CTItem );
-	  selectedCTImage = CTItem;
-	  selectedCTImage->setActive();
-	} else setImage( NULL );
+    } else if (typeid(item) == typeid(BinaryImageTreeItem)) {
+      BinaryImageTreeItem *SegItem = dynamic_cast<BinaryImageTreeItem*>(&item);
+      if (displayedSegments.find( SegItem )==displayedSegments.end()) {
+	segmentShow( SegItem );
+      } else {
+	segmentHide( SegItem );
       }
-      if (SegItem) {
-	if (selectedSegments.find( SegItem )==selectedSegments.end()) {
-	  segmentShow( SegItem );
-	} else {
-	  segmentHide( SegItem );
-	}
-      }
-    } catch(...) {
-      selectedSegments.clear();
-      setImage( NULL );
     }
   }
 }

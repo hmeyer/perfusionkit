@@ -126,6 +126,7 @@ CTImageTreeItem::ImageType::Pointer CTImageTreeItem::getITKImage(QProgressDialog
 	    std::cerr << excep << std::endl;
     }
     itkImage = imageReader->GetOutput();
+    itkImage->Print( std::cerr );
     model->dataChanged(model->createIndex(childNumber(),0,parent()),model->createIndex(childNumber(),columnCount()-1,parent()));
   }
   return itkImage;
@@ -151,7 +152,7 @@ const std::string &CTImageTreeItem::getSeriesInstanceUIDTag() {
   return SeriesInstanceUIDTag;
 }
 
-bool CTImageTreeItem::generateSegment(void) {
+BinaryImageTreeItem *CTImageTreeItem::generateSegment(void) {
   typedef itk::CastImageFilter< CTImageType, BinaryImageType> CastFilterType;
   
   bool ok;
@@ -165,7 +166,8 @@ bool CTImageTreeItem::generateSegment(void) {
     caster->Update();
     seg = caster->GetOutput();
   }
-  insertChild(new BinaryImageTreeItem(this, seg, segName));
-  return true;
+  BinaryImageTreeItem *result = new BinaryImageTreeItem(this, seg, segName);
+  insertChild(result);
+  return result;
 }
 
