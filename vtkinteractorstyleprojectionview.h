@@ -56,12 +56,14 @@ class vtkInteractorStyleProjectionView : public vtkInteractorStyle
   void Spin( int alpha );
   void Zoom( int delta );
   void Pan( int dx, int dy );
-  int addAction(const std::string &label, const ActionSignal::slot_type &slot, bool restricted);
+  int addAction(const std::string &label, const ActionSignal::slot_type &slot,
+    ActionDispatch::ActionType atype, ActionDispatch::RestrictionType restrict);
   int addAction(const ActionDispatch &action);
   void activateAction(int action);
   void removeAction(int action);
   void resetActions();
   protected:
+  void processAction();
   void updateRenderer();
   void dipatchActions();
   void updateLMBHint();

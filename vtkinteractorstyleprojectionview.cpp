@@ -48,19 +48,20 @@ vtkInteractorStyleProjectionView::vtkInteractorStyleProjectionView():
 }
 
 void vtkInteractorStyleProjectionView::resetActions() {
-  ActionFirst = ActionSlice = addAction("Slice", boost::bind(&vtkInteractorStyleProjectionView::Slice, this, _2), false );
-  ActionRotate = addAction("Rotate", boost::bind(&vtkInteractorStyleProjectionView::Rotate, this, _1, _2), true );
-  ActionSpin = addAction("Spin", boost::bind(&vtkInteractorStyleProjectionView::Spin, this, _1), false );
-  ActionZoom = addAction("Zoom", boost::bind(&vtkInteractorStyleProjectionView::Zoom, this, _2 ), false );
-  ActionPan = addAction("Pan", boost::bind(&vtkInteractorStyleProjectionView::Pan, this, _1, _2), true );
-  ActionWindowLevel = addAction("Window/Level", boost::bind(&vtkInteractorStyleProjectionView::WindowLevelDelta, this, _1, _2), true );
+  ActionFirst = ActionSlice = addAction("Slice", boost::bind(&vtkInteractorStyleProjectionView::Slice, this, _2), ActionDispatch::MovingAction, ActionDispatch::UnRestricted );
+  ActionRotate = addAction("Rotate", boost::bind(&vtkInteractorStyleProjectionView::Rotate, this, _1, _2), ActionDispatch::MovingAction, ActionDispatch::Restricted );
+  ActionSpin = addAction("Spin", boost::bind(&vtkInteractorStyleProjectionView::Spin, this, _1), ActionDispatch::MovingAction, ActionDispatch::UnRestricted );
+  ActionZoom = addAction("Zoom", boost::bind(&vtkInteractorStyleProjectionView::Zoom, this, _2 ), ActionDispatch::MovingAction, ActionDispatch::UnRestricted );
+  ActionPan = addAction("Pan", boost::bind(&vtkInteractorStyleProjectionView::Pan, this, _1, _2), ActionDispatch::MovingAction, ActionDispatch::Restricted );
+  ActionWindowLevel = addAction("Window/Level", boost::bind(&vtkInteractorStyleProjectionView::WindowLevelDelta, this, _1, _2), ActionDispatch::MovingAction, ActionDispatch::Restricted );
   m_leftButtonAction = ActionSlice;
   m_interAction = ActionNone;
 }
 
 
-int vtkInteractorStyleProjectionView::addAction(const std::string &label, const ActionSignal::slot_type &slot, bool restricted) {
-  return addAction(ActionDispatch( label, slot, restricted ) );
+int vtkInteractorStyleProjectionView::addAction(const std::string &label, const ActionSignal::slot_type &slot,
+						ActionDispatch::ActionType atype, ActionDispatch::RestrictionType restrict) {
+  return addAction(ActionDispatch( label, slot, atype, restrict ) );
 }
   
 int vtkInteractorStyleProjectionView::addAction(const ActionDispatch &action) {
@@ -189,7 +190,7 @@ void vtkInteractorStyleProjectionView::SetLMBHint( float alpha, const std::strin
 
 /** Restrict the Action to major Axis?*/
 bool vtkInteractorStyleProjectionView::restrictAction() { 
-  if (m_actionList[m_interAction].restricted  && this->Interactor)
+  if (m_actionList[m_interAction].restrict == ActionDispatch::Restricted  && this->Interactor)
     return this->Interactor->GetControlKey();
   return false;
 }
@@ -199,6 +200,10 @@ bool vtkInteractorStyleProjectionView::restrictAction() {
 void vtkInteractorStyleProjectionView::OnMouseMove()
 {
   vtkInteractorStyle::OnMouseMove();
+  processAction();
+}
+
+void vtkInteractorStyleProjectionView::processAction() {
   if (m_interAction != ActionNone) {
     int x,y,ox,oy;
     if (!GetEventPosition(x,y) || !GetEventPosition(ox,oy,true)) return;
@@ -243,6 +248,7 @@ void vtkInteractorStyleProjectionView::OnMouseMove()
     updateDisplay();
   }
 }
+
 
 /** Slice forward */
 void vtkInteractorStyleProjectionView::OnMouseWheelForward() {
@@ -370,6 +376,9 @@ void vtkInteractorStyleProjectionView::WindowLevelDelta( int dw/**<[in] delta wi
 void vtkInteractorStyleProjectionView::OnLeftButtonDown()
 {
   vtkInteractorStyle::OnLeftButtonDown();
+  if (m_interAction != ActionNone)
+    if (m_actionList[ m_interAction ].atype == ActionDispatch::ClickingAction)
+      processAction();
   m_stateLButton = true;
   dipatchActions();
 }

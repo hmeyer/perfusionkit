@@ -42,7 +42,13 @@ void MainWindow::segmentShow( BinaryImageTreeItem *segItem ) {
     if (segItem->parent() != selectedCTImage) {
       setImage(dynamic_cast<VTKTreeItem*>(segItem->parent()));
     }
-    ActionDispatch overlayAction(std::string("draw sphere on ") + segItem->getName().toStdString(), boost::bind(&BinaryImageTreeItem::drawSphere, segItem, _3, _4, _5), false );
+    ActionDispatch overlayAction(std::string("draw sphere on ") + segItem->getName().toStdString(), 
+				 boost::bind(&BinaryImageTreeItem::drawSphere, segItem, 
+					     boost::bind( &QSpinBox::value, spinBoxSize ),
+					     _3, _4, _5,
+					     boost::bind( &QCheckBox::checkState, checkErase )
+					     ),
+				 ActionDispatch::ClickingAction, ActionDispatch::UnRestricted );
     mprView->addBinaryOverlay( segItem->getVTKImage(), segItem->getColor(), overlayAction);
     displayedSegments.insert( segItem );
     segItem->setActive();
@@ -61,10 +67,32 @@ void MainWindow::segmentHide( BinaryImageTreeItem *segItem ) {
 }
 
 void MainWindow::on_buttonDraw_clicked() {
+  BinaryImageTreeItem *seg = focusSegmentFromSelection();
+  if (seg)
+    mprView->activateOverlayAction(seg->getVTKImage());
+}
+
+void MainWindow::on_buttonThreshold_clicked() {
+  BinaryImageTreeItem *seg = focusSegmentFromSelection();
+  if (seg) {
+    bool ok;
+    double lower = QInputDialog::getDouble(this,tr("Threshold"), tr("Enter lower Threshold value"),
+      -100, -4000, 4000, 1, &ok);
+    if (!ok) return;
+    double upper = QInputDialog::getDouble(this,tr("Threshold"), tr("Enter upper Threshold value"),
+      100, -4000, 4000, 1, &ok);
+    if (ok) {
+      seg->thresholdParent(lower, upper);
+      mprView->activateOverlayAction(seg->getVTKImage());
+    }
+  }
+}
+
+BinaryImageTreeItem *MainWindow::focusSegmentFromSelection(void) {
   QModelIndexList selectedIndex = treeView->selectionModel()->selectedRows();
   if (selectedIndex.size() != 1) {
-    QMessageBox::information(this,tr("Draw Error"),tr("Select one volume to edit"));
-    return;
+    QMessageBox::information(this,tr("Segment Error"),tr("Select one volume to edit"));
+    return NULL;
   }
   if (selectedIndex[0].isValid()) {
     TreeItem *item = &imageModel.getItem( selectedIndex[0] );
@@ -77,17 +105,19 @@ void MainWindow::on_buttonDraw_clicked() {
       } else if (ctitem->childCount()==1) {
 	item = &ctitem->child(0);
       } else {
-	QMessageBox::information(this,tr("Draw Error"),tr("Choose the segment to edit"));
-	return;
+	QMessageBox::information(this,tr("Segment Error"),tr("Choose the segment to edit"));
+	return  NULL;
       }
     }
     if (typeid(*item) == typeid(BinaryImageTreeItem)) {
       BinaryImageTreeItem *seg = dynamic_cast<BinaryImageTreeItem*>(item);
       segmentShow(seg);
-      mprView->activateOverlayAction(seg->getVTKImage());
+      return seg;
     }
   }
+  return NULL;
 }
+
 
 void MainWindow::on_actionAbout_triggered() {
      QMessageBox::about(this, tr("About Perfusionkit"),

@@ -1,5 +1,9 @@
 #include "binaryimagetreeitem.h"
 #include <boost/random.hpp>
+#include <itkImageRegionIterator.h>
+#include <vector>
+#include "ctimagetreeitem.h"
+#include <itkBinaryThresholdImageFilter.h>
 
 
 BinaryImageTreeItem::BinaryImageTreeItem(TreeItem * parent, BinaryImageType::Pointer itkImage, const QString &name)
@@ -8,7 +12,7 @@ BinaryImageTreeItem::BinaryImageTreeItem(TreeItem * parent, BinaryImageType::Poi
 }
 
 TreeItem *BinaryImageTreeItem::clone(TreeItem *clonesParent) const {
-  BinaryImageTreeItem *c = new BinaryImageTreeItem(clonesParent, itkImage, name );
+  BinaryImageTreeItem *c = new BinaryImageTreeItem(clonesParent, peekITKImage(), name );
   cloneChildren(c);
   return c;
 }
@@ -39,6 +43,73 @@ bool BinaryImageTreeItem::setData(int c, const QVariant &value) {
     return true;
   } 
   return false;
+}
+
+template <typename T>
+inline T clip(T min, T val, T max) {
+  return std::max<T>( std::min<T>( val, max), min );
+}
+
+void BinaryImageTreeItem::drawSphere( float radius, float x, float y, float z, bool erase ) {
+  itk::ContinuousIndex< double, ImageDimension > idx;
+  ImageType::PointType point;
+  point[0] = x;point[1] = y;point[2] = z;
+  peekITKImage()->TransformPhysicalPointToContinuousIndex(point, idx);
+  ImageType::SpacingType spacing = peekITKImage()->GetSpacing();
+  ImageType::SizeType size = peekITKImage()->GetBufferedRegion().GetSize();
+  
+  long start[3],end[3];
+  ImageType::SizeType itSize;
+  ImageType::IndexType itIndex;
+  for(int i=0; i < 3; ++i) {
+    start[i]	= (int)(idx[i] - radius/spacing[i]); start[i] 	= clip<long>(0, start[i], size[i]);
+    end[i]	= (int)(idx[i] + radius/spacing[i]); end[i] 	= clip<long>(0, end[i], size[i]);
+    itSize[i] = end[i] - start[i];
+    itIndex[i] = start[i];
+  }
+  
+  ImageType::RegionType itRegion;
+  itRegion.SetSize( itSize );
+  itRegion.SetIndex( itIndex );
+  typedef itk::ImageRegionIterator< ImageType > BinImageIterator;
+  BinImageIterator iterator = BinImageIterator( peekITKImage(), itRegion );
+  iterator.GoToBegin();
+  float brushRadius2 = radius * radius;
+
+  static std::vector< float > prodx;
+  prodx.resize(end[0] - start[0]);
+  for(int lx = start[0]; lx < end[0]; ++lx) {
+    float t = (lx - idx[0]) * spacing[0]; t *= t;
+    prodx[lx-start[0]] = t;
+  }
+  BinaryPixelType pixelVal = 255;
+  if (erase) pixelVal = 0;
+  for(int lz = start[2]; lz < end[2]; ++lz) {
+	  float sumz = (lz - idx[2]) * spacing[2]; sumz *= sumz;
+	  for(int ly = start[1]; ly < end[1]; ++ly) {
+		  float sumy = (ly - idx[1]) * spacing[1]; sumy *= sumy; sumy += sumz;
+		  for(int lx = start[0]; lx < end[0]; ++lx) {
+			  if ((prodx[lx-start[0]] + sumy) < brushRadius2) {
+				  iterator.Set(pixelVal);
+			  }
+			  ++iterator;
+		  }
+	  }
+  }  
+  getVTKImage()->Update();
+}
+
+void BinaryImageTreeItem::thresholdParent(double lower, double upper) {
+  CTImageType::Pointer parentImage = dynamic_cast<CTImageTreeItem*>(parent())->getITKImage();
+  typedef itk::BinaryThresholdImageFilter< CTImageType, BinaryImageType > ThresholdFilterType;
+  ThresholdFilterType::Pointer thresholder = ThresholdFilterType::New();
+  thresholder->SetInput( parentImage );
+  thresholder->SetLowerThreshold( lower );
+  thresholder->SetUpperThreshold( upper );
+  thresholder->Update();
+  BinaryImageType::Pointer thresholdImage = thresholder->GetOutput();
+  setITKImage( thresholdImage );
+  getVTKImage()->Update();
 }
 
 

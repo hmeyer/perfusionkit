@@ -35,7 +35,7 @@ QVariant CTImageTreeItem::do_getData_DisplayRole(int column) const {
 }
 
 QVariant CTImageTreeItem::do_getData_ForegroundRole(int column) const {
-  if (itkImage.IsNull()) return QApplication::palette().midlight();
+  if (peekITKImage().IsNull()) return QApplication::palette().midlight();
   return QVariant::Invalid;
 }
 
@@ -50,8 +50,8 @@ int CTImageTreeItem::columnCount() const {
 }
 
 int CTImageTreeItem::getNumberOfSlices() const {
-  if (itkImage.IsNotNull()) {
-    ImageType::RegionType imageRegion = itkImage->GetLargestPossibleRegion();
+  if (peekITKImage().IsNotNull()) {
+    ImageType::RegionType imageRegion = peekITKImage()->GetLargestPossibleRegion();
     return static_cast<uint>(imageRegion.GetSize(2));
   } else {
     int num = fnList.size();
@@ -107,7 +107,7 @@ class CTImageTreeItem::ReaderProgress : public itk::Command {
 
 
 CTImageTreeItem::ImageType::Pointer CTImageTreeItem::getITKImage(QProgressDialog *progress, int progressScale, int progressBase) {
-  if (itkImage.IsNull()) {
+  if (BaseClass::getITKImage().IsNull()) {
     typedef ReaderProgress::ReaderType ReaderType;
     ReaderType::Pointer imageReader = ReaderType::New();
     ReaderType::FileNamesContainer fc;
@@ -125,11 +125,11 @@ CTImageTreeItem::ImageType::Pointer CTImageTreeItem::getITKImage(QProgressDialog
 	    std::cerr << "Exception caught !" << std::endl;
 	    std::cerr << excep << std::endl;
     }
-    itkImage = imageReader->GetOutput();
-    itkImage->Print( std::cerr );
+    CTImageType::Pointer result =  imageReader->GetOutput();
+    setITKImage( result );
     model->dataChanged(model->createIndex(childNumber(),0,parent()),model->createIndex(childNumber(),columnCount()-1,parent()));
   }
-  return itkImage;
+  return BaseClass::getITKImage();
 }
 
 void CTImageTreeItem::getUIDFromDict(const itk::MetaDataDictionary &dict, std::string &iUID) {
@@ -165,6 +165,7 @@ BinaryImageTreeItem *CTImageTreeItem::generateSegment(void) {
     caster->SetInput( getITKImage() );
     caster->Update();
     seg = caster->GetOutput();
+    seg->FillBuffer(0);
   }
   BinaryImageTreeItem *result = new BinaryImageTreeItem(this, seg, segName);
   insertChild(result);

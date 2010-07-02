@@ -98,9 +98,6 @@ void MultiPlanarReformatWidget::setImage(vtkImageData *image/**<[in] Volume (3D)
     m_reslice->SetOutputSpacing(1,1,1);
     m_reslice->GetOutputExtent(ex);
     std::cerr << "outputExtent:" << ex[0] << " ," << ex[1] << " ," << ex[2] << " ," << ex[3] << " ," << ex[4] << " ," << ex[5] << std::endl;
-    m_actor->Print(std::cerr);
-    m_renderer->Print( std::cerr );
-      
   }
 }
 

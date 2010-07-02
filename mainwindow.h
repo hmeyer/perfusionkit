@@ -42,10 +42,12 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
       void on_actionLoadAllSeries_triggered();
       void on_treeView_doubleClicked(const QModelIndex &index);
       void on_buttonDraw_clicked();
+      void on_buttonThreshold_clicked();
       void treeViewContextMenu(const QPoint &pos);
       void removeCTImage(int number);
 
  private:
+  BinaryImageTreeItem *focusSegmentFromSelection(void);
   typedef std::auto_ptr<DicomSelectorDialog> DicomSelectorDialogPtr;
   void loadDicomData(DicomSelectorDialogPtr dicomSelector);
   void setImage(VTKTreeItem *imageItem);

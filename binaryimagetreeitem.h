@@ -20,7 +20,9 @@ class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
     virtual bool setData(int c, const QVariant &value);
     const QString &getName() const { return name; }
     void setName(const QString &_name) { name = _name; }
+    void drawSphere( float radius, float x, float y, float z, bool erase );
     const unsigned char *getColor() { return color;}
+    void thresholdParent(double lower, double upper);
   private:
     void createRandomColor();
     QString name;

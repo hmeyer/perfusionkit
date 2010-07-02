@@ -198,15 +198,6 @@
            </item>
            <item>
             <widget class="QSpinBox" name="spinBoxSize">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimum">
-              <number>1</number>
-             </property>
              <property name="maximum">
               <number>50</number>
              </property>
@@ -242,6 +233,9 @@
           <property name="value">
            <number>5</number>
           </property>
+          <property name="sliderPosition">
+           <number>5</number>
+          </property>
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
@@ -250,7 +244,7 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="0">
+        <item row="5" column="0">
          <widget class="QPushButton" name="buttonDilate">
           <property name="enabled">
            <bool>true</bool>
@@ -260,7 +254,7 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
+        <item row="5" column="1">
          <widget class="QPushButton" name="buttonErode">
           <property name="enabled">
            <bool>true</bool>
@@ -270,7 +264,7 @@
           </property>
          </widget>
         </item>
-        <item row="5" column="0">
+        <item row="6" column="0">
          <widget class="QPushButton" name="buttonClose">
           <property name="enabled">
            <bool>true</bool>
@@ -280,7 +274,7 @@
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
+        <item row="6" column="1">
          <widget class="QPushButton" name="buttonOpen">
           <property name="enabled">
            <bool>true</bool>
@@ -290,7 +284,7 @@
           </property>
          </widget>
         </item>
-        <item row="6" column="0">
+        <item row="7" column="0">
          <widget class="QPushButton" name="buttonIntersection">
           <property name="enabled">
            <bool>true</bool>
@@ -300,23 +294,13 @@
           </property>
          </widget>
         </item>
-        <item row="6" column="1">
+        <item row="7" column="1">
          <widget class="QPushButton" name="buttonDifference">
           <property name="enabled">
            <bool>true</bool>
           </property>
           <property name="text">
            <string>Difference</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="0" colspan="2">
-         <widget class="QPushButton" name="buttonUnion">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="text">
-           <string>Union</string>
           </property>
          </widget>
         </item>
@@ -334,6 +318,23 @@
           </property>
           <property name="text">
            <string>Draw</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0" colspan="2">
+         <widget class="QPushButton" name="buttonThreshold">
+          <property name="text">
+           <string>Threshold</string>
+          </property>
+         </widget>
+        </item>
+        <item row="8" column="0" colspan="2">
+         <widget class="QPushButton" name="buttonUnion">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="text">
+           <string>Union</string>
           </property>
          </widget>
         </item>
@@ -484,7 +485,7 @@
     </hint>
     <hint type="destinationlabel">
      <x>101</x>
-     <y>300</y>
+     <y>244</y>
     </hint>
    </hints>
   </connection>
@@ -496,7 +497,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>101</x>
-     <y>300</y>
+     <y>244</y>
     </hint>
     <hint type="destinationlabel">
      <x>-1</x>
@@ -521,38 +522,6 @@
    </hints>
   </connection>
   <connection>
-   <sender>sliderSize</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>spinBoxSize</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>104</x>
-     <y>522</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>144</x>
-     <y>495</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>spinBoxSize</sender>
-   <signal>valueChanged(int)</signal>
-   <receiver>sliderSize</receiver>
-   <slot>setValue(int)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>127</x>
-     <y>478</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>227</x>
-     <y>524</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
    <sender>dockSegmentation</sender>
    <signal>visibilityChanged(bool)</signal>
    <receiver>actionSegmentationTools</receiver>
@@ -565,6 +534,38 @@
     <hint type="destinationlabel">
      <x>-1</x>
      <y>-1</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>sliderSize</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>spinBoxSize</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>51</x>
+     <y>348</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>122</x>
+     <y>332</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>spinBoxSize</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>sliderSize</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>134</x>
+     <y>323</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>139</x>
+     <y>348</y>
     </hint>
    </hints>
   </connection>

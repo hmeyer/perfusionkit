@@ -31,6 +31,12 @@ vtkBinaryImageOverlay::vtkBinaryImageOverlay( vtkSmartPointer<vtkRenderer> rende
   m_reslice->SetResliceAxes(reslicePlaneTransform);
   m_image->UpdateInformation();
   m_reslice->SetInput( m_image );
+
+    int xres = 1000;
+    int yres = 1000;
+    m_reslice->SetOutputExtent(0,xres,0,yres,0,0);
+    m_reslice->SetOutputOrigin(-xres/2.0,-yres/2.0,0);
+    m_reslice->SetOutputSpacing(1,1,1);
   
   if (m_renderer)
     m_renderer->AddActor(m_actor);
