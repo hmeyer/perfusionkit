@@ -199,7 +199,6 @@ bool vtkInteractorStyleProjectionView::restrictAction() {
 /** Gathers Event information and calls the appropiate Action */
 void vtkInteractorStyleProjectionView::OnMouseMove()
 {
-  vtkInteractorStyle::OnMouseMove();
   processAction();
 }
 
@@ -252,13 +251,11 @@ void vtkInteractorStyleProjectionView::processAction() {
 
 /** Slice forward */
 void vtkInteractorStyleProjectionView::OnMouseWheelForward() {
-  vtkInteractorStyle::OnMouseWheelForward();
   Slice(1);
 }
 
 /** Slice backward */
 void vtkInteractorStyleProjectionView::OnMouseWheelBackward() {
-  vtkInteractorStyle::OnMouseWheelBackward();
   Slice(-1);
 }
 
@@ -375,45 +372,39 @@ void vtkInteractorStyleProjectionView::WindowLevelDelta( int dw/**<[in] delta wi
 
 void vtkInteractorStyleProjectionView::OnLeftButtonDown()
 {
-  vtkInteractorStyle::OnLeftButtonDown();
+  m_stateLButton = true;
+  dipatchActions();
   if (m_interAction != ActionNone)
     if (m_actionList[ m_interAction ].atype == ActionDispatch::ClickingAction)
       processAction();
-  m_stateLButton = true;
-  dipatchActions();
 }
 
 void vtkInteractorStyleProjectionView::OnLeftButtonUp()
 {
-  vtkInteractorStyle::OnLeftButtonUp();
   m_stateLButton = false;
   dipatchActions();
 }
 
 void vtkInteractorStyleProjectionView::OnMiddleButtonDown()
 {
-  vtkInteractorStyle::OnMiddleButtonDown();
   m_stateMButton = true;
   dipatchActions();
 }
 
 void vtkInteractorStyleProjectionView::OnMiddleButtonUp()
 {
-  vtkInteractorStyle::OnMiddleButtonUp();
   m_stateMButton = false;
   dipatchActions();
 }
 
 void vtkInteractorStyleProjectionView::OnRightButtonDown()
 {
-  vtkInteractorStyle::OnRightButtonDown();
   m_stateRButton = true;
   dipatchActions();
 }
 
 void vtkInteractorStyleProjectionView::OnRightButtonUp()
 {
-  vtkInteractorStyle::OnRightButtonUp();
   m_stateRButton = false;
   dipatchActions();
 }
@@ -424,7 +415,6 @@ void vtkInteractorStyleProjectionView::OnRightButtonUp()
   */
 void vtkInteractorStyleProjectionView::OnKeyDown()
 {
-  vtkInteractorStyle::OnKeyDown();
   const char *keySym = this->GetInteractor()->GetKeySym();
   if (this->GetInteractor()->GetControlKey()) {
     if (keySymLeft == keySym) { Rotate(90,0); return; }
