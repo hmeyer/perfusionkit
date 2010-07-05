@@ -82,7 +82,7 @@ class TreeItemCompareFunctor {
     if (okx && oky) {
       return descending ^ (ix < iy);
     }
-    return descending ^ (dx.toString() < dy.toString());
+    return descending ^ (&x < &y);
   }
 };
 

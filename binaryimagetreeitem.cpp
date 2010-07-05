@@ -4,6 +4,9 @@
 #include <vector>
 #include "ctimagetreeitem.h"
 #include <itkBinaryThresholdImageFilter.h>
+#include <itkBinaryDilateImageFilter.h>
+#include <itkBinaryErodeImageFilter.h>
+#include <itkBinaryBallStructuringElement.h>
 
 
 BinaryImageTreeItem::BinaryImageTreeItem(TreeItem * parent, BinaryImageType::Pointer itkImage, const QString &name)
@@ -96,7 +99,7 @@ void BinaryImageTreeItem::drawSphere( float radius, float x, float y, float z, b
 		  }
 	  }
   }  
-  getVTKImage()->Update();
+  getVTKImage()->Modified();
 }
 
 void BinaryImageTreeItem::thresholdParent(double lower, double upper) {
@@ -109,8 +112,43 @@ void BinaryImageTreeItem::thresholdParent(double lower, double upper) {
   thresholder->Update();
   BinaryImageType::Pointer thresholdImage = thresholder->GetOutput();
   setITKImage( thresholdImage );
-  getVTKImage()->Update();
+  getVTKImage()->Modified();
 }
+
+void BinaryImageTreeItem::binaryDilate(double radius) {
+  typedef itk::BinaryBallStructuringElement< BinaryPixelType, ImageDimension > KernelType;
+  typedef itk::BinaryDilateImageFilter< BinaryImageType, BinaryImageType, KernelType > FilterType;
+  FilterType::Pointer filter = FilterType::New();
+  filter->SetInput( getITKImage() );
+  BinaryImageType::SpacingType spacing = getITKImage()->GetSpacing();
+  BinaryImageType::SizeType radius3d = {{ radius/spacing[0], radius/spacing[1], radius/spacing[2]}};
+  KernelType kernel;
+  kernel.SetRadius( radius3d );
+  kernel.CreateStructuringElement();
+  filter->SetKernel( kernel );
+  filter->Update();
+  BinaryImageType::Pointer result = filter->GetOutput();
+  setITKImage( result );
+  getVTKImage()->Modified();
+}
+
+void BinaryImageTreeItem::binaryErode(double radius) {
+  typedef itk::BinaryBallStructuringElement< BinaryPixelType, ImageDimension > KernelType;
+  typedef itk::BinaryErodeImageFilter< BinaryImageType, BinaryImageType, KernelType > FilterType;
+  FilterType::Pointer filter = FilterType::New();
+  filter->SetInput( getITKImage() );
+  BinaryImageType::SpacingType spacing = getITKImage()->GetSpacing();
+  BinaryImageType::SizeType radius3d = {{ radius/spacing[0], radius/spacing[1], radius/spacing[2]}};
+  KernelType kernel;
+  kernel.SetRadius( radius3d );
+  kernel.CreateStructuringElement();
+  filter->SetKernel( kernel );
+  filter->Update();
+  BinaryImageType::Pointer result = filter->GetOutput();
+  setITKImage( result );
+  getVTKImage()->Modified();
+}
+
 
 
 void BinaryImageTreeItem::createRandomColor() {

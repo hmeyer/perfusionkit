@@ -25,7 +25,7 @@ const string keySymSpace = "space";
 
 
 vtkStandardNewMacro(InteractorStyleVolumeView);
-
+vtkCxxRevisionMacro(InteractorStyleVolumeView, "$Revision: 0.1 $");
 
 /// default Constructor
 InteractorStyleVolumeView::InteractorStyleVolumeView():
@@ -34,7 +34,7 @@ InteractorStyleVolumeView::InteractorStyleVolumeView():
   m_stateMButton(false),
   m_leftMBHint( NULL ),
   m_restricted( false ),
-  m_rayCastMapper( NULL )
+  RayCastMapper( NULL )
 {
   SetLMBHint(0);
   m_LMBState=VTKIS_ROTATE;
@@ -43,8 +43,11 @@ InteractorStyleVolumeView::InteractorStyleVolumeView():
 
 /// Destructor
 InteractorStyleVolumeView::~InteractorStyleVolumeView() {
+  if (RayCastMapper) RayCastMapper->Delete();
   if (m_leftMBHint) m_leftMBHint->Delete();
 }
+
+vtkCxxSetObjectMacro(InteractorStyleVolumeView, RayCastMapper, vtkFixedPointVolumeRayCastMapper);
 
 /** dispatch Actions according to the State of the Mouse Buttons */
 void InteractorStyleVolumeView::dipatchActions() {
@@ -322,18 +325,18 @@ void InteractorStyleVolumeView::WindowLevel() {
     {
     return;
     }
-  if (!m_rayCastMapper) return;
+  if (!RayCastMapper) return;
   vtkRenderWindowInteractor *rwi = this->Interactor;
 
   int dw = rwi->GetEventPosition()[0] - rwi->GetLastEventPosition()[0];
   int dl = rwi->GetEventPosition()[1] - rwi->GetLastEventPosition()[1];
   
   if (dw || dl) {
-    float newW = (1.0 - dw / 100.0) * m_rayCastMapper->GetFinalColorWindow();
-    float newL = (1.0 - dl / 100.0) * m_rayCastMapper->GetFinalColorLevel();
+    float newW = (1.0 - dw / 100.0) * RayCastMapper->GetFinalColorWindow();
+    float newL = (1.0 - dl / 100.0) * RayCastMapper->GetFinalColorLevel();
     
-    m_rayCastMapper->SetFinalColorWindow( newW );
-    m_rayCastMapper->SetFinalColorLevel( newL );
+    RayCastMapper->SetFinalColorWindow( newW );
+    RayCastMapper->SetFinalColorLevel( newL );
     this->Interactor->Render();
   }
 }

@@ -265,26 +265,6 @@
          </widget>
         </item>
         <item row="6" column="0">
-         <widget class="QPushButton" name="buttonClose">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="text">
-           <string>Close</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="1">
-         <widget class="QPushButton" name="buttonOpen">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="text">
-           <string>Open</string>
-          </property>
-         </widget>
-        </item>
-        <item row="7" column="0">
          <widget class="QPushButton" name="buttonIntersection">
           <property name="enabled">
            <bool>true</bool>
@@ -294,7 +274,7 @@
           </property>
          </widget>
         </item>
-        <item row="7" column="1">
+        <item row="6" column="1">
          <widget class="QPushButton" name="buttonDifference">
           <property name="enabled">
            <bool>true</bool>
@@ -328,7 +308,7 @@
           </property>
          </widget>
         </item>
-        <item row="8" column="0" colspan="2">
+        <item row="7" column="0" colspan="2">
          <widget class="QPushButton" name="buttonUnion">
           <property name="enabled">
            <bool>true</bool>

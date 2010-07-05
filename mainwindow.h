@@ -41,10 +41,12 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
       void on_actionStereoOff_triggered();
       void on_actionLoadAllSeries_triggered();
       void on_treeView_doubleClicked(const QModelIndex &index);
-      void on_buttonDraw_clicked();
-      void on_buttonThreshold_clicked();
       void treeViewContextMenu(const QPoint &pos);
       void removeCTImage(int number);
+      void on_buttonDraw_clicked();
+      void on_buttonThreshold_clicked();
+      void on_buttonDilate_clicked();
+      void on_buttonErode_clicked();
 
  private:
   BinaryImageTreeItem *focusSegmentFromSelection(void);

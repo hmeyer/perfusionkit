@@ -2,13 +2,13 @@
 #define VTKINTERACTORSTYLEPROJECTIONVIEW_H
 
 #include <vtkInteractorStyle.h>
-#include <vtkSmartPointer.h>
 #include "vtkinteractoractiondispatch.h"
 
 
 class vtkImageMapToWindowLevelColors;
 class vtkMatrix4x4;
 class vtkTextActor;
+class vtkTransform;
 
 
 /// Interactor Style specific for Projection Views.
@@ -19,6 +19,7 @@ as well as selection of interaction mode by pressing Space.
 
 class vtkInteractorStyleProjectionView : public vtkInteractorStyle
 {
+  vtkTypeRevisionMacro(vtkInteractorStyleProjectionView,vtkInteractorStyle);
   public:
   /// Default Construction Method filled by vtkStandardNewMacro
   static vtkInteractorStyleProjectionView *New();
@@ -46,8 +47,8 @@ class vtkInteractorStyleProjectionView : public vtkInteractorStyle
   /** @name Attribute Setters
       in order to give vtkInteractorStyleProjectionView needed access to the displayed entities */
   ///@{
-  void SetImageMapToWindowLevelColors(vtkSmartPointer<vtkImageMapToWindowLevelColors> map/**<[in]*/) { m_imageMapToWindowLevelColors = map; }
-  void SetOrientationMatrix(vtkSmartPointer<vtkMatrix4x4> orientation/**<[in]*/) { m_orientation = orientation; }
+  void SetImageMapToWindowLevelColors(vtkImageMapToWindowLevelColors *map/**<[in]*/) { m_imageMapToWindowLevelColors = map; }
+  void SetOrientationMatrix(vtkMatrix4x4 *orientation/**<[in]*/) { m_orientation = orientation; }
   ///@}
   void CycleLeftButtonAction();
   void WindowLevelDelta( int dw, int dl );
@@ -100,11 +101,13 @@ class vtkInteractorStyleProjectionView : public vtkInteractorStyle
   bool m_stateMButton;
   //@}
   float m_sliceIncrement; ///< Value to Increment the Viewers Z-Position when slicing
-  vtkSmartPointer<vtkTextActor> m_leftMBHint; ///< Hint actor for showing the Action associated with the Left Mouse Button
+  vtkTextActor *m_leftMBHint; ///< Hint actor for showing the Action associated with the Left Mouse Button
   float m_leftMBHintAlpha; ///< alpha value for #m_leftMBHint
-  vtkSmartPointer<vtkImageMapToWindowLevelColors> m_imageMapToWindowLevelColors; ///< Mapper (set external via SetImageMapToWindowLevelColors()) for Window and Level (changed via vtkInteractorStyleProjectionView::ActionWindowLevel)
-  vtkSmartPointer<vtkMatrix4x4> m_orientation; ///< the Transformation Matrix of the displayed Data
+  vtkImageMapToWindowLevelColors *m_imageMapToWindowLevelColors; ///< Mapper (set external via SetImageMapToWindowLevelColors()) for Window and Level (changed via vtkInteractorStyleProjectionView::ActionWindowLevel)
+  vtkMatrix4x4 *m_orientation; ///< the Transformation Matrix of the displayed Data
   DisplayState m_initialState; ///< Display state at the beginning of an action
+  private:
+  vtkTransform *tempTransform;
 };
 
 #endif // VTKINTERACTORSTYLEPROJECTIONVIEW_H

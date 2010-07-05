@@ -83,10 +83,35 @@ void MainWindow::on_buttonThreshold_clicked() {
       100, -4000, 4000, 1, &ok);
     if (ok) {
       seg->thresholdParent(lower, upper);
-      mprView->activateOverlayAction(seg->getVTKImage());
+      mprView->repaint();
     }
   }
 }
+
+void MainWindow::on_buttonDilate_clicked() {
+  BinaryImageTreeItem *seg = focusSegmentFromSelection();
+  if (seg) {
+    bool ok;
+    double radius = QInputDialog::getDouble(this,tr("Radius"), tr("Enter dilation radius [mm]"),
+      1, 0, 100, 1, &ok);
+    if (!ok) return;
+    seg->binaryDilate(radius);
+    mprView->repaint();
+  }
+}
+
+void MainWindow::on_buttonErode_clicked() {
+  BinaryImageTreeItem *seg = focusSegmentFromSelection();
+  if (seg) {
+    bool ok;
+    double radius = QInputDialog::getDouble(this,tr("Radius"), tr("Enter erosion radius [mm]"),
+      1, 0, 100, 1, &ok);
+    if (!ok) return;
+    seg->binaryErode(radius);
+    mprView->repaint();
+  }
+}
+
 
 BinaryImageTreeItem *MainWindow::focusSegmentFromSelection(void) {
   QModelIndexList selectedIndex = treeView->selectionModel()->selectedRows();

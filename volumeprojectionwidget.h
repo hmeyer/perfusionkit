@@ -30,7 +30,6 @@ class VolumeProjectionWidget : public QVTKWidget
   void setEyeAngle(double ang);
   void setStereoMode(int mode);
   protected:
-  vtkImageData *m_image; ///< volume image data to be displayed - set by setImage()
   vtkVolume *m_volume; ///< vtkVolume which actually displays the projected volume
   vtkRenderer *m_renderer; ///< the used renderer
   vtkInteractorStyle *m_interactorStyle; ///< special InteractorStyle for Projected Volumes

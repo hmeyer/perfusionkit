@@ -53,8 +53,6 @@ int CTImageTreeModel::rowCount(const QModelIndex &parent) const {
 }
 
 int CTImageTreeModel::columnCount(const QModelIndex &parent) const {
-//  const TreeItem *parentItem = &getItem(parent);
-//  if (parentItem != &rootItem) return parentItem->columnCount();
   return HeaderFields->size();
 }
 
@@ -86,27 +84,6 @@ const TreeItem &CTImageTreeModel::getItem(const QModelIndex &index) const {
   }
   return rootItem;
 }
-/*
-bool CTImageTreeModel::isActive(const TreeItem *item) const {
-  ItemPointerContainer::const_iterator it = activeItems.find( item );
-  if (it != activeItems.end()) return true;
-  return false;
-}
-
-void CTImageTreeModel::setActive(const TreeItem *item, bool active) {
-  if (active) activeItems.insert(item);
-  else activeItems.erase(item);
-  dataChanged(createIndex(0,0,item),createIndex(0,item->columnCount()-1,item));
-}
-
-void CTImageTreeModel::clearAllActive(void) {
-  ItemPointerContainer t;
-  std::swap(t, activeItems);
-  for(ItemPointerContainer::const_iterator it = t.begin(); it!=t.end(); ++it) {
-    dataChanged(createIndex(0, 0, *it), createIndex(0, (*it)->columnCount()-1, *it) );
-  }
-}
-*/
 
 void CTImageTreeModel::appendFilename( const itk::MetaDataDictionary &dict, const std::string &fname) {
   std::string iUID;

@@ -1,8 +1,14 @@
 #include "vtkbinaryimagetocolor.h"
-#include <vtkType.h>
+#include <vtkObjectFactory.h>
 
-vtkBinaryImageToColor *vtkBinaryImageToColor::New(unsigned char r, unsigned char g, unsigned char b) {
-  return new vtkBinaryImageToColor(r,g,b);
+vtkStandardNewMacro(vtkBinaryImageToColor);
+vtkCxxRevisionMacro(vtkBinaryImageToColor, "$Revision: 0.1 $");
+
+vtkBinaryImageToColor::vtkBinaryImageToColor() {
+  SetRange(0,255);
+  SetColor(0,0,0);
+  nothing[0] = 0;nothing[1] = 0;nothing[2] = 0;nothing[3] = 0;
+  dnothing[0] = 0;dnothing[1] = 0;dnothing[2] = 0;
 }
 
 vtkBinaryImageToColor::vtkBinaryImageToColor(unsigned char r, unsigned char g, unsigned char b) {

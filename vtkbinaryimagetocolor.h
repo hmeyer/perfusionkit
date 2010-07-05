@@ -4,7 +4,9 @@
 
 class vtkBinaryImageToColor: public vtkScalarsToColors {
   public:
-  static vtkBinaryImageToColor *New(unsigned char r, unsigned char g, unsigned char b);
+  vtkTypeRevisionMacro(vtkBinaryImageToColor,vtkScalarsToColors);
+  static vtkBinaryImageToColor *New();
+  vtkBinaryImageToColor();
   vtkBinaryImageToColor(unsigned char r, unsigned char g, unsigned char b);
   virtual double *GetRange();
   virtual void SetRange(double min, double max);

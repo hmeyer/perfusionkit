@@ -34,6 +34,5 @@ int main( int argc, char **argv ) {
   window.show();
   
   app.exec();
-  
   return 0;
 }

@@ -18,7 +18,6 @@ class CTImageTreeModel : public QAbstractItemModel {
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const;
     void sort ( int column, Qt::SortOrder order = Qt::AscendingOrder );
 
-
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
     QModelIndex parent(const QModelIndex &index) const;
     bool hasChildren ( const QModelIndex & parent = QModelIndex() ) const;
@@ -34,11 +33,7 @@ class CTImageTreeModel : public QAbstractItemModel {
     void loadAllImages(void);
     const TreeItem &getItem(const QModelIndex &index) const;
     TreeItem &getItem(const QModelIndex &index);
-/*    
-    bool isActive(const TreeItem *item) const;
-    void setActive(const TreeItem *item, bool active = true);
-    void clearAllActive(void);
-*/    
+  
     friend class TreeItem;
     friend class CTImageTreeItem;
     

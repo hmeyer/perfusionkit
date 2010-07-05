@@ -51,6 +51,13 @@ MultiPlanarReformatWidget::MultiPlanarReformatWidget(QWidget* parent, Qt::WFlags
 /** Destructor*/
 MultiPlanarReformatWidget::~MultiPlanarReformatWidget() {
   this->hide();
+  if (m_renderer) m_renderer->Delete();
+  m_overlays.clear();
+  if (m_colormap) m_colormap->Delete();
+  if (m_reslice) m_reslice->Delete();
+  if (m_actor) m_actor->Delete();
+  if (m_interactorStyle) m_interactorStyle->Delete();
+  if (m_reslicePlaneTransform) m_reslicePlaneTransform->Delete();
 }
 
 /** Volume Setter*/

@@ -28,6 +28,7 @@ const string keySymDown = "Down";
 const string keySymSpace = "space";
 
 vtkStandardNewMacro(vtkInteractorStyleProjectionView);
+vtkCxxRevisionMacro(vtkInteractorStyleProjectionView, "$Revision: 0.1 $");
 
 /// default Constructor
 vtkInteractorStyleProjectionView::vtkInteractorStyleProjectionView():
@@ -38,13 +39,15 @@ vtkInteractorStyleProjectionView::vtkInteractorStyleProjectionView():
   m_sliceIncrement(1.0),
   m_leftMBHint( NULL ),
   m_imageMapToWindowLevelColors(NULL),
-  m_orientation(NULL)
+  m_orientation(NULL),
+  tempTransform( vtkTransform::New() )
 {
   State = VTKIS_NONE;
   UseTimers = 1;
   SetLMBHint(0);
   m_initialState.orientation = vtkMatrix4x4::New();
   resetActions();
+  tempTransform->PreMultiply();
 }
 
 void vtkInteractorStyleProjectionView::resetActions() {
@@ -88,7 +91,8 @@ void vtkInteractorStyleProjectionView::activateAction(int action) {
 /// Destructor
 vtkInteractorStyleProjectionView::~vtkInteractorStyleProjectionView() {
   if (m_leftMBHint) m_leftMBHint->Delete();
-  m_initialState.orientation->Delete();
+  if (m_initialState.orientation) m_initialState.orientation->Delete();
+  if (tempTransform) tempTransform->Delete();
 }
 
 /** Get Position of Current Event 
@@ -237,13 +241,6 @@ void vtkInteractorStyleProjectionView::processAction() {
       }
     }
     (*m_actionList[m_interAction].sig)( dx, dy, coord[0], coord[1], coord[2]);
-    vtkTransform *newTransform = vtkTransform::New();
-    newTransform->PreMultiply();
-    newTransform->SetMatrix( m_orientation );
-    newTransform->Translate(0, 0, 1);
-    newTransform->Translate(0, 0, -1);
-    newTransform->GetMatrix( m_orientation );
-    newTransform->Delete();
     updateDisplay();
   }
 }
@@ -279,12 +276,9 @@ void vtkInteractorStyleProjectionView::Pan( int dx/**<[in]*/, int dy/**<[in]*/) 
       ren->GetViewPoint( d );
       ren->ViewToWorld( d[0], d[1], d[2] );
 
-      vtkTransform *newTransform = vtkTransform::New();
-      newTransform->PreMultiply();
-      newTransform->SetMatrix( m_orientation );
-      newTransform->Translate( zero[0] - d[0], zero[1] - d[1], 0 );
-      newTransform->GetMatrix( m_orientation );
-      newTransform->Delete();
+      tempTransform->SetMatrix( m_orientation );
+      tempTransform->Translate( zero[0] - d[0], zero[1] - d[1], 0 );
+      tempTransform->GetMatrix( m_orientation );
       updateDisplay();
     }
   }
@@ -308,12 +302,9 @@ void vtkInteractorStyleProjectionView::updateDisplay(void) {
 void vtkInteractorStyleProjectionView::Zoom( int delta/**<[in] positive numbers mean positive zoom, negative....*/) {
   if (delta && m_orientation) {
     double zoom = 1.0 - delta / 100.0;
-    vtkTransform *newTransform = vtkTransform::New();
-    newTransform->PreMultiply();
-    newTransform->SetMatrix( m_orientation );
-    newTransform->Scale( zoom, zoom, zoom );
-    newTransform->GetMatrix( m_orientation );
-    newTransform->Delete();
+    tempTransform->SetMatrix( m_orientation );
+    tempTransform->Scale( zoom, zoom, zoom );
+    tempTransform->GetMatrix( m_orientation );
     updateDisplay();
   }
 }
@@ -321,12 +312,9 @@ void vtkInteractorStyleProjectionView::Zoom( int delta/**<[in] positive numbers 
 /** spin the viewed object around the viewing direction */
 void vtkInteractorStyleProjectionView::Spin( int angle/**<[in] in degrees*/) {
   if (m_orientation) {
-    vtkTransform *newTransform = vtkTransform::New();
-    newTransform->PreMultiply();
-    newTransform->SetMatrix( m_orientation );
-    newTransform->RotateZ( angle );
-    newTransform->GetMatrix( m_orientation );
-    newTransform->Delete();
+    tempTransform->SetMatrix( m_orientation );
+    tempTransform->RotateZ( angle );
+    tempTransform->GetMatrix( m_orientation );
     updateDisplay();
   }
 }
@@ -334,13 +322,10 @@ void vtkInteractorStyleProjectionView::Spin( int angle/**<[in] in degrees*/) {
 /** rotate the viewed object around axes perpendicular to the viewing direction*/
 void vtkInteractorStyleProjectionView::Rotate( int theta/**<[in] angle around vertical axis*/, int phi/**<[in] angle around horizontal axis*/) {
   if (m_orientation) {
-    vtkTransform *newTransform = vtkTransform::New();
-    newTransform->PreMultiply();
-    newTransform->SetMatrix( m_orientation );
-    newTransform->RotateX( phi );
-    newTransform->RotateY( -theta );
-    newTransform->GetMatrix( m_orientation );
-    newTransform->Delete();
+    tempTransform->SetMatrix( m_orientation );
+    tempTransform->RotateX( phi );
+    tempTransform->RotateY( -theta );
+    tempTransform->GetMatrix( m_orientation );
     updateDisplay();
   }
 }
@@ -348,12 +333,9 @@ void vtkInteractorStyleProjectionView::Rotate( int theta/**<[in] angle around ve
 /** slice the viewed object */
 void vtkInteractorStyleProjectionView::Slice(int dpos/**<[in] delta in position perpendicular to the viewing direction*/) {
   if (m_orientation) {
-    vtkTransform *newTransform = vtkTransform::New();
-    newTransform->PreMultiply();
-    newTransform->SetMatrix( m_orientation );
-    newTransform->Translate(0, 0, dpos* m_sliceIncrement);
-    newTransform->GetMatrix( m_orientation );
-    newTransform->Delete();
+    tempTransform->SetMatrix( m_orientation );
+    tempTransform->Translate(0, 0, dpos* m_sliceIncrement);
+    tempTransform->GetMatrix( m_orientation );
     updateDisplay();
   }
 }

@@ -18,7 +18,6 @@ VolumeProjectionWidget::VolumeProjectionWidget(QWidget* parent, Qt::WFlags f):
   QVTKWidget( parent, f),
   m_volume(vtkVolume::New()),
   m_renderer(vtkOpenGLRenderer::New()),
-//  m_interactorStyle(vtkInteractorStyleProjectionView::New()),
   m_interactorStyle(InteractorStyleVolumeView::New()),
   m_volumeMapper(vtkFixedPointVolumeRayCastMapper::New()),
   m_volumeProperty(vtkVolumeProperty::New()),
@@ -68,32 +67,27 @@ VolumeProjectionWidget::VolumeProjectionWidget(QWidget* parent, Qt::WFlags f):
 /** Destructor*/
 VolumeProjectionWidget::~VolumeProjectionWidget() {
   this->hide();
-  m_renderer->Delete();
-  m_volume->Delete();
-  m_interactorStyle->Delete();
-  m_volumeMapper->Delete();
-  m_volumeProperty->Delete();
-  m_opacityTransferFunction->Delete();
-  m_grayTransferFunction->Delete();
+  if (m_volume) m_volume->Delete();
+  if (m_renderer) m_renderer->Delete();
+  if (m_interactorStyle) m_interactorStyle->Delete();
+  if (m_volumeMapper) m_volumeMapper->Delete();
+  if (m_volumeProperty) m_volumeProperty->Delete();
+  if (m_opacityTransferFunction) m_opacityTransferFunction->Delete();
+  if (m_grayTransferFunction) m_grayTransferFunction->Delete();
 }
 
 /** Volume Setter*/
 void VolumeProjectionWidget::setImage(vtkImageData *image/**<[in] Volume (3D) Image with one component*/) {
-  if (image==NULL) {
-    m_image = NULL;
-    vtkRenderWindow *window = this->GetRenderWindow();
+  vtkRenderWindow *window = this->GetRenderWindow();
+  if (image != NULL) {
+    image->UpdateInformation();
     window->RemoveRenderer( m_renderer );
-    this->update();
-  } else {
-    vtkRenderWindow *window = this->GetRenderWindow();
-    window->RemoveRenderer( m_renderer );
-    m_image = image;
-    m_image->UpdateInformation();
-
-    m_volumeMapper->SetInput( m_image );
-    window->AddRenderer(m_renderer);
-    this->update();
   }
+  m_volumeMapper->SetInput(image);
+  if (image) {
+    window->AddRenderer( m_renderer );
+  }
+  this->update();
 }
 
 

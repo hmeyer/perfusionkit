@@ -14,6 +14,7 @@ as well as selection of interaction mode by pressing Space.
 */
 class InteractorStyleVolumeView : public vtkInteractorStyleTrackballCamera
 {
+  vtkTypeRevisionMacro(InteractorStyleVolumeView,vtkInteractorStyleTrackballCamera);
   public:
   /// Default Construction Method filled by vtkStandardNewMacro
   static InteractorStyleVolumeView *New();
@@ -45,7 +46,7 @@ class InteractorStyleVolumeView : public vtkInteractorStyleTrackballCamera
   virtual void WindowLevel();
   virtual void StartWindowLevel();
   /// Set a RayCastMapper - in order to enable Window-Level-Modifications.
-  void SetRayCastMapper( vtkFixedPointVolumeRayCastMapper *m) { m_rayCastMapper = m; }
+  void SetRayCastMapper( vtkFixedPointVolumeRayCastMapper *m);
   
 /*
   void SpinBy( int alpha );
@@ -80,7 +81,7 @@ class InteractorStyleVolumeView : public vtkInteractorStyleTrackballCamera
   vtkTextActor *m_leftMBHint; ///< Hint actor for showing the Action associated with the Left Mouse Button
   float m_leftMBHintAlpha; ///< alpha value for #m_leftMBHint
   bool m_restricted; ///< flag indicating, whether or not the current Action is restrict to a major Axis
-  vtkFixedPointVolumeRayCastMapper* m_rayCastMapper; ///< pointer to RayCastMapper - if set
+  vtkFixedPointVolumeRayCastMapper *RayCastMapper; ///< pointer to RayCastMapper - if set
 };
 
 
