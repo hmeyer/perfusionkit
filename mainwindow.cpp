@@ -26,8 +26,8 @@ void MainWindow::setImage(VTKTreeItem *imageItem) {
   if (imageItem != NULL)
     vtkImage = imageItem->getVTKImage();
   if (imageItem != selectedCTImage) {
-    for(DisplayedSegmentContainer::const_iterator it = displayedSegments.begin(); it != displayedSegments.end(); it++) {
-      segmentHide( *it );
+    while(!displayedSegments.empty()) {
+      segmentHide( *displayedSegments.begin() );
     }
     mprView->setImage( vtkImage );
     volumeView->setImage( vtkImage );
