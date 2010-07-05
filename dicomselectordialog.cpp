@@ -95,9 +95,7 @@ void DicomSelectorDialog::exec() {
     }
   }
   if (ctImageModel.rowCount(QModelIndex())==0) return;
-std::cerr << __FILE__ << "[" << __LINE__ << "]:" << __FUNCTION__ << std::endl;
   treeView->setModel( &ctImageModel );
-std::cerr << __FILE__ << "[" << __LINE__ << "]:" << __FUNCTION__ << std::endl;
   treeView->selectAll();
   for(unsigned int t=0; t < HeaderFields.size(); t++) treeView->resizeColumnToContents(t);
   QDialog::exec();
