@@ -92,10 +92,10 @@ void MainWindow::on_buttonDilate_clicked() {
   BinaryImageTreeItem *seg = focusSegmentFromSelection();
   if (seg) {
     bool ok;
-    double radius = QInputDialog::getDouble(this,tr("Radius"), tr("Enter dilation radius [mm]"),
-      1, 0, 100, 1, &ok);
+    int iterations = QInputDialog::getInt(this,tr("Interations"), tr("Enter number of dilation iterations"),
+      1, 1, 100, 1, &ok);
     if (!ok) return;
-    seg->binaryDilate(radius);
+    seg->binaryDilate(iterations);
     mprView->repaint();
   }
 }
@@ -104,10 +104,10 @@ void MainWindow::on_buttonErode_clicked() {
   BinaryImageTreeItem *seg = focusSegmentFromSelection();
   if (seg) {
     bool ok;
-    double radius = QInputDialog::getDouble(this,tr("Radius"), tr("Enter erosion radius [mm]"),
-      1, 0, 100, 1, &ok);
+    int iterations = QInputDialog::getInt(this,tr("Interations"), tr("Enter number of erosion iterations"),
+      1, 1, 100, 1, &ok);
     if (!ok) return;
-    seg->binaryErode(radius);
+    seg->binaryErode(iterations);
     mprView->repaint();
   }
 }
@@ -227,6 +227,11 @@ void MainWindow::on_actionStereoOff_triggered() {
 
 void MainWindow::on_actionLoadAllSeries_triggered() {
   imageModel.loadAllImages();
+}
+
+void MainWindow::on_actionCubicInterpolation_triggered() {
+  mprView->setCubicInterpolation( actionCubicInterpolation->isChecked() );
+  mprView->repaint();
 }
 
 

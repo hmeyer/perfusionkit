@@ -61,21 +61,23 @@ void BinaryImageTreeItem::drawSphere( float radius, float x, float y, float z, b
   ImageType::SpacingType spacing = peekITKImage()->GetSpacing();
   ImageType::SizeType size = peekITKImage()->GetBufferedRegion().GetSize();
   
+  
   long start[3],end[3];
   ImageType::SizeType itSize;
   ImageType::IndexType itIndex;
   for(int i=0; i < 3; ++i) {
-    start[i]	= (int)(idx[i] - radius/spacing[i]); start[i] 	= clip<long>(0, start[i], size[i]);
-    end[i]	= (int)(idx[i] + radius/spacing[i]); end[i] 	= clip<long>(0, end[i], size[i]);
+    double iradius =  std::abs(radius/spacing[i]);
+    start[i]	= (int)(idx[i] - iradius); start[i] 	= clip<long>(0, start[i], size[i]);
+    end[i]	= (int)(idx[i] + iradius); end[i] 	= clip<long>(0, end[i], size[i]);
     itSize[i] = end[i] - start[i];
     itIndex[i] = start[i];
   }
   
-  ImageType::RegionType itRegion;
-  itRegion.SetSize( itSize );
-  itRegion.SetIndex( itIndex );
+  ImageType::RegionType DrawRegion;
+  DrawRegion.SetSize( itSize );
+  DrawRegion.SetIndex( itIndex );
   typedef itk::ImageRegionIterator< ImageType > BinImageIterator;
-  BinImageIterator iterator = BinImageIterator( peekITKImage(), itRegion );
+  BinImageIterator iterator = BinImageIterator( peekITKImage(), DrawRegion );
   iterator.GoToBegin();
   float brushRadius2 = radius * radius;
 
@@ -115,15 +117,13 @@ void BinaryImageTreeItem::thresholdParent(double lower, double upper) {
   getVTKImage()->Modified();
 }
 
-void BinaryImageTreeItem::binaryDilate(double radius) {
+void BinaryImageTreeItem::binaryDilate(int iterations) {
   typedef itk::BinaryBallStructuringElement< BinaryPixelType, ImageDimension > KernelType;
   typedef itk::BinaryDilateImageFilter< BinaryImageType, BinaryImageType, KernelType > FilterType;
   FilterType::Pointer filter = FilterType::New();
   filter->SetInput( getITKImage() );
-  BinaryImageType::SpacingType spacing = getITKImage()->GetSpacing();
-  BinaryImageType::SizeType radius3d = {{ radius/spacing[0], radius/spacing[1], radius/spacing[2]}};
   KernelType kernel;
-  kernel.SetRadius( radius3d );
+  kernel.SetRadius( iterations );
   kernel.CreateStructuringElement();
   filter->SetKernel( kernel );
   filter->Update();
@@ -132,15 +132,13 @@ void BinaryImageTreeItem::binaryDilate(double radius) {
   getVTKImage()->Modified();
 }
 
-void BinaryImageTreeItem::binaryErode(double radius) {
+void BinaryImageTreeItem::binaryErode(int iterations) {
   typedef itk::BinaryBallStructuringElement< BinaryPixelType, ImageDimension > KernelType;
   typedef itk::BinaryErodeImageFilter< BinaryImageType, BinaryImageType, KernelType > FilterType;
   FilterType::Pointer filter = FilterType::New();
   filter->SetInput( getITKImage() );
-  BinaryImageType::SpacingType spacing = getITKImage()->GetSpacing();
-  BinaryImageType::SizeType radius3d = {{ radius/spacing[0], radius/spacing[1], radius/spacing[2]}};
   KernelType kernel;
-  kernel.SetRadius( radius3d );
+  kernel.SetRadius( iterations );
   kernel.CreateStructuringElement();
   filter->SetKernel( kernel );
   filter->Update();
@@ -157,34 +155,34 @@ void BinaryImageTreeItem::createRandomColor() {
   static boost::variate_generator<boost::mt19937&, boost::uniform_int<> > rainbowcolor(rng, rainbow);
   int hue = rainbowcolor();     
   if (hue<256) {
-    int rise = hue;
+    int ascend = hue;
       color[0] = 255;
-      color[1] = rise;
+      color[1] = ascend;
       color[2] = 0;
   } else if (hue<512) {
-    int fall = 511-hue;
-      color[0] = fall;
+    int descend = 511-hue;
+      color[0] = descend;
       color[1] = 255;
       color[2] = 0;
   } else if (hue<768) {
-    int rise = hue-512;
+    int ascend = hue-512;
       color[0] = 0;
       color[1] = 255;
-      color[2] = rise;
+      color[2] = ascend;
   } else if (hue<1024) {
-    int fall = 1023-hue;
+    int descend = 1023-hue;
       color[0] = 0;
-      color[1] = fall;
+      color[1] = descend;
       color[2] = 255;
   } else if (hue<1280) {
-    int rise = hue-1024;
-      color[0] = rise;
+    int ascend = hue-1024;
+      color[0] = ascend;
       color[1] = 0;
       color[2] = 255;
   } else { //if (color<1536) 
-    int fall = 1535-hue;
+    int descend = 1535-hue;
       color[0] = 255;
       color[1] = 0;
-      color[2] = fall;
+      color[2] = descend;
   }
 }

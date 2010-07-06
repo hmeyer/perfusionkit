@@ -23,8 +23,8 @@ class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
     void drawSphere( float radius, float x, float y, float z, bool erase );
     const unsigned char *getColor() { return color;}
     void thresholdParent(double lower, double upper);
-    void binaryDilate(double radius);
-    void binaryErode(double radius);
+    void binaryDilate(int iterations);
+    void binaryErode(int iterations);
   private:
     void createRandomColor();
     QString name;

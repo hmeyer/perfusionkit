@@ -28,6 +28,8 @@ class MultiPlanarReformatWidget : public QVTKWidget
   void addBinaryOverlay(vtkImageData *image, const unsigned char *color, const ActionDispatch &dispatch = ActionDispatch() );
   void activateOverlayAction(vtkImageData *image);
   void removeBinaryOverlay(vtkImageData *image);
+  virtual void resizeEvent( QResizeEvent * event );
+  void setCubicInterpolation(bool cubic=true);
   
   protected:
   typedef std::map< vtkImageData *, boost::shared_ptr< vtkBinaryImageOverlay > > OverlayMapType;

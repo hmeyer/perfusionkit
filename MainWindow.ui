@@ -108,6 +108,8 @@
     </property>
     <addaction name="actionSeriesSelector"/>
     <addaction name="actionSegmentationTools"/>
+    <addaction name="separator"/>
+    <addaction name="actionCubicInterpolation"/>
    </widget>
    <widget class="QMenu" name="menuSeries">
     <property name="title">
@@ -432,6 +434,17 @@
   <action name="actionLoadAllSeries">
    <property name="text">
     <string>Load All</string>
+   </property>
+  </action>
+  <action name="actionCubicInterpolation">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Cubic Interpolation</string>
    </property>
   </action>
  </widget>

@@ -237,6 +237,7 @@ void vtkInteractorStyleProjectionView::processAction() {
 	ren->SetDisplayPoint( x, y, 0);// 0.38 );
 	ren->DisplayToWorld();
 	ren->GetWorldPoint( coord );
+	coord[2] = 0.0;
 	m_orientation->MultiplyPoint(coord, coord);
       }
     }

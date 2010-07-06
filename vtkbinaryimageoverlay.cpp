@@ -29,6 +29,7 @@ vtkBinaryImageOverlay::vtkBinaryImageOverlay( vtkRenderer *renderer,
   
   m_reslice->SetOutputDimensionality(2);
   m_reslice->SetBackgroundLevel(-1000);
+  
   m_colormap->SetLookupTable(m_lookup);
   m_colormap->SetInputConnection(m_reslice->GetOutputPort());
 
@@ -37,11 +38,7 @@ vtkBinaryImageOverlay::vtkBinaryImageOverlay( vtkRenderer *renderer,
   m_image->UpdateInformation();
   m_reslice->SetInput( m_image );
 
-    int xres = 1000;
-    int yres = 1000;
-    m_reslice->SetOutputExtent(0,xres,0,yres,0,0);
-    m_reslice->SetOutputOrigin(-xres/2.0,-yres/2.0,0);
-    m_reslice->SetOutputSpacing(1,1,1);
+  m_reslice->SetOutputSpacing(1,1,1);
   
   if (m_renderer)
     m_renderer->AddActor(m_actor);
@@ -62,6 +59,11 @@ vtkBinaryImageOverlay::~vtkBinaryImageOverlay() {
   if (m_colormap) m_colormap->Delete();
   if (m_lookup) m_lookup->Delete();
   if (m_actor) m_actor->Delete();
+}
+
+void vtkBinaryImageOverlay::resize( unsigned int xres, unsigned int yres ) {
+  m_reslice->SetOutputExtent(0,xres,0,yres,0,0);
+  m_reslice->SetOutputOrigin(xres/-2.0,yres/-2.0,0);
 }
 
 void vtkBinaryImageOverlay::activateAction() {

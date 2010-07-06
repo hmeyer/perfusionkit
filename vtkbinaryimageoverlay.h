@@ -26,6 +26,7 @@ class vtkBinaryImageOverlay {
     void activateAction();
     vtkImageActor *getActor() { return m_actor; }
     bool operator<(const vtkBinaryImageOverlay &other) const;
+    void resize( unsigned int x, unsigned int y );
   protected:
   vtkImageData *m_image; ///< volume image data to be displayed
   vtkImageReslice *m_reslice; ///< vtkImageAlgorithm to reslice the image

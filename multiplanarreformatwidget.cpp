@@ -12,6 +12,7 @@
 #include <vtkRenderWindow.h>
 #include <algorithm>
 #include <boost/bind.hpp>
+#include <boost/foreach.hpp>
 
 
 #include <vtkCamera.h>
@@ -29,7 +30,7 @@ MultiPlanarReformatWidget::MultiPlanarReformatWidget(QWidget* parent, Qt::WFlags
 {
   m_reslice->SetOutputDimensionality(2);
   m_reslice->SetBackgroundLevel(-1000);
-  m_reslice->SetInterpolationModeToLinear();
+  m_reslice->SetInterpolationModeToCubic();
   
   m_colormap->SetOutputFormatToRGB();
 
@@ -59,6 +60,23 @@ MultiPlanarReformatWidget::~MultiPlanarReformatWidget() {
   if (m_interactorStyle) m_interactorStyle->Delete();
   if (m_reslicePlaneTransform) m_reslicePlaneTransform->Delete();
 }
+
+void MultiPlanarReformatWidget::resizeEvent( QResizeEvent * event ) {
+  QVTKWidget::resizeEvent(event);
+  int xres = this->size().width();
+  int yres = this->size().height();
+  m_reslice->SetOutputExtent(0,xres,0,yres,0,0);
+  m_reslice->SetOutputOrigin(-xres/2.0,-yres/2.0,0);
+  BOOST_FOREACH(OverlayMapType::value_type it, m_overlays) {
+    it.second->resize( xres, yres );
+  }
+}
+
+void MultiPlanarReformatWidget::setCubicInterpolation(bool cubic) {
+  if (cubic) m_reslice->SetInterpolationModeToCubic();
+  else m_reslice->SetInterpolationModeToLinear();
+}
+
 
 /** Volume Setter*/
 void MultiPlanarReformatWidget::setImage(vtkImageData *image/**<[in] Volume (3D) Image with one component*/) {
@@ -95,16 +113,7 @@ void MultiPlanarReformatWidget::setImage(vtkImageData *image/**<[in] Volume (3D)
     window->AddRenderer(m_renderer);
     this->update();
     
-    int ex[6];
-    m_reslice->GetOutputExtent(ex);
-    std::cerr << "outputExtent:" << ex[0] << " ," << ex[1] << " ," << ex[2] << " ," << ex[3] << " ," << ex[4] << " ," << ex[5] << std::endl;
-    int xres = 1000;
-    int yres = 1000;
-    m_reslice->SetOutputExtent(0,xres,0,yres,0,0);
-    m_reslice->SetOutputOrigin(-xres/2.0,-yres/2.0,0);
     m_reslice->SetOutputSpacing(1,1,1);
-    m_reslice->GetOutputExtent(ex);
-    std::cerr << "outputExtent:" << ex[0] << " ," << ex[1] << " ," << ex[2] << " ," << ex[3] << " ," << ex[4] << " ," << ex[5] << std::endl;
   }
 }
 
@@ -114,6 +123,7 @@ void MultiPlanarReformatWidget::addBinaryOverlay(vtkImageData *image, const unsi
     boost::shared_ptr< vtkBinaryImageOverlay > overlay(
      new vtkBinaryImageOverlay( m_renderer, m_interactorStyle, dispatch, image, m_reslicePlaneTransform, color) );
     m_overlays.insert( OverlayMapType::value_type( image, overlay ) );
+    overlay->resize( this->size().width(), this->size().height() );
     this->update();
   }
 }
