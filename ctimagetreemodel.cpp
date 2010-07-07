@@ -2,6 +2,8 @@
 #include <QProgressDialog>
 #include <QApplication>
 #include <boost/make_shared.hpp>
+#include "ctimagetreemodel_serializer.h"
+
 
 CTImageTreeModel::CTImageTreeModel(const DicomTagList &header, QObject *parent)
   : QAbstractItemModel(parent), rootItem( this ) {
@@ -17,7 +19,7 @@ bool CTImageTreeModel::hasChildren ( const QModelIndex & parent) const {
 QVariant CTImageTreeModel::headerData(int section, Qt::Orientation orientation, int role) const {
   if (role == Qt::DisplayRole) {
     if ( section < 0 || section >= int(HeaderFields->size()) ) return QVariant::Invalid;
-    return QString::fromStdString((*HeaderFields)[section].first);
+    return QString::fromStdString((*HeaderFields)[section].name);
   } else {
     return QVariant::Invalid;
   }  
@@ -144,3 +146,13 @@ QModelIndex CTImageTreeModel::createIndex(int r, int c, const TreeItem*p) const 
   if (p == NULL || p == &rootItem) return QModelIndex();
   return QAbstractItemModel::createIndex(r, c, const_cast<TreeItem*>(p));
 }
+
+
+void CTImageTreeModel::openModelFromFile(const std::string &fname) {
+  deserializeCTImageTreeModelFromFile( *this, fname );
+}
+
+void CTImageTreeModel::saveModelToFile(const std::string &fname) const {
+  serializeCTImageTreeModelToFile(*this, fname);
+}
+

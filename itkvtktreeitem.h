@@ -18,7 +18,7 @@ class ITKVTKTreeItem : public VTKTreeItem {
   public:
     typedef ITKVTKTreeItem< TImage > MyType;
     typedef TImage ImageType;
-    ITKVTKTreeItem(TreeItem * parent=NULL, const typename TImage::Pointer itkI = typename TImage::Pointer()): VTKTreeItem(parent), itkImage(itkI), connector(0) {}
+    ITKVTKTreeItem(TreeItem * parent, const typename TImage::Pointer itkI = typename TImage::Pointer()): VTKTreeItem(parent), itkImage(itkI), connector(0) {}
     virtual typename TImage::Pointer getITKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0);
     virtual vtkImageData *getVTKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) {
       if (connector.IsNull()) {
@@ -41,6 +41,16 @@ class ITKVTKTreeItem : public VTKTreeItem {
     typename ImageType::Pointer itkImage;
     typedef itk::ImageToVTKImageFilter< ImageType >   ConnectorType;
     typename ConnectorType::Pointer connector;
+    
+  protected:
+    ITKVTKTreeItem() {}
+
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version) {
+      ar & boost::serialization::base_object<VTKTreeItem>(*this);
+    }
 };
 
 

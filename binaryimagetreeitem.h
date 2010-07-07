@@ -5,7 +5,9 @@
 #include "imagedefinitions.h"
 #include "QString"
 
-
+#include "serialization_helper.h"
+#include <boost/serialization/array.hpp>
+#include <boost/serialization/split_member.hpp>
 
 
 class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
@@ -21,14 +23,39 @@ class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
     const QString &getName() const { return name; }
     void setName(const QString &_name) { name = _name; }
     void drawSphere( float radius, float x, float y, float z, bool erase );
-    const unsigned char *getColor() { return color;}
+    const RGBType &getColor() { return color;}
     void thresholdParent(double lower, double upper);
     void binaryDilate(int iterations);
     void binaryErode(int iterations);
   private:
     void createRandomColor();
     QString name;
-    unsigned char color[3];
+    RGBType color;
+
+  private:
+    friend class boost::serialization::access;
+    BinaryImageTreeItem() {};
+    template<class Archive>
+    void load(Archive & ar, const unsigned int version) {
+      ar & boost::serialization::base_object<BaseClass>(*this);
+      ar & name;
+      ar & color;
+      BinaryImageType::Pointer binIm;
+      ar & binIm;
+      setITKImage( binIm );
+    }
+    template<class Archive>
+    void save(Archive & ar, const unsigned int version) const {
+      ar & boost::serialization::base_object<BaseClass>(*this);
+      ar & name;
+      ar & color;
+      BinaryImageType::Pointer binIm = peekITKImage();
+      ar & binIm;
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
+
+
+
 
 #endif // BINARYIMAGETREEITEM_H

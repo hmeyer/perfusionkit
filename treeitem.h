@@ -9,6 +9,9 @@
 #include <string>
 #include <QAbstractItemModel>
 
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/vector.hpp>
+
 class CTImageTreeModel;
 
 class TreeItem : boost::noncopyable {
@@ -52,12 +55,21 @@ class TreeItem : boost::noncopyable {
   protected:
     QModelIndex getIndex(int column=0);
     CTImageTreeModel *model;
+    TreeItem():active(false) {};
   private:
     typedef boost::ptr_vector<TreeItem> ChildListType;
     ChildListType childItems;
     TreeItem * parentItem;
     bool active;
-};
 
+  private:
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version) {
+      ar & model;
+      ar & parentItem;
+      ar & childItems;
+    }
+};
 
 #endif // TREEITEM_H

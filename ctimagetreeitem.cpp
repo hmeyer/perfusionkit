@@ -28,9 +28,9 @@ bool CTImageTreeItem::setData(int column, const QVariant& value) {
 
 QVariant CTImageTreeItem::do_getData_DisplayRole(int column) const {
   if (column < 0 || column >= int(HeaderFields->size())) return QVariant::Invalid;
-  if ((*HeaderFields)[ column ].second == getNumberOfFramesTag()) return getNumberOfSlices();
+  if ((*HeaderFields)[ column ].tag == getNumberOfFramesTag()) return getNumberOfSlices();
   std::string val;
-  itk::ExposeMetaData( dict, (*HeaderFields)[ column ].second, val );
+  itk::ExposeMetaData( dict, (*HeaderFields)[ column ].tag, val );
   return QString::fromStdString( val );
 }
 

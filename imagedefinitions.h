@@ -2,6 +2,7 @@
 #define IMAGEDEFINITIONS_H
 
 #include <itkImage.h>
+#include <boost/array.hpp>
 
 const unsigned int ImageDimension = 3;
 
@@ -11,5 +12,8 @@ typedef itk::Image< BinaryPixelType, ImageDimension> BinaryImageType;
 
 typedef signed short CTPixelType;
 typedef itk::Image< CTPixelType, ImageDimension> CTImageType;
+
+typedef boost::array< unsigned char, 3 > RGBType;
+
 
 #endif // IMAGEDEFINITIONS_H

@@ -234,6 +234,28 @@ void MainWindow::on_actionCubicInterpolation_triggered() {
   mprView->repaint();
 }
 
+void MainWindow::on_actionSaveProject_triggered() {
+  QString pname = QFileDialog::getSaveFileName( this,
+				tr("Save Project"),
+				"./unnamed.perfproj",
+				tr("Project Files (*.perfproj)"));
+  if (!pname.isEmpty()) {
+    imageModel.saveModelToFile(pname.toStdString());
+  }
+}
+
+void MainWindow::on_actionOpenProject_triggered() {
+  QString pname = QFileDialog::getOpenFileName( this,
+				tr("Open Project"),
+				"./unnamed.perfproj",
+				tr("Project Files (*.perfproj)"));
+  if (!pname.isEmpty()) {
+    setImage(NULL);
+    imageModel.openModelFromFile(pname.toStdString());
+  }
+}
+
+
 
 
 void MainWindow::on_treeView_doubleClicked(const QModelIndex &index) {

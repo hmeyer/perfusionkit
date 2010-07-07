@@ -5,16 +5,31 @@
 #include <imagedefinitions.h>
 #include <string>
 #include <boost/shared_ptr.hpp>
-#include "binaryimagetreeitem.h"
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/set.hpp>
 
+class BinaryImageTreeItem;
 
 class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
 {
   public:
     typedef ITKVTKTreeItem< CTImageType > BaseClass;
-    typedef std::pair< const std::string, const std::string > DicomTagType;
+//    typedef std::pair< const std::string, const std::string > DicomTagType;
+    struct DicomTagType {
+      std::string name;
+      std::string tag;
+      DicomTagType(const std::string &n, const std::string &t):name(n), tag(t) {}
+      private:
+	friend class boost::serialization::access;
+	DicomTagType(){}
+	template<class Archive>
+	void serialize(Archive & ar, const unsigned int version) {
+	  ar & name;
+	  ar & tag;
+	}
+    };
     typedef std::vector< DicomTagType > DicomTagList;
-    typedef boost::shared_ptr< const DicomTagList > DicomTagListPointer;
+    typedef boost::shared_ptr< DicomTagList > DicomTagListPointer;
     CTImageTreeItem(TreeItem * parent, DicomTagListPointer headerFields, const itk::MetaDataDictionary &_dict=itk::MetaDataDictionary());
 
     virtual TreeItem *clone(TreeItem *clonesParent=NULL) const;
@@ -43,6 +58,17 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     DicomTagListPointer HeaderFields;
     itk::MetaDataDictionary dict;
 
+  private:
+    friend class boost::serialization::access;
+    CTImageTreeItem() {}
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version) {
+      ar & boost::serialization::base_object<BaseClass>(*this);
+      ar & itemUID;
+      ar & fnList;
+      ar & HeaderFields;
+      ar & dict;
+    }
 };
 
 

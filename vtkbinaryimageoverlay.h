@@ -2,6 +2,7 @@
 #define VTKBINARYIMAGEOVERLAY_H
 
 #include "vtkinteractoractiondispatch.h"
+#include "imagedefinitions.h"
 
 class vtkImageData;
 class vtkImageReslice;
@@ -20,7 +21,7 @@ class vtkBinaryImageOverlay {
     vtkBinaryImageOverlay( vtkRenderer *renderer,
 			   vtkInteractorStyleProjectionView *interactorStyle,
 			  const ActionDispatch &action, vtkImageData *image, vtkMatrix4x4 *reslicePlaneTransform,
-			  const unsigned char *color, double opacity = 0.3);
+			  const RGBType &color, double opacity = 0.3);
     ~vtkBinaryImageOverlay();
     vtkImageData *getImage() const { return m_image; }
     void activateAction();

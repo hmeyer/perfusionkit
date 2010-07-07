@@ -6,14 +6,15 @@ vtkCxxRevisionMacro(vtkBinaryImageToColor, "$Revision: 0.1 $");
 
 vtkBinaryImageToColor::vtkBinaryImageToColor() {
   SetRange(0,255);
-  SetColor(0,0,0);
+  RGBType black;
+  SetColor(black);
   nothing[0] = 0;nothing[1] = 0;nothing[2] = 0;nothing[3] = 0;
   dnothing[0] = 0;dnothing[1] = 0;dnothing[2] = 0;
 }
 
-vtkBinaryImageToColor::vtkBinaryImageToColor(unsigned char r, unsigned char g, unsigned char b) {
+vtkBinaryImageToColor::vtkBinaryImageToColor(const RGBType &color) {
   SetRange(0,255);
-  SetColor(r,g,b);
+  SetColor(color);
   nothing[0] = 0;nothing[1] = 0;nothing[2] = 0;nothing[3] = 0;
   dnothing[0] = 0;dnothing[1] = 0;dnothing[2] = 0;
 }
@@ -70,10 +71,10 @@ void vtkBinaryImageToColor::MapScalarsThroughTable2(void *input, unsigned char *
   }
 }
 
-void vtkBinaryImageToColor::SetColor(unsigned int r, unsigned int g, unsigned int b) {
-  color[0] = r;
-  color[1] = g;
-  color[2] = b;
+void vtkBinaryImageToColor::SetColor(const RGBType &c) {
+  color[0] = c[0];
+  color[1] = c[1];
+  color[2] = c[2];
   color[3] = 255;
-  dcolor[0] = r/255.0;dcolor[1] = g/255.0;dcolor[2] = b/255.0;
+  dcolor[0] = c[0]/255.0;dcolor[1] = c[1]/255.0;dcolor[2] = c[2]/255.0;
 }

@@ -41,6 +41,8 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
       void on_actionStereoOff_triggered();
       void on_actionLoadAllSeries_triggered();
       void on_actionCubicInterpolation_triggered();
+      void on_actionSaveProject_triggered();
+      void on_actionOpenProject_triggered();
       void on_treeView_doubleClicked(const QModelIndex &index);
       void treeViewContextMenu(const QPoint &pos);
       void removeCTImage(int number);

@@ -118,7 +118,7 @@ void MultiPlanarReformatWidget::setImage(vtkImageData *image/**<[in] Volume (3D)
 }
 
 
-void MultiPlanarReformatWidget::addBinaryOverlay(vtkImageData *image, const unsigned char *color, const ActionDispatch &dispatch) {
+void MultiPlanarReformatWidget::addBinaryOverlay(vtkImageData *image, const RGBType &color, const ActionDispatch &dispatch) {
   if (m_overlays.find( image ) == m_overlays.end() ) {
     boost::shared_ptr< vtkBinaryImageOverlay > overlay(
      new vtkBinaryImageOverlay( m_renderer, m_interactorStyle, dispatch, image, m_reslicePlaneTransform, color) );

@@ -14,7 +14,7 @@
 vtkBinaryImageOverlay::vtkBinaryImageOverlay( vtkRenderer *renderer,
 			  vtkInteractorStyleProjectionView *interactorStyle,
 			  const ActionDispatch &action, vtkImageData *image, vtkMatrix4x4 *reslicePlaneTransform,
-			  const unsigned char *color, double opacity)
+			  const RGBType &color, double opacity)
   :m_image(image),
   m_reslice(vtkImageReslice::New()),
   m_colormap(vtkImageMapToColors::New()),
@@ -23,7 +23,7 @@ vtkBinaryImageOverlay::vtkBinaryImageOverlay( vtkRenderer *renderer,
   m_renderer( renderer ),
   m_interactorStyle(interactorStyle), actionHandle(-1) {
     
-  m_lookup->SetColor(color[0],color[1],color[2]);
+  m_lookup->SetColor(color);
     
   m_actor->SetOpacity(opacity);
   

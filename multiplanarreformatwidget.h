@@ -7,6 +7,7 @@
 #include "vtkinteractorstyleprojectionview.h"
 #include "vtkinteractoractiondispatch.h"
 #include <boost/shared_ptr.hpp>
+#include "imagedefinitions.h"
 
 class vtkImageData;
 class vtkImageReslice;
@@ -25,7 +26,7 @@ class MultiPlanarReformatWidget : public QVTKWidget
   MultiPlanarReformatWidget(QWidget* parent = NULL, Qt::WFlags f = 0);
   ~MultiPlanarReformatWidget();  
   void setImage(vtkImageData *image);
-  void addBinaryOverlay(vtkImageData *image, const unsigned char *color, const ActionDispatch &dispatch = ActionDispatch() );
+  void addBinaryOverlay(vtkImageData *image, const RGBType &color, const ActionDispatch &dispatch = ActionDispatch() );
   void activateOverlayAction(vtkImageData *image);
   void removeBinaryOverlay(vtkImageData *image);
   virtual void resizeEvent( QResizeEvent * event );

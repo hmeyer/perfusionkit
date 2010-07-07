@@ -5,6 +5,11 @@
 #include "ctimagetreeitem.h"
 #include <string>
 #include <vector>
+#include <boost/serialization/access.hpp>
+#include <boost/serialization/shared_ptr.hpp>
+#include <boost/serialization/vector.hpp>
+
+
 
 class CTImageTreeModel : public QAbstractItemModel {
   Q_OBJECT
@@ -33,6 +38,9 @@ class CTImageTreeModel : public QAbstractItemModel {
     void loadAllImages(void);
     const TreeItem &getItem(const QModelIndex &index) const;
     TreeItem &getItem(const QModelIndex &index);
+    
+    void openModelFromFile(const std::string &fname);
+    void saveModelToFile(const std::string &fname) const;
   
     friend class TreeItem;
     friend class CTImageTreeItem;
@@ -42,11 +50,21 @@ class CTImageTreeModel : public QAbstractItemModel {
     bool createSegment(int srow);
 
   private:
+    friend class boost::serialization::access;
+    CTImageTreeModel(QObject *parent = 0):QAbstractItemModel(parent),rootItem(this) {};
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version) {
+      beginResetModel(); 
+      ar & HeaderFields;
+      ar & rootItem;
+      endResetModel(); 
+    }
     void emitLayoutAboutToBeChanged() { emit layoutAboutToBeChanged(); }
     void emitLayoutChanged() { emit layoutChanged(); }
     QModelIndex createIndex(int r, int c, const TreeItem*p) const;
     DicomTagListPointer HeaderFields;
     TreeItem rootItem;
 };
+
 
 #endif // CTIMAGETREEMODEL_H

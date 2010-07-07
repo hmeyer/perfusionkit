@@ -18,7 +18,7 @@ ELSE(ITK_FOUND)
   MESSAGE(FATAL_ERROR "Cannot build without ITK.  Please set ITK_DIR.")
 ENDIF( ITK_FOUND )
 
-FIND_PACKAGE(Boost 1.40.0 REQUIRED COMPONENTS filesystem signals)
+FIND_PACKAGE(Boost 1.40.0 REQUIRED COMPONENTS filesystem signals serialization iostreams)
 INCLUDE( ${Boost_INCLUDE_DIR} )
 
 # use what QVTK built with
@@ -46,9 +46,12 @@ SET( PerfusionkitSrc vtkbinaryimagetocolor.cpp vtkbinaryimageoverlay.cpp vtktree
   vtkinteractorstyleprojectionview.cpp 
   volumeprojectionwidget.cpp 
   dicomselectordialog.cpp
+  ctimagetreemodel_serializer.cpp
 #  ${MYLIBS}/itkbasics.cpp
  
 )
+
+ADD_DEFINITIONS(-ftemplate-depth-100)
 
 INCLUDE_DIRECTORIES(
   ${QT_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR}
