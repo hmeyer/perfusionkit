@@ -10,7 +10,7 @@ const CTImageTreeItem::DicomTagList MainWindow::CTModelHeaderFields = boost::ass
   (CTImageTreeItem::DicomTagType("#Slices",CTImageTreeItem::getNumberOfFramesTag()))
   (CTImageTreeItem::DicomTagType("AcquisitionDatetime","0008|002a"));
 
-MainWindow::MainWindow():imageModel(CTModelHeaderFields),selectedCTImage(NULL) {
+MainWindow::MainWindow():imageModel(CTModelHeaderFields),selectedCTImage(NULL),pendingAction(-1) {
   setupUi( this );
   treeView->setModel( &imageModel );
   connect( treeView, SIGNAL( customContextMenuRequested(const QPoint &) ),
@@ -57,6 +57,7 @@ void MainWindow::segmentShow( BinaryImageTreeItem *segItem ) {
 
 void MainWindow::segmentHide( BinaryImageTreeItem *segItem ) {
   if (segItem) {
+    clearPendingAction();
     DisplayedSegmentContainer::const_iterator it = displayedSegments.find( segItem );
     if (it != displayedSegments.end()) {
       mprView->removeBinaryOverlay( segItem->getVTKImage() );
@@ -88,6 +89,20 @@ void MainWindow::on_buttonThreshold_clicked() {
   }
 }
 
+void MainWindow::on_buttonRegionGrow_clicked() {
+    BinaryImageTreeItem *seg = focusSegmentFromSelection();
+    if (seg) {
+      ActionDispatch regionGrowAction(std::string("click to region grow inside ") + seg->getName().toStdString(), 
+				 boost::bind(&BinaryImageTreeItem::regionGrow, seg, 
+					     _3, _4, _5,
+					     boost::function<void()>(boost::bind(&MainWindow::clearPendingAction, this))
+					     ),
+				 ActionDispatch::ClickingAction, ActionDispatch::UnRestricted );
+      pendingAction = mprView->addAction(regionGrowAction);
+      mprView->activateAction(pendingAction);
+    }
+}
+
 void MainWindow::on_buttonDilate_clicked() {
   BinaryImageTreeItem *seg = focusSegmentFromSelection();
   if (seg) {
@@ -114,6 +129,7 @@ void MainWindow::on_buttonErode_clicked() {
 
 
 BinaryImageTreeItem *MainWindow::focusSegmentFromSelection(void) {
+  clearPendingAction();
   QModelIndexList selectedIndex = treeView->selectionModel()->selectedRows();
   if (selectedIndex.size() != 1) {
     QMessageBox::information(this,tr("Segment Error"),tr("Select one volume to edit"));
@@ -312,5 +328,12 @@ void MainWindow::treeViewContextMenu(const QPoint &pos) {
 
       cm.exec(treeView->mapToGlobal(pos));
     }
+  }
+}
+
+void MainWindow::clearPendingAction() {
+  if (pendingAction != -1) {
+    mprView->removeAction( pendingAction );
+    pendingAction = -1;
   }
 }

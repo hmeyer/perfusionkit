@@ -7,6 +7,9 @@
 #include <itkBinaryDilateImageFilter.h>
 #include <itkBinaryErodeImageFilter.h>
 #include <itkBinaryBallStructuringElement.h>
+#include <itkConnectedThresholdImageFilter.h>
+
+#include <QMessageBox>
 
 
 BinaryImageTreeItem::BinaryImageTreeItem(TreeItem * parent, BinaryImageType::Pointer itkImage, const QString &name)
@@ -87,8 +90,8 @@ void BinaryImageTreeItem::drawSphere( float radius, float x, float y, float z, b
     float t = (lx - idx[0]) * spacing[0]; t *= t;
     prodx[lx-start[0]] = t;
   }
-  BinaryPixelType pixelVal = 255;
-  if (erase) pixelVal = 0;
+  BinaryPixelType pixelVal = BinaryPixelOn;
+  if (erase) pixelVal = BinaryPixelOff;
   for(int lz = start[2]; lz < end[2]; ++lz) {
 	  float sumz = (lz - idx[2]) * spacing[2]; sumz *= sumz;
 	  for(int ly = start[1]; ly < end[1]; ++ly) {
@@ -104,6 +107,30 @@ void BinaryImageTreeItem::drawSphere( float radius, float x, float y, float z, b
   getVTKImage()->Modified();
 }
 
+void BinaryImageTreeItem::regionGrow( float x, float y, float z, boost::function<void()> clearAction) {
+  ImageType::IndexType idx;
+  ImageType::PointType point;
+  point[0] = x;point[1] = y;point[2] = z;
+  peekITKImage()->TransformPhysicalPointToIndex(point, idx);
+  ImageType::PixelType p = peekITKImage()->GetPixel(idx);
+  if (p > 0) {
+    typedef itk::ConnectedThresholdImageFilter< ImageType, ImageType > RegionGrowFilterType;
+    RegionGrowFilterType::Pointer regionGrower = RegionGrowFilterType::New();
+    regionGrower->SetInput( peekITKImage() );
+    regionGrower->SetLower(BinaryPixelOn);
+    regionGrower->SetUpper(BinaryPixelOn);
+    regionGrower->SetSeed(idx);
+    regionGrower->Update();
+    BinaryImageType::Pointer result = regionGrower->GetOutput();
+    setITKImage( result );
+    getVTKImage()->Modified();
+    clearAction();
+  } else {
+    QMessageBox::information(0,QObject::tr("Region Grow Error"),QObject::tr("Click on a part of the segmentation"));
+  }
+}
+
+
 void BinaryImageTreeItem::thresholdParent(double lower, double upper) {
   CTImageType::Pointer parentImage = dynamic_cast<CTImageTreeItem*>(parent())->getITKImage();
   typedef itk::BinaryThresholdImageFilter< CTImageType, BinaryImageType > ThresholdFilterType;
@@ -111,6 +138,8 @@ void BinaryImageTreeItem::thresholdParent(double lower, double upper) {
   thresholder->SetInput( parentImage );
   thresholder->SetLowerThreshold( lower );
   thresholder->SetUpperThreshold( upper );
+  thresholder->SetInsideValue( BinaryPixelOn );
+  thresholder->SetOutsideValue( BinaryPixelOff );
   thresholder->Update();
   BinaryImageType::Pointer thresholdImage = thresholder->GetOutput();
   setITKImage( thresholdImage );

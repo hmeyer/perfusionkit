@@ -76,6 +76,8 @@ int vtkInteractorStyleProjectionView::addAction(const ActionDispatch &action) {
 }
 
 void vtkInteractorStyleProjectionView::removeAction(int action) {
+  if (action == m_leftButtonAction) 
+    CycleLeftButtonAction();
   m_actionList.erase( action );
 }
 

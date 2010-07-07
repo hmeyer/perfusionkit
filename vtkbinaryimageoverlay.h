@@ -21,7 +21,7 @@ class vtkBinaryImageOverlay {
     vtkBinaryImageOverlay( vtkRenderer *renderer,
 			   vtkInteractorStyleProjectionView *interactorStyle,
 			  const ActionDispatch &action, vtkImageData *image, vtkMatrix4x4 *reslicePlaneTransform,
-			  const RGBType &color, double opacity = 0.3);
+			  const RGBType &color, int &actionHandle, double opacity = 0.3);
     ~vtkBinaryImageOverlay();
     vtkImageData *getImage() const { return m_image; }
     void activateAction();

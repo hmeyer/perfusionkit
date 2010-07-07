@@ -1,11 +1,12 @@
 #include "vtkbinaryimagetocolor.h"
 #include <vtkObjectFactory.h>
+#include "imagedefinitions.h"
 
 vtkStandardNewMacro(vtkBinaryImageToColor);
 vtkCxxRevisionMacro(vtkBinaryImageToColor, "$Revision: 0.1 $");
 
 vtkBinaryImageToColor::vtkBinaryImageToColor() {
-  SetRange(0,255);
+  SetRange(BinaryPixelOff, BinaryPixelOn);
   RGBType black;
   SetColor(black);
   nothing[0] = 0;nothing[1] = 0;nothing[2] = 0;nothing[3] = 0;
@@ -13,7 +14,7 @@ vtkBinaryImageToColor::vtkBinaryImageToColor() {
 }
 
 vtkBinaryImageToColor::vtkBinaryImageToColor(const RGBType &color) {
-  SetRange(0,255);
+  SetRange(BinaryPixelOff, BinaryPixelOn);
   SetColor(color);
   nothing[0] = 0;nothing[1] = 0;nothing[2] = 0;nothing[3] = 0;
   dnothing[0] = 0;dnothing[1] = 0;dnothing[2] = 0;
@@ -27,7 +28,7 @@ void vtkBinaryImageToColor::SetRange(double min, double max) {
   range[0] = min;
   range[1] = max;
   dthreshold = (min+max)*.5;
-  threshold = static_cast<unsigned char>(dthreshold);
+  threshold = static_cast<unsigned char>(dthreshold+.5);
 }
 
 unsigned char* vtkBinaryImageToColor::MapValue(double value) {

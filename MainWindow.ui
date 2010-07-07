@@ -270,26 +270,6 @@
           </property>
          </widget>
         </item>
-        <item row="6" column="0">
-         <widget class="QPushButton" name="buttonIntersection">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="text">
-           <string>Intersection</string>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="1">
-         <widget class="QPushButton" name="buttonDifference">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="text">
-           <string>Difference</string>
-          </property>
-         </widget>
-        </item>
         <item row="3" column="1">
          <widget class="QCheckBox" name="checkErase">
           <property name="text">
@@ -307,20 +287,20 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="0" colspan="2">
+        <item row="4" column="0">
          <widget class="QPushButton" name="buttonThreshold">
           <property name="text">
            <string>Threshold</string>
           </property>
          </widget>
         </item>
-        <item row="7" column="0" colspan="2">
-         <widget class="QPushButton" name="buttonUnion">
+        <item row="4" column="1">
+         <widget class="QPushButton" name="buttonRegionGrow">
           <property name="enabled">
            <bool>true</bool>
           </property>
           <property name="text">
-           <string>Union</string>
+           <string>Region Grow</string>
           </property>
          </widget>
         </item>

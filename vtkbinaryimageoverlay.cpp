@@ -14,7 +14,7 @@
 vtkBinaryImageOverlay::vtkBinaryImageOverlay( vtkRenderer *renderer,
 			  vtkInteractorStyleProjectionView *interactorStyle,
 			  const ActionDispatch &action, vtkImageData *image, vtkMatrix4x4 *reslicePlaneTransform,
-			  const RGBType &color, double opacity)
+			  const RGBType &color, int &actionHandle, double opacity)
   :m_image(image),
   m_reslice(vtkImageReslice::New()),
   m_colormap(vtkImageMapToColors::New()),
@@ -45,8 +45,9 @@ vtkBinaryImageOverlay::vtkBinaryImageOverlay( vtkRenderer *renderer,
   
   if (action.valid) {
     action.sig->connect( boost::bind(&vtkImageReslice::Modified, m_reslice) );
-    actionHandle = interactorStyle->addAction(action);
+    this->actionHandle = interactorStyle->addAction(action);
   }
+  actionHandle = this->actionHandle;
 }
 
 vtkBinaryImageOverlay::~vtkBinaryImageOverlay() {

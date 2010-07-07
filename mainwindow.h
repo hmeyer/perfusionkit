@@ -48,9 +48,12 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
       void removeCTImage(int number);
       void on_buttonDraw_clicked();
       void on_buttonThreshold_clicked();
+      void on_buttonRegionGrow_clicked();
       void on_buttonDilate_clicked();
       void on_buttonErode_clicked();
 
+ protected:
+  void clearPendingAction();
  private:
   BinaryImageTreeItem *focusSegmentFromSelection(void);
   typedef std::auto_ptr<DicomSelectorDialog> DicomSelectorDialogPtr;
@@ -66,6 +69,7 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
   typedef std::set< BinaryImageTreeItem* > DisplayedSegmentContainer;
   DisplayedSegmentContainer displayedSegments;
   static const CTImageTreeItem::DicomTagList CTModelHeaderFields;
+  int pendingAction;
 };
 
 

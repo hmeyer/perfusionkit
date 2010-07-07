@@ -118,14 +118,17 @@ void MultiPlanarReformatWidget::setImage(vtkImageData *image/**<[in] Volume (3D)
 }
 
 
-void MultiPlanarReformatWidget::addBinaryOverlay(vtkImageData *image, const RGBType &color, const ActionDispatch &dispatch) {
+int MultiPlanarReformatWidget::addBinaryOverlay(vtkImageData *image, const RGBType &color, const ActionDispatch &dispatch) {
   if (m_overlays.find( image ) == m_overlays.end() ) {
+    int actionHandle;
     boost::shared_ptr< vtkBinaryImageOverlay > overlay(
-     new vtkBinaryImageOverlay( m_renderer, m_interactorStyle, dispatch, image, m_reslicePlaneTransform, color) );
+     new vtkBinaryImageOverlay( m_renderer, m_interactorStyle, dispatch, image, m_reslicePlaneTransform, color, actionHandle ) );
     m_overlays.insert( OverlayMapType::value_type( image, overlay ) );
     overlay->resize( this->size().width(), this->size().height() );
     this->update();
+    return actionHandle;
   }
+  return -1;
 }
 
 void MultiPlanarReformatWidget::removeBinaryOverlay(vtkImageData *image) {
@@ -138,5 +141,17 @@ void MultiPlanarReformatWidget::activateOverlayAction(vtkImageData *image) {
   if (it != m_overlays.end()) {
     it->second->activateAction();
   }
+}
+
+void MultiPlanarReformatWidget::activateAction(int actionHandle) {
+  m_interactorStyle->activateAction(actionHandle);
+}
+
+int MultiPlanarReformatWidget::addAction(const ActionDispatch &dispatch) {
+  return m_interactorStyle->addAction(dispatch);
+}
+
+void MultiPlanarReformatWidget::removeAction(int actionHandle) {
+  m_interactorStyle->removeAction(actionHandle);
 }
 

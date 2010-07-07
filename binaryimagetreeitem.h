@@ -5,6 +5,8 @@
 #include "imagedefinitions.h"
 #include "QString"
 
+#include <boost/function.hpp>
+
 #include "serialization_helper.h"
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/split_member.hpp>
@@ -23,6 +25,7 @@ class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
     const QString &getName() const { return name; }
     void setName(const QString &_name) { name = _name; }
     void drawSphere( float radius, float x, float y, float z, bool erase );
+    void regionGrow( float x, float y, float z, boost::function<void()> clearAction);
     const RGBType &getColor() { return color;}
     void thresholdParent(double lower, double upper);
     void binaryDilate(int iterations);
