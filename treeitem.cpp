@@ -74,15 +74,22 @@ class TreeItemCompareFunctor {
     typedef bool result_type;
   TreeItemCompareFunctor(int column, bool ascending=true):col(column),descending(!ascending) {};
   bool operator()(const TreeItem &x, const TreeItem &y) const {
-    const QVariant dx = x.data(col);
-    const QVariant dy = y.data(col);
+    const QVariant qx = x.data(col);
+    const QVariant qy = y.data(col);
     bool okx, oky;
-    int ix = dx.toInt(&okx);
-    int iy = dy.toInt(&oky);
+    double dx = qx.toDouble(&okx);
+    double dy = qy.toDouble(&oky);
     if (okx && oky) {
-      return descending ^ (ix < iy);
+      if (dx == dy) return false;
+      return descending ^ (dx < dy);
+    } else if (okx) {
+      return descending;
+    } else if (oky) {
+      return !descending;
+    } else {
+      if (&x == &y) return false;
+      return descending ^ (&x < &y);
     }
-    return descending ^ (&x < &y);
   }
 };
 
