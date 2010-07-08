@@ -154,6 +154,8 @@ void BinaryImageTreeItem::binaryDilate(int iterations) {
   KernelType kernel;
   kernel.SetRadius( iterations );
   kernel.CreateStructuringElement();
+  filter->SetBackgroundValue(BinaryPixelOff);
+  filter->SetForegroundValue(BinaryPixelOn);
   filter->SetKernel( kernel );
   filter->Update();
   BinaryImageType::Pointer result = filter->GetOutput();
@@ -169,6 +171,8 @@ void BinaryImageTreeItem::binaryErode(int iterations) {
   KernelType kernel;
   kernel.SetRadius( iterations );
   kernel.CreateStructuringElement();
+  filter->SetBackgroundValue(BinaryPixelOff);
+  filter->SetForegroundValue(BinaryPixelOn);
   filter->SetKernel( kernel );
   filter->Update();
   BinaryImageType::Pointer result = filter->GetOutput();

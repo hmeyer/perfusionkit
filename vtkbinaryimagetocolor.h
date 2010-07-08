@@ -2,6 +2,9 @@
 #define VTKBINARYIMAGETOCOLOR_H
 #include <vtkScalarsToColors.h>
 #include "imagedefinitions.h"
+#include <boost/array.hpp>
+
+
 
 class vtkBinaryImageToColor: public vtkScalarsToColors {
   public:
@@ -18,13 +21,12 @@ class vtkBinaryImageToColor: public vtkScalarsToColors {
   void SetColor(const RGBType &color);
   void SetRandomColor();
   private:
-    double range[2];
+    void adjustUpperLower(void);
+    boost::array< double, 2> range;
     unsigned char threshold;
     double dthreshold;
-    unsigned char color[4];
-    double dcolor[3];
-    unsigned char nothing[4];
-    double dnothing[3];
+    boost::array< unsigned char, 4> &upperColor, &lowerColor, blackColor, colorColor;
+    boost::array< double,3 > &dUpperColor, &dLowerColor, dBlackColor, dColorColor;
 };
 
 

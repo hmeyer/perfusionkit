@@ -9,7 +9,7 @@ const unsigned int ImageDimension = 3;
 //typedef bool BinaryPixelType;
 typedef unsigned char BinaryPixelType;
 const BinaryPixelType BinaryPixelOff = 0;
-const BinaryPixelType BinaryPixelOn = 1;
+const BinaryPixelType BinaryPixelOn = 255;
 typedef itk::Image< BinaryPixelType, ImageDimension> BinaryImageType;
 
 typedef signed short CTPixelType;
