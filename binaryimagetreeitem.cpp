@@ -113,12 +113,13 @@ void BinaryImageTreeItem::regionGrow( float x, float y, float z, boost::function
   point[0] = x;point[1] = y;point[2] = z;
   peekITKImage()->TransformPhysicalPointToIndex(point, idx);
   ImageType::PixelType p = peekITKImage()->GetPixel(idx);
-  if (p > 0) {
+  if (p == BinaryPixelOn) {
     typedef itk::ConnectedThresholdImageFilter< ImageType, ImageType > RegionGrowFilterType;
     RegionGrowFilterType::Pointer regionGrower = RegionGrowFilterType::New();
     regionGrower->SetInput( peekITKImage() );
     regionGrower->SetLower(BinaryPixelOn);
     regionGrower->SetUpper(BinaryPixelOn);
+    regionGrower->SetReplaceValue(BinaryPixelOn);
     regionGrower->SetSeed(idx);
     regionGrower->Update();
     BinaryImageType::Pointer result = regionGrower->GetOutput();

@@ -165,7 +165,7 @@ BinaryImageTreeItem *CTImageTreeItem::generateSegment(void) {
     caster->SetInput( getITKImage() );
     caster->Update();
     seg = caster->GetOutput();
-    seg->FillBuffer(0);
+    seg->FillBuffer(BinaryPixelOff);
   }
   BinaryImageTreeItem *result = new BinaryImageTreeItem(this, seg, segName);
   insertChild(result);
