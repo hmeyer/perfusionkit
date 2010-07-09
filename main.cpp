@@ -6,6 +6,7 @@
 #include "mainwindow.h"
 #include <QApplication>
 
+
 using namespace std;
 
 
@@ -24,9 +25,10 @@ class applicationClass : public QApplication {
 
 
 int main( int argc, char **argv ) {
-  
   QApplication app(argc, argv);
 //  applicationClass app(argc, argv);
+
+
   MainWindow window;
   QStringList args = app.arguments();
   args.removeFirst();

@@ -1,16 +1,19 @@
 #include "ctimagetreeitem.h"
 #include "binaryimagetreeitem.h"
 #include <itkMetaDataObject.h>
+#include <itkImageRegionConstIteratorWithIndex.h>
 #include <QPalette>
 #include <QInputDialog>
 #include <QApplication>
 #include <boost/assign.hpp>
 #include <itkCastImageFilter.h>
 #include "ctimagetreemodel.h"
-
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <sstream>
+#include <set>
 
 CTImageTreeItem::CTImageTreeItem(TreeItem * parent, DicomTagListPointer headerFields, const itk::MetaDataDictionary &_dict )
-  :BaseClass(parent),HeaderFields(headerFields),dict(_dict) {
+  :BaseClass(parent),HeaderFields(headerFields),dict(_dict),imageTime(-1) {
     getUIDFromDict(dict, itemUID);
 }
 
@@ -21,6 +24,60 @@ TreeItem *CTImageTreeItem::clone(TreeItem *clonesParent) const {
   cloneChildren(c);
   return c;
 }
+
+
+struct IndexCompareFunctor {
+  typedef CTImageType::IndexType argT;
+  bool operator()(const argT &x, const argT &y) const {
+    if (x[0] < y[0]) return true;
+    else if (x[0] > y[0]) return false;
+    
+    else if (x[1] < y[1]) return true;
+    else if (x[1] > y[1]) return false;
+    
+    else if (x[2] < y[2]) return true;
+    else /*if (x[2] > y[2])*/ return false;
+  }
+};
+    
+bool CTImageTreeItem::getSegmentationValues( const BinaryImageTreeItem *segment, double &mean, double &stddev, int &min, int &max) const {
+  min = itk::NumericTraits< int >::max();
+  max = itk::NumericTraits< int >::min();
+  mean = 0; stddev = 0;
+  std::vector<int> samples;
+  BinaryImageType::Pointer itkSeg = segment->getITKImage();
+  ImageType::Pointer image = getITKImage();
+  typedef itk::ImageRegionConstIteratorWithIndex< BinaryImageType > BinaryIteratorType;
+  BinaryIteratorType binIter( itkSeg, itkSeg->GetBufferedRegion() );
+  ImageType::PointType point;
+  ImageType::IndexType index;
+  std::set< ImageType::IndexType, IndexCompareFunctor > indexSet;
+  for(binIter.GoToBegin(); !binIter.IsAtEnd(); ++binIter) {
+    if (binIter.Value() == BinaryPixelOn) {
+      itkSeg->TransformIndexToPhysicalPoint(binIter.GetIndex(),point);
+      image->TransformPhysicalPointToIndex(point, index);
+      if (indexSet.find(index) == indexSet.end()) {
+	indexSet.insert(index);
+	int t = image->GetPixel(index);
+	if (isRealHUvalue(t)) {
+	  samples.push_back(t);
+	  mean += t;
+	  min = std::min( t, min );
+	  max = std::max( t, max );
+	}
+      }
+    }
+  }
+  if (samples.size()==0) return false;
+  mean /= samples.size();
+  for(unsigned i=0;i<samples.size();i++) {
+    double t = samples[i] - mean;
+    stddev += t * t;
+  }
+  stddev = std::sqrt(stddev/samples.size());
+  return true;
+}    
+    
     
 bool CTImageTreeItem::setData(int column, const QVariant& value) {
   return false;
@@ -37,6 +94,22 @@ QVariant CTImageTreeItem::do_getData_DisplayRole(int column) const {
 QVariant CTImageTreeItem::do_getData_ForegroundRole(int column) const {
   if (peekITKImage().IsNull()) return QApplication::palette().midlight();
   return QVariant::Invalid;
+}
+
+double CTImageTreeItem::getTime() const {
+  if (imageTime > 0) return imageTime;
+  std::string dicomTimeString;
+  itk::ExposeMetaData( dict, getAcquisitionDatetimeTag(), dicomTimeString );
+  using namespace boost::posix_time;
+  time_input_facet *dicomTimeFacet = new time_input_facet("%Y%m%d%H%M%S%F");
+  std::stringstream dicomTimeStream;
+  dicomTimeStream.imbue( std::locale(std::locale::classic(), dicomTimeFacet) );
+  dicomTimeStream.str( dicomTimeString );
+  ptime dicomTime;
+  dicomTimeStream >> dicomTime;
+  time_duration since1900 = dicomTime - ptime(boost::gregorian::date(1900,1,1));
+  double secSince1900 = double(since1900.ticks()) / time_duration::ticks_per_second();
+  return secSince1900;
 }
 
 
@@ -106,7 +179,9 @@ class CTImageTreeItem::ReaderProgress : public itk::Command {
 };
 
 
-CTImageTreeItem::ImageType::Pointer CTImageTreeItem::getITKImage(QProgressDialog *progress, int progressScale, int progressBase) {
+
+
+CTImageTreeItem::ImageType::Pointer CTImageTreeItem::getITKImage(QProgressDialog *progress, int progressScale, int progressBase) const {
   if (BaseClass::getITKImage().IsNull()) {
     typedef ReaderProgress::ReaderType ReaderType;
     ReaderType::Pointer imageReader = ReaderType::New();
@@ -126,7 +201,7 @@ CTImageTreeItem::ImageType::Pointer CTImageTreeItem::getITKImage(QProgressDialog
 	    std::cerr << excep << std::endl;
     }
     CTImageType::Pointer result =  imageReader->GetOutput();
-    setITKImage( result );
+    const_cast<CTImageTreeItem*>(this)->setITKImage( result );
     model->dataChanged(model->createIndex(childNumber(),0,parent()),model->createIndex(childNumber(),columnCount()-1,parent()));
   }
   return BaseClass::getITKImage();
@@ -150,6 +225,10 @@ const std::string &CTImageTreeItem::getSOPInstanceUIDTag() {
 const std::string &CTImageTreeItem::getSeriesInstanceUIDTag() {
   const static std::string SeriesInstanceUIDTag("0020|000e");
   return SeriesInstanceUIDTag;
+}
+const std::string &CTImageTreeItem::getAcquisitionDatetimeTag() {
+  const static std::string SOPInstanceUIDTag("0008|002a");
+  return SOPInstanceUIDTag;
 }
 
 BinaryImageTreeItem *CTImageTreeItem::generateSegment(void) {

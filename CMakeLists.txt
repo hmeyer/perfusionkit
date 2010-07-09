@@ -4,6 +4,9 @@ PROJECT( perfusionkit )
 
 #FIND_PATH(MYLIBS itkbasics.h ../myLibs ../../myLibs)
 
+FIND_PATH(QWTLIB include/qwt.h)
+
+
 FIND_PACKAGE ( VTK )
 IF ( VTK_FOUND )
       INCLUDE( ${USE_VTK_FILE} )
@@ -46,7 +49,7 @@ SET( PerfusionkitSrc vtkbinaryimagetocolor.cpp vtkbinaryimageoverlay.cpp vtktree
   vtkinteractorstyleprojectionview.cpp 
   volumeprojectionwidget.cpp 
   dicomselectordialog.cpp
-  ctimagetreemodel_serializer.cpp
+  ctimagetreemodel_serializer.cpp analysedialog.cpp
 #  ${MYLIBS}/itkbasics.cpp
  
 )
@@ -57,24 +60,27 @@ INCLUDE_DIRECTORIES(
   ${QT_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
 #  ${MYLIBS}
+  ${QWTLIB}/include
 )
 
-SET( UIS MainWindow.ui DicomSelectDialog.ui )
+LINK_DIRECTORIES( ${LINK_DIRECTORIES} 
+  ${QWTLIB}/lib
+)
+
+SET( UIS MainWindow.ui DicomSelectDialog.ui AnalyseDialog.ui)
 
 QT4_WRAP_UI( PerfusionkitSrc ${UIS} )
 
 SET ( QVTKMocHeaders
     mainwindow.h
     ctimagetreemodel.h
+    analysedialog.h
+    dicomselectordialog.h
     )
 
 QT4_WRAP_CPP( PerfusionkitSrc ${QVTKMocHeaders} )
 
-#SET_SOURCE_FILES_PROPERTIES(${PerfusionkitSrc} PROPERTIES
-#                            OBJECT_DEPENDS "${UIHeaders}")
-
                          
-MESSAGE(${Boost_LIBRARIES})
 
 ADD_EXECUTABLE( perfusionkit ${PerfusionkitSrc} ${MOCSrcs})
 TARGET_LINK_LIBRARIES ( perfusionkit
@@ -85,5 +91,6 @@ TARGET_LINK_LIBRARIES ( perfusionkit
   vtkImaging vtkIO vtkFiltering vtkCommon
   vtkVolumeRendering
   ${Boost_LIBRARIES}
+  qwt
   )
 

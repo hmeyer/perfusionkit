@@ -39,6 +39,9 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     virtual Qt::ItemFlags flags(int column) const;
     virtual int columnCount() const;
     virtual const std::string &getUID() const { return itemUID; }
+    double getTime() const;
+    bool getSegmentationValues( const BinaryImageTreeItem *segment, double &mean, double &stddev, int &min, int &max) const;
+    
     
     void appendFileName( const std::string &fn ) { fnList.insert( fn ); }
     
@@ -47,8 +50,10 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     static const std::string &getNumberOfFramesTag();
     static const std::string &getSeriesInstanceUIDTag();
     static const std::string &getSOPInstanceUIDTag();
-    ImageType::Pointer getITKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0);
+    static const std::string &getAcquisitionDatetimeTag();
+    ImageType::Pointer getITKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) const;
     static void getUIDFromDict(const itk::MetaDataDictionary &dict, std::string &iUID);
+    static inline bool isRealHUvalue(CTPixelType value) { return (value!=-2048)?true:false; }
   protected:
     class ReaderProgress;
     typedef std::set< std::string > FileNameList;
@@ -57,10 +62,11 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     FileNameList fnList;
     DicomTagListPointer HeaderFields;
     itk::MetaDataDictionary dict;
+    double imageTime;
 
   private:
     friend class boost::serialization::access;
-    CTImageTreeItem() {}
+    CTImageTreeItem():imageTime(-1) {}
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version) {
       ar & boost::serialization::base_object<BaseClass>(*this);

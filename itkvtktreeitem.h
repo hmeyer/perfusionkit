@@ -19,7 +19,7 @@ class ITKVTKTreeItem : public VTKTreeItem {
     typedef ITKVTKTreeItem< TImage > MyType;
     typedef TImage ImageType;
     ITKVTKTreeItem(TreeItem * parent, const typename TImage::Pointer itkI = typename TImage::Pointer()): VTKTreeItem(parent), itkImage(itkI), connector(0) {}
-    virtual typename TImage::Pointer getITKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0);
+    virtual typename TImage::Pointer getITKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) const;
     virtual vtkImageData *getVTKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) {
       if (connector.IsNull()) {
 	connector = ConnectorType::New();
@@ -57,7 +57,7 @@ class ITKVTKTreeItem : public VTKTreeItem {
 
 
 template< class TImage >
-typename TImage::Pointer  ITKVTKTreeItem<TImage>::getITKImage(QProgressDialog *progress, int progressScale, int progressBase) {
+typename TImage::Pointer  ITKVTKTreeItem<TImage>::getITKImage(QProgressDialog *progress, int progressScale, int progressBase) const {
   return itkImage;
 }
 

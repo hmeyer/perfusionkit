@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include <QtGui>
 #include "dicomselectordialog.h"
+#include "analysedialog.h"
 #include "binaryimagetreeitem.h"
 #include <boost/assign.hpp>
 
@@ -127,12 +128,26 @@ void MainWindow::on_buttonErode_clicked() {
   }
 }
 
+void MainWindow::on_buttonAnalyse_clicked() {
+  AnalyseDialog myDia(this);
+  QModelIndexList selectedIndex = treeView->selectionModel()->selectedRows();
+  for(QModelIndexList::Iterator index = selectedIndex.begin(); index != selectedIndex.end(); ++index) {
+    if (index->isValid()) {
+      TreeItem *item = &imageModel.getItem( *index );
+      if (typeid(*item) == typeid(CTImageTreeItem)) {
+	myDia.addImage( dynamic_cast<CTImageTreeItem*>(item) );
+      }
+    }
+  }
+  myDia.exec();
+}
+
 
 BinaryImageTreeItem *MainWindow::focusSegmentFromSelection(void) {
   clearPendingAction();
   QModelIndexList selectedIndex = treeView->selectionModel()->selectedRows();
   if (selectedIndex.size() != 1) {
-    QMessageBox::information(this,tr("Segment Error"),tr("Select one volume to edit"));
+    QMessageBox::warning(this,tr("Segment Error"),tr("Select one volume to edit"));
     return NULL;
   }
   if (selectedIndex[0].isValid()) {
@@ -146,7 +161,7 @@ BinaryImageTreeItem *MainWindow::focusSegmentFromSelection(void) {
       } else if (ctitem->childCount()==1) {
 	item = &ctitem->child(0);
       } else {
-	QMessageBox::information(this,tr("Segment Error"),tr("Choose the segment to edit"));
+	QMessageBox::warning(this,tr("Segment Error"),tr("Choose the segment to edit"));
 	return  NULL;
       }
     }

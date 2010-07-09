@@ -7,6 +7,7 @@
 #include "ctimagetreemodel.h"
 #include <vector>
 #include <auto_ptr.h>
+#include <boost/shared_ptr.hpp>
 
 class vtkImageData;
 class VolumeProjectionWidget;
@@ -51,12 +52,14 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
       void on_buttonRegionGrow_clicked();
       void on_buttonDilate_clicked();
       void on_buttonErode_clicked();
+      void on_buttonAnalyse_clicked();
 
  protected:
   void clearPendingAction();
  private:
   BinaryImageTreeItem *focusSegmentFromSelection(void);
   typedef std::auto_ptr<DicomSelectorDialog> DicomSelectorDialogPtr;
+  
   void loadDicomData(DicomSelectorDialogPtr dicomSelector);
   void setImage(VTKTreeItem *imageItem);
   void segmentShow( BinaryImageTreeItem *segItem );

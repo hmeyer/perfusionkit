@@ -26,7 +26,7 @@ class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
     void setName(const QString &_name) { name = _name; }
     void drawSphere( float radius, float x, float y, float z, bool erase );
     void regionGrow( float x, float y, float z, boost::function<void()> clearAction);
-    const RGBType &getColor() { return color;}
+    const RGBType &getColor() const { return color;}
     void thresholdParent(double lower, double upper);
     void binaryDilate(int iterations);
     void binaryErode(int iterations);
