@@ -2,6 +2,7 @@
 #include "binaryimagetreeitem.h"
 #include <itkMetaDataObject.h>
 #include <itkImageRegionConstIteratorWithIndex.h>
+#include <itkLinearInterpolateImageFunction.h>
 #include <QPalette>
 #include <QInputDialog>
 #include <QApplication>
@@ -40,42 +41,103 @@ struct IndexCompareFunctor {
   }
 };
     
-bool CTImageTreeItem::getSegmentationValues( const BinaryImageTreeItem *segment, double &mean, double &stddev, int &min, int &max) const {
-  min = itk::NumericTraits< int >::max();
-  max = itk::NumericTraits< int >::min();
-  mean = 0; stddev = 0;
+bool CTImageTreeItem::getSegmentationValues( SegmentationValues &values) const {
+  SegmentationValueMap::const_iterator it = segmentationValueCache.find( values.segment );
+  if (it != segmentationValueCache.end() 
+    && it->second.mtime == values.segment->getITKMTime()
+    && it->second.accuracy == values.accuracy) {
+    values = it->second;
+    return values.sampleCount > 0;
+  }
+  return internalGetSegmentationValues( values );
+}
+
+bool CTImageTreeItem::internalGetSegmentationValues( SegmentationValues &values) const {
+  values.min = itk::NumericTraits< int >::max();
+  values.max = itk::NumericTraits< int >::min();
+  values.mean = 0; values.stddev = 0; values.sampleCount = 0;
   std::vector<int> samples;
-  BinaryImageType::Pointer itkSeg = segment->getITKImage();
   ImageType::Pointer image = getITKImage();
+  ImageType::RegionType ctregion = image->GetBufferedRegion();
   typedef itk::ImageRegionConstIteratorWithIndex< BinaryImageType > BinaryIteratorType;
-  BinaryIteratorType binIter( itkSeg, itkSeg->GetBufferedRegion() );
+  BinaryImageType::Pointer segment = values.segment->getITKImage();
+  BinaryIteratorType binIter( segment, segment->GetBufferedRegion() );
   ImageType::PointType point;
-  ImageType::IndexType index;
-  std::set< ImageType::IndexType, IndexCompareFunctor > indexSet;
-  for(binIter.GoToBegin(); !binIter.IsAtEnd(); ++binIter) {
-    if (binIter.Value() == BinaryPixelOn) {
-      itkSeg->TransformIndexToPhysicalPoint(binIter.GetIndex(),point);
-      image->TransformPhysicalPointToIndex(point, index);
-      if (indexSet.find(index) == indexSet.end()) {
-	indexSet.insert(index);
-	int t = image->GetPixel(index);
-	if (isRealHUvalue(t)) {
-	  samples.push_back(t);
-	  mean += t;
-	  min = std::min( t, min );
-	  max = std::max( t, max );
+  if (values.accuracy == SimpleAccuracy) {
+    ImageType::IndexType index;
+    for(binIter.GoToBegin(); !binIter.IsAtEnd(); ++binIter) {
+      if (binIter.Value() == BinaryPixelOn) {
+	segment->TransformIndexToPhysicalPoint(binIter.GetIndex(),point);
+	image->TransformPhysicalPointToIndex(point, index);
+	if (ctregion.IsInside(index)) {
+	  int t = image->GetPixel(index);
+	  if (isRealHUvalue(t)) {
+	    samples.push_back(t);
+	    values.mean += t;
+	    values.min = std::min( t, values.min );
+	    values.max = std::max( t, values.max );
+	  }
 	}
       }
     }
+  } else if (values.accuracy == NonMultiSamplingAccuracy) {
+    ImageType::IndexType index;
+    typedef std::set< ImageType::IndexType, IndexCompareFunctor > IndexSetType;
+    IndexSetType indexSet;
+    for(binIter.GoToBegin(); !binIter.IsAtEnd(); ++binIter) {
+      if (binIter.Value() == BinaryPixelOn) {
+	segment->TransformIndexToPhysicalPoint(binIter.GetIndex(),point);
+	image->TransformPhysicalPointToIndex(point, index);
+	if (ctregion.IsInside(index)) {
+	  std::pair<IndexSetType::iterator,IndexSetType::iterator> ret;
+	  ret = indexSet.equal_range(index);
+	  if (ret.first == ret.second) {
+	    indexSet.insert(ret.first, index);
+	    int t = image->GetPixel(index);
+	    if (isRealHUvalue(t)) {
+	      samples.push_back(t);
+	      values.mean += t;
+	      values.min = std::min( t, values.min );
+	      values.max = std::max( t, values.max );
+	    }
+	  }
+	}
+      }
+    }
+  } else if (values.accuracy == InterpolatedAccuray) {
+    typedef  itk::LinearInterpolateImageFunction< CTImageType > InterpolatorType;
+    InterpolatorType::Pointer interpolator = InterpolatorType::New();
+    interpolator->SetInputImage( image );
+    InterpolatorType::ContinuousIndexType index;
+    for(binIter.GoToBegin(); !binIter.IsAtEnd(); ++binIter) {
+      if (binIter.Value() == BinaryPixelOn) {
+	segment->TransformIndexToPhysicalPoint(binIter.GetIndex(),point);
+	image->TransformPhysicalPointToContinuousIndex(point, index);
+	if (interpolator->IsInsideBuffer(index)) {
+	  int t = interpolator->EvaluateAtContinuousIndex(index);
+	  if (isRealHUvalue(t)) {
+	    samples.push_back(t);
+	    values.mean += t;
+	    values.min = std::min( t, values.min );
+	    values.max = std::max( t, values.max );
+	  }
+	}
+      }
+    }
+    
   }
-  if (samples.size()==0) return false;
-  mean /= samples.size();
-  for(unsigned i=0;i<samples.size();i++) {
-    double t = samples[i] - mean;
-    stddev += t * t;
+  if (samples.size() > 0) {
+    values.mean /= samples.size();
+    for(unsigned i=0;i<samples.size();i++) {
+      double t = samples[i] - values.mean;
+      values.stddev += t * t;
+    }
+    values.stddev = std::sqrt(values.stddev/samples.size());
   }
-  stddev = std::sqrt(stddev/samples.size());
-  return true;
+  values.sampleCount = samples.size();
+  values.mtime = segment->GetMTime();
+  const_cast<CTImageTreeItem*>(this)->segmentationValueCache[ values.segment ] = values;
+  return values.sampleCount > 0;
 }    
     
     

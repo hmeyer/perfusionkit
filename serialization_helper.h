@@ -7,12 +7,13 @@
 #include <QString>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/serialization/map.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/split_free.hpp>
+#include <boost/serialization/tracking.hpp>
+
+
 
 #include "ctimagetreemodel.h"
-
-void deserializeCTImageTreeModelFromFile(CTImageTreeModel &model, const std::string &fname);
-void serializeCTImageTreeModelToFile(const CTImageTreeModel &model, const std::string &fname);
 
 
 
@@ -127,6 +128,8 @@ inline void load(Archive & ar, typename itk::SmartPointer< itk::Image<PixelType,
   }
 }
 
+
+
 template<class Archive, class PixelType, unsigned Dimension>
 inline void save(Archive & ar, const typename itk::SmartPointer< itk::Image<PixelType, Dimension> > &i, const unsigned int version)
 {
@@ -154,7 +157,6 @@ inline void serialize(Archive & ar, typename itk::SmartPointer< itk::Image<Pixel
 {
   boost::serialization::split_free(ar, i, version);
 }
-
 
 
 } // namespace serialization

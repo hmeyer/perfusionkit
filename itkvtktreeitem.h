@@ -28,6 +28,7 @@ class ITKVTKTreeItem : public VTKTreeItem {
       connector->Update();
       return connector->GetOutput();
     }
+    unsigned long getITKMTime(void) const {if (itkImage.IsNotNull()) return itkImage->GetMTime(); else return 0;}
     ~ITKVTKTreeItem() { if (connector.IsNotNull()) connector->Delete(); connector=0; }
   protected:
     inline typename ImageType::Pointer peekITKImage(void) const { 

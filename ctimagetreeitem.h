@@ -14,7 +14,6 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
 {
   public:
     typedef ITKVTKTreeItem< CTImageType > BaseClass;
-//    typedef std::pair< const std::string, const std::string > DicomTagType;
     struct DicomTagType {
       std::string name;
       std::string tag;
@@ -40,7 +39,39 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     virtual int columnCount() const;
     virtual const std::string &getUID() const { return itemUID; }
     double getTime() const;
-    bool getSegmentationValues( const BinaryImageTreeItem *segment, double &mean, double &stddev, int &min, int &max) const;
+    enum Accuracy {
+      SimpleAccuracy,
+      NonMultiSamplingAccuracy,
+      InterpolatedAccuray
+    };
+    struct SegmentationValues {
+      ITKVTKTreeItem<BinaryImageType> *segment;
+      long unsigned mtime;
+      double mean;
+      double stddev;
+      int min;
+      int max;
+      int sampleCount;
+      Accuracy accuracy;
+      private:
+	friend class boost::serialization::access;
+	template<class Archive>
+	void load(Archive & ar, const unsigned int version) {
+	  ar & segment; ar & mean; ar & stddev; ar & min; ar & max; ar & sampleCount; ar & accuracy;
+	  bool matchingMtime;
+	  ar & matchingMtime;
+	  if (matchingMtime) mtime = segment->getITKMTime();
+	  else mtime = 0;
+	}
+	template<class Archive>
+	void save(Archive & ar, const unsigned int version) const {
+	  ar & segment; ar & mean; ar & stddev; ar & min; ar & max; ar & sampleCount; ar & accuracy;
+	  bool matchingMtime = segment->getITKMTime() == mtime;
+	  ar & matchingMtime;
+	}
+	BOOST_SERIALIZATION_SPLIT_MEMBER()
+    };
+    bool getSegmentationValues( SegmentationValues &values) const;
     
     
     void appendFileName( const std::string &fn ) { fnList.insert( fn ); }
@@ -54,7 +85,12 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     ImageType::Pointer getITKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) const;
     static void getUIDFromDict(const itk::MetaDataDictionary &dict, std::string &iUID);
     static inline bool isRealHUvalue(CTPixelType value) { return (value!=-2048)?true:false; }
+    
+    
   protected:
+    typedef std::map< ITKVTKTreeItem<BinaryImageType> *, SegmentationValues > SegmentationValueMap;
+    SegmentationValueMap segmentationValueCache;
+    bool internalGetSegmentationValues( SegmentationValues &values) const;
     class ReaderProgress;
     typedef std::set< std::string > FileNameList;
     int getNumberOfSlices() const;
@@ -74,6 +110,7 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
       ar & fnList;
       ar & HeaderFields;
       ar & dict;
+      ar & segmentationValueCache;
     }
 };
 

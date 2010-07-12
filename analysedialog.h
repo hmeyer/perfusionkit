@@ -5,11 +5,14 @@
 #include "ui_AnalyseDialog.h"
 #include <set>
 #include <vector>
+#include <boost/shared_ptr.hpp>
 
 class CTImageTreeItem;
 class BinaryImageTreeItem;
 class QwtPlotMarker;
 class QwtPlotGrid;
+class QwtPlotPicker;
+class QwtPlotCurve;
 
 class AnalyseDialog : public QDialog, private Ui_AnalyseDialog
 {
@@ -21,6 +24,8 @@ class AnalyseDialog : public QDialog, private Ui_AnalyseDialog
   int exec(void);
   
   static double stringToSec(const std::string &timeString);
+  typedef boost::shared_ptr< QwtPlotCurve > CurvePtr;
+  typedef std::vector< CurvePtr > CurveList;
   
   
  public slots:
@@ -37,11 +42,15 @@ class AnalyseDialog : public QDialog, private Ui_AnalyseDialog
   typedef std::set<CTImageTreeItem *, CTImageTimeCompareFunctor> ImageSet;
   typedef std::set<BinaryImageTreeItem *> SegmentSet;
   typedef std::vector< double > DoubleVector;
+  
   ImageSet images;
   SegmentSet segments;
   DoubleVector times;
+  CurveList curveset;
   QwtPlotMarker *markerStart, *markerEnd;
+  QwtPlotMarker *markerPickerX, *markerPickerY;
   QwtPlotGrid *grid;
+  QwtPlotPicker *picker;
 };
 
 #endif // ANALYSEDIALOG_H

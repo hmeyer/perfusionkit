@@ -103,7 +103,8 @@ void BinaryImageTreeItem::drawSphere( float radius, float x, float y, float z, b
 			  ++iterator;
 		  }
 	  }
-  }  
+  }
+  peekITKImage()->Modified();
   getVTKImage()->Modified();
 }
 
