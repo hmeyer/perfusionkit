@@ -225,20 +225,26 @@ QwtText TimeDensityDataPicker::trackerText(const QPoint &p) const {
   if (minDist < 25) {
     BinaryImageTreeItem *binseg = dynamic_cast<BinaryImageTreeItem *>(minValues.segment);
     QString text( binseg->getName() );
-    text += "\nTime:" + QString::number(minX);
-    text += "\nMean:" + QString::number(minValues.mean);
-    text += "\nStdDev:" + QString::number(minValues.stddev);
-    text += "\nMin:" + QString::number(minValues.min);
-    text += "\nMax:" + QString::number(minValues.max);
-    text += "\nSamples:" + QString::number(minValues.sampleCount);
-    markerX->setXValue(minX);
-    markerY->setYValue(minValues.mean);
-    markerX->setVisible(true);
-    markerY->setVisible(true);
+    text += "\nTime:" + QString::number(minX) + " s";
+    text += "\nMean:" + QString::number(minValues.mean) + " HU";
+    text += "\nStdDev:" + QString::number(minValues.stddev) + " HU";
+    text += "\nMin:" + QString::number(minValues.min) + " HU";
+    text += "\nMax:" + QString::number(minValues.max) + " HU";
+    text += "\n#Samples:" + QString::number(minValues.sampleCount);
+    if (!markerX->isVisible() || markerX->xValue()!= minX || markerY->yValue()!=minValues.mean) {
+      markerX->setXValue(minX);
+      markerY->setYValue(minValues.mean);
+      markerX->setVisible(true);
+      markerY->setVisible(true);
+      const_cast<TimeDensityDataPicker*>(this)->canvas()->replot();
+    }
     return text;
   } else {
-    markerX->setVisible(false);
-    markerY->setVisible(false);
+    if (markerX->isVisible()) {
+      markerX->setVisible(false);
+      markerY->setVisible(false);
+      const_cast<TimeDensityDataPicker*>(this)->canvas()->replot();
+    }
     return QwtText();
   }
 }
