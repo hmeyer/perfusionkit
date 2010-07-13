@@ -201,8 +201,10 @@ TimeDensityDataPicker::TimeDensityDataPicker(QwtPlotMarker *markerX_, QwtPlotMar
 
 QwtText TimeDensityDataPicker::trackerText(const QPoint &p) const {
   int minDist = std::numeric_limits< int >::max();
-  double minX;
+  double minX = 0;
   CTImageTreeItem::SegmentationValues minValues;
+   // prevent Warning
+  minValues.min = 0; minValues.max = 0; minValues.mean = 0; minValues.stddev = 0; minValues.sampleCount = 0; minValues.segment = 0;
   QwtDoublePoint pdv;
   QPoint pv;
   for(AnalyseDialog::CurveList::const_iterator it = curveset.begin(); it != curveset.end(); ++it) {
