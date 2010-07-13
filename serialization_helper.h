@@ -7,12 +7,10 @@
 #include <QString>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/serialization/map.hpp>
-#include <boost/serialization/shared_ptr.hpp>
 #include <boost/serialization/split_free.hpp>
-#include <boost/serialization/tracking.hpp>
 
-
-
+#include <bitset>
+#include "imagedefinitions.h"
 #include "ctimagetreemodel.h"
 
 
@@ -100,10 +98,10 @@ inline void serialize(Archive & ar, boost::ptr_vector<U> &v, const unsigned int 
 }
 
 
-template<class Archive, class PixelType, unsigned Dimension>
-inline void load(Archive & ar, typename itk::SmartPointer< itk::Image<PixelType, Dimension> > &i, const unsigned int version)
+template<class Archive, unsigned Dimension>
+inline void load(Archive & ar, typename itk::SmartPointer< itk::Image<BinaryPixelType, Dimension> > &i, const unsigned int version)
 {
-  typedef typename itk::Image<PixelType, Dimension> ImageType;
+  typedef typename itk::Image<BinaryPixelType, Dimension> ImageType;
   i = ImageType::New();
   typename ImageType::SpacingType spacing;
   typename ImageType::SizeType size;
@@ -123,17 +121,28 @@ inline void load(Archive & ar, typename itk::SmartPointer< itk::Image<PixelType,
   i->SetOrigin( origin );
   i->Allocate();
   itk::ImageRegionIterator<ImageType> it(i,region);
+  
+  unsigned long ulongVal = 0;
+  typedef std::bitset< sizeof( ulongVal ) > UlongBitSet;
+  UlongBitSet bitValues;
+  size_t sizeCount = bitValues.size();
   for(it.GoToBegin(); !it.IsAtEnd(); ++it) {
-    ar & it.Value();
+    if (sizeCount == bitValues.size()) {
+      ar & ulongVal;
+      bitValues = UlongBitSet(ulongVal);
+      sizeCount = 0;
+    }
+    it.Value() = bitValues[sizeCount]? BinaryPixelOn : BinaryPixelOff;
+    sizeCount++;
   }
 }
 
 
 
-template<class Archive, class PixelType, unsigned Dimension>
-inline void save(Archive & ar, const typename itk::SmartPointer< itk::Image<PixelType, Dimension> > &i, const unsigned int version)
+template<class Archive, unsigned Dimension>
+inline void save(Archive & ar, const typename itk::SmartPointer< itk::Image<BinaryPixelType, Dimension> > &i, const unsigned int version)
 {
-  typedef typename itk::Image<PixelType, Dimension> ImageType;
+  typedef typename itk::Image<BinaryPixelType, Dimension> ImageType;
   typename ImageType::RegionType region = i->GetBufferedRegion();
   typename ImageType::SpacingType spacing = i->GetSpacing();
   typename ImageType::SizeType size = region.GetSize();
@@ -146,14 +155,27 @@ inline void save(Archive & ar, const typename itk::SmartPointer< itk::Image<Pixe
     ar & origin[d];
   }
   itk::ImageRegionConstIterator<ImageType> it(i,region);
+  unsigned long ulongVal;
+  std::bitset< sizeof( ulongVal ) > bitValues;
+  size_t sizeCount = 0;
   for(it.GoToBegin(); !it.IsAtEnd(); ++it) {
-    ar & it.Value();
+    bitValues[sizeCount] = (it.Value() == BinaryPixelOn);
+    sizeCount++;
+    if (sizeCount == bitValues.size()) {
+      ulongVal = bitValues.to_ulong();
+      ar & ulongVal;
+      sizeCount = 0;
+    }
+  }
+  if (sizeCount != 0) {
+      ulongVal = bitValues.to_ulong();
+      ar & ulongVal;
   }
 }
 
 
-template<class Archive, class PixelType, unsigned Dimension>
-inline void serialize(Archive & ar, typename itk::SmartPointer< itk::Image<PixelType, Dimension> > &i, const unsigned int version)
+template<class Archive, unsigned Dimension>
+inline void serialize(Archive & ar, typename itk::SmartPointer< itk::Image<BinaryPixelType, Dimension> > &i, const unsigned int version)
 {
   boost::serialization::split_free(ar, i, version);
 }
