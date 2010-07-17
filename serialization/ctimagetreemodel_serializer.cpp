@@ -13,6 +13,10 @@
 BOOST_CLASS_EXPORT_GUID(CTImageTreeItem, "CTImageTreeItem");
 BOOST_CLASS_EXPORT_GUID(BinaryImageTreeItem, "BinaryImageTreeItem");
 
+
+
+
+
 void deserializeCTImageTreeModelFromFile(CTImageTreeModel &model, const std::string &fname) {
   using namespace std;
   using namespace boost::iostreams;

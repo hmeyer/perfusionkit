@@ -2,6 +2,61 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT( perfusionkit )
 
+
+
+SET( PerfusionkitSrc 
+	main/main.cpp 
+	main/mainwindow.cpp 
+	main/dicomselectordialog.cpp
+
+	analyse/analysedialog.cpp
+	analyse/gammaVariate.cpp
+	analyse/segmentlistmodel.cpp 
+	analyse/segmentselectbutton.cpp 
+
+	imagetree/vtktreeitem.cpp 
+	imagetree/ctimagetreemodel.cpp 
+	imagetree/ctimagetreeitem.cpp 
+	imagetree/binaryimagetreeitem.cpp 
+	imagetree/itkvtktreeitem.cpp 
+	imagetree/treeitem.cpp 
+
+	serialization/ctimagetreemodel_serializer.cpp 
+
+	vtkwidgets/vtkbinaryimagetocolor.cpp 
+	vtkwidgets/vtkbinaryimageoverlay.cpp 
+	vtkwidgets/interactorstylevolumeview.cpp 
+	vtkwidgets/multiplanarreformatwidget.cpp 
+	vtkwidgets/vtkinteractorstyleprojectionview.cpp 
+	vtkwidgets/volumeprojectionwidget.cpp 
+)
+
+SET( HeaderDirs
+	main
+	analyse
+	imagetree
+	serialization
+	misc
+	vtkwidgets
+)
+
+SET( UIS 
+	main/MainWindow.ui 
+	main/DicomSelectDialog.ui
+	analyse/AnalyseDialog.ui
+)
+
+SET ( QVTKMocHeaders
+	main/mainwindow.h
+	main/dicomselectordialog.h
+	analyse/segmentselectbutton.h
+	analyse/analysedialog.h
+	imagetree/ctimagetreemodel.h
+    )
+
+
+
+
 #FIND_PATH(MYLIBS itkbasics.h ../myLibs ../../myLibs)
 
 FIND_PATH(QWTLIB include/qwt.h)
@@ -40,43 +95,21 @@ IF(NOT DESIRED_QT_VERSION MATCHES 4)
 	MESSAGE(FATAL_ERROR "Need QT Version >= 4 build into VTK")
 ENDIF(NOT DESIRED_QT_VERSION MATCHES 4)
 
-
-SET( PerfusionkitSrc vtkbinaryimagetocolor.cpp vtkbinaryimageoverlay.cpp vtktreeitem.cpp ctimagetreemodel.cpp ctimagetreeitem.cpp binaryimagetreeitem.cpp itkvtktreeitem.cpp treeitem.cpp 
-  main.cpp 
-  mainwindow.cpp 
-  interactorstylevolumeview.cpp 
-  multiplanarreformatwidget.cpp 
-  vtkinteractorstyleprojectionview.cpp 
-  volumeprojectionwidget.cpp 
-  dicomselectordialog.cpp
-  ctimagetreemodel_serializer.cpp analysedialog.cpp
-#  ${MYLIBS}/itkbasics.cpp
- 
-)
-
 ADD_DEFINITIONS(-ftemplate-depth-100)
 
 INCLUDE_DIRECTORIES(
-  ${QT_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR}
-  ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
-#  ${MYLIBS}
-  ${QWTLIB}/include
+	${HeaderDirs}
+  	${QT_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR}
+	${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
+	${QWTLIB}/include
 )
 
 LINK_DIRECTORIES( ${LINK_DIRECTORIES} 
   ${QWTLIB}/lib
 )
 
-SET( UIS MainWindow.ui DicomSelectDialog.ui AnalyseDialog.ui)
-
 QT4_WRAP_UI( PerfusionkitSrc ${UIS} )
 
-SET ( QVTKMocHeaders
-    mainwindow.h
-    ctimagetreemodel.h
-    analysedialog.h
-    dicomselectordialog.h
-    )
 
 QT4_WRAP_CPP( PerfusionkitSrc ${QVTKMocHeaders} )
 
@@ -86,7 +119,7 @@ ADD_EXECUTABLE( perfusionkit ${PerfusionkitSrc} ${MOCSrcs})
 TARGET_LINK_LIBRARIES ( perfusionkit
   QVTK
   ${QT_LIBRARIES}
-  ITKBasicFilters ITKCommon ITKIO
+  ITKBasicFilters ITKCommon ITKAlgorithms ITKIO
   vtkRendering vtkGraphics vtkHybrid
   vtkImaging vtkIO vtkFiltering vtkCommon
   vtkVolumeRendering

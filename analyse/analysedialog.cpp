@@ -11,6 +11,10 @@
 #include <qwt_plot_picker.h>
 #include <vector>
 #include <QMessageBox>
+#include <QLabel>
+#include <QRadioButton>
+#include <QCheckBox>
+#include "gammaVariate.h"
 
 
 class TimeDensityData: public QwtData {
@@ -42,15 +46,39 @@ private:
   std::vector< CTImageTreeItem::SegmentationValues > values;
 };
 
+const unsigned GammaSamples = 500;
+class GammaFitData: public QwtData {
+public:
+  GammaFitData(const GammaFunctions::GammaVariate &g, double start, double end):
+    xstart(start), xend( end ), gamma(g) { }
+    virtual QwtData *copy() const {
+        return new GammaFitData(*this);
+    }
+    virtual size_t size() const {
+        return GammaSamples;
+    }
+    virtual double x(size_t i) const {
+        return xstart + (xend - xstart) / GammaSamples * i;
+    }
+    virtual double y(size_t i) const {
+        return gamma.computeY(x(i));
+    }
+    GammaFunctions::GammaVariate &getGammaVariate() { return gamma; }
+private:
+  double xstart, xend;
+  GammaFunctions::GammaVariate gamma;
+};
+
+
 
 class TimeDensityDataPicker: public QwtPlotPicker {
   public:
-  TimeDensityDataPicker(QwtPlotMarker *markerX_, QwtPlotMarker *markerY_, const AnalyseDialog::CurveList &curveset_, QwtPlotCanvas *);
+  TimeDensityDataPicker(QwtPlotMarker *markerX_, QwtPlotMarker *markerY_, const AnalyseDialog::SegmentCurveMap &curveset_, QwtPlotCanvas *);
   virtual QwtText trackerText(const QPoint &) const;
   protected:
     QwtPlotMarker *markerX;
     QwtPlotMarker *markerY;
-    const AnalyseDialog::CurveList &curveset;
+    const AnalyseDialog::SegmentCurveMap &curveset;
 };
 
 
@@ -60,22 +88,26 @@ AnalyseDialog::AnalyseDialog(QWidget * parent, Qt::WindowFlags f)
   ,markerEnd(new QwtPlotMarker)
   ,markerPickerX(new QwtPlotMarker)
   ,markerPickerY(new QwtPlotMarker)
-  ,grid(new QwtPlotGrid) {
+  ,grid(new QwtPlotGrid)
+  ,segments(this) {
   setupUi( this );
   plot->setTitle(tr("Time Density Curves"));
   plot->setAxisTitle(QwtPlot::xBottom, tr("Time [s]"));
   plot->setAxisTitle(QwtPlot::yLeft, tr("Density [HU]"));
+  plot->insertLegend(new QwtLegend(), QwtPlot::RightLegend);
   
   markerStart->setLabel(tr("Start"));
   markerStart->setLabelAlignment(Qt::AlignRight|Qt::AlignTop);
   markerStart->setLineStyle(QwtPlotMarker::VLine);
   markerStart->setXValue(0);
+  markerStart->setVisible(false);
   markerStart->attach(plot);  
   
   markerEnd->setLabel(tr("End"));
   markerEnd->setLabelAlignment(Qt::AlignLeft|Qt::AlignTop);
   markerEnd->setLineStyle(QwtPlotMarker::VLine);
   markerEnd->setXValue(0);
+  markerEnd->setVisible(false);
   markerEnd->attach(plot);  
   
   markerPickerX->setLineStyle(QwtPlotMarker::VLine);
@@ -93,7 +125,8 @@ AnalyseDialog::AnalyseDialog(QWidget * parent, Qt::WindowFlags f)
   
   sliderStart->setTracking(true);
   sliderEnd->setTracking(true);
-  picker = new TimeDensityDataPicker(markerPickerX, markerPickerY, curveset, plot->canvas());
+  picker = new TimeDensityDataPicker(markerPickerX, markerPickerY, sampleCurveset, plot->canvas());
+  listSegments->setModel( &segments );
 }
 
 AnalyseDialog::~AnalyseDialog() {
@@ -111,13 +144,33 @@ void AnalyseDialog::addImage(CTImageTreeItem *image) {
   for(int i = 0; i < childNum; ++i) {
     TreeItem *child = &image->child(i);
     if (typeid(*child) == typeid(BinaryImageTreeItem)) {
-      segments.insert( dynamic_cast<BinaryImageTreeItem*>(child) );
+      const BinaryImageTreeItem *seg = dynamic_cast<BinaryImageTreeItem*>(child);
+      segments.addSegment(seg);
+      boost::shared_ptr< QwtPlotCurve > curve( new QwtPlotCurve(seg->getName()) );
+      sampleCurveset[seg] = curve;
+      const RGBType &RGBColor = seg->getColor();
+      QColor color = QColor( RGBColor[0], RGBColor[1], RGBColor[2] );
+      curve->setPen(QPen(color));
+      curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+      curve->attach(plot);
+      QwtSymbol symbol; 
+      symbol.setStyle( QwtSymbol::Ellipse );
+      symbol.setSize(8);
+      symbol.setPen(QPen(color));
+      symbol.setBrush(QBrush(color.darker(130)));
+      curve->setSymbol( symbol );
+      TimeDensityData curveData;
+      curve->setData( curveData );      
     }
   }
+  sliderStart->setRange(0, images.size()-1 );
+  sliderEnd->setRange(0, images.size()-1 );
 }
 
+
+
 int AnalyseDialog::exec(void ) {
-  if (!images.size() || !segments.size()) {
+  if (!images.size() || !segments.rowCount()) {
     QMessageBox::warning(this,tr("Analyse Error"),tr("Select at least one volume with at least one segment"));
     return QDialog::Rejected;
   }
@@ -126,54 +179,24 @@ int AnalyseDialog::exec(void ) {
     const CTImageTreeItem *ct = *ii;
     times.push_back(ct->getTime() - firstTime);
   }
-  curveset.clear();
-  
-  for(SegmentSet::const_iterator si = segments.begin(); si != segments.end(); ++si) {
-    const BinaryImageTreeItem *seg = *si;
-    boost::shared_ptr< QwtPlotCurve > curve( new QwtPlotCurve(seg->getName()) );
-    curveset.push_back( curve );
-    const RGBType &RGBColor = seg->getColor();
-    QColor color = QColor( RGBColor[0], RGBColor[1], RGBColor[2] );
-    curve->setPen(QPen(color));
-    curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
-    curve->attach(plot);
-    QwtSymbol symbol; 
-    symbol.setStyle( QwtSymbol::Ellipse );
-    symbol.setSize(8);
-    symbol.setPen(QPen(color));
-    symbol.setBrush(QBrush(color.darker(130)));
-    curve->setSymbol( symbol );
-    TimeDensityData curveData;
-    curve->setData( curveData );
-  }
   int imageIndex = 0;
   CTImageTreeItem::SegmentationValues values; values.accuracy = CTImageTreeItem::SimpleAccuracy;
   for(ImageSet::const_iterator ii = images.begin(); ii != images.end(); ++ii) {
     const CTImageTreeItem *ct = *ii;
     int segmentIndex = 0;
-    for(SegmentSet::const_iterator si = segments.begin(); si != segments.end(); ++si) {
-      values.segment = *si;
+    for(SegmentListModel::iterator si = segments.begin(); si != segments.end(); ++si) {
+      values.segment = si->segment;
       if (ct->getSegmentationValues( values )) {
-	TimeDensityData &curveData = dynamic_cast<TimeDensityData &>(curveset[segmentIndex]->data());
+	TimeDensityData &curveData = dynamic_cast<TimeDensityData &>(sampleCurveset[si->segment]->data());
 	curveData.pushPoint(times[imageIndex], values);
       } else {
-	QMessageBox::warning(this,tr("Analyse Error"),tr("Could not apply Segment ") + (*si)->getName() + tr(" on image #") + QString::number(imageIndex));
+	QMessageBox::warning(this,tr("Analyse Error"),tr("Could not apply Segment ") + si->segment->getName() + tr(" on image #") + QString::number(imageIndex));
       }
       ++segmentIndex;
     }
     ++imageIndex;
   }
-  
-  sliderStart->setRange(0, times.size()-1 );
-  sliderStart->setSliderPosition(0);
-  sliderEnd->setRange(0, times.size()-1 );
-  sliderEnd->setSliderPosition( times.size() -1 );
-  plot->insertLegend(new QwtLegend(), QwtPlot::RightLegend);
   return QDialog::exec();
-}
-
-double AnalyseDialog::stringToSec(const std::string &timeString) {
-  return 0;
 }
 
 bool AnalyseDialog::CTImageTimeCompareFunctor::operator()(const argT &x, const argT &y) const {
@@ -182,17 +205,90 @@ bool AnalyseDialog::CTImageTimeCompareFunctor::operator()(const argT &x, const a
 
 void AnalyseDialog::on_sliderStart_valueChanged(int val) {
   markerStart->setXValue(times[val]);
+  QModelIndexList indexList = listSegments->selectionModel()->selectedRows();
+  if (indexList.size() == 1) {
+    SegmentListModel::SegmentInfo &seg = segments.getSegment(indexList[0]);
+    seg.gammaStartIndex = val;
+    seg.gammaStart = times[val];
+    recalculateGamma(seg);
+  }
   plot->replot();
 }
 void AnalyseDialog::on_sliderEnd_valueChanged(int val) {
   markerEnd->setXValue(times[val]);
+  QModelIndexList indexList = listSegments->selectionModel()->selectedRows();
+  if (indexList.size() == 1) {
+    SegmentListModel::SegmentInfo &seg = segments.getSegment(indexList.at(0));
+    seg.gammaEndIndex = val;
+    seg.gammaEnd = times[val];
+    recalculateGamma(seg);
+  }
+  plot->replot();
+}
+
+void AnalyseDialog::on_listSegments_clicked(const QModelIndex & index) {
+  on_listSegments_activated(index);
+}
+
+void AnalyseDialog::on_listSegments_activated(const QModelIndex & index) {
+  sliderStart->setEnabled(true);
+  sliderEnd->setEnabled(true);
+  checkEnableGamma->setEnabled(true);
+  markerStart->setVisible(true);
+  markerEnd->setVisible(true);
+  const SegmentListModel::SegmentInfo &seg = segments.getSegment( index );
+  sliderStart->setValue(seg.gammaStartIndex);
+  sliderEnd->setValue(seg.gammaEndIndex);
+  checkEnableGamma->setChecked(seg.enableGammaFit);
+}
+
+void AnalyseDialog::on_checkEnableGamma_toggled() {
+  QModelIndexList indexList = listSegments->selectionModel()->selectedRows();
+  if (indexList.size() == 1) {
+    SegmentListModel::SegmentInfo &seg = segments.getSegment(indexList.at(0));
+    seg.enableGammaFit = checkEnableGamma->isChecked();
+    recalculateGamma(seg);
+  }
+}
+
+
+
+
+void AnalyseDialog::recalculateGamma(const SegmentListModel::SegmentInfo &seginfo) {
+  const BinaryImageTreeItem *seg = seginfo.segment;
+  CurvePtr &curve = gammaCurveset[ seg ];
+  if (!seginfo.enableGammaFit || seginfo.gammaEndIndex < seginfo.gammaStartIndex + 2) {
+    curve.reset();
+  } else {
+    if (!curve) {
+	curve.reset( new QwtPlotCurve(seg->getName() + tr(" Gamma Fit")) );
+	const RGBType &RGBColor = seg->getColor();
+	QColor color = QColor( RGBColor[0], RGBColor[1], RGBColor[2] );
+	QPen pen(color);
+	pen.setStyle(Qt::DotLine);
+	curve->setPen(pen);
+	curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+	curve->attach(plot);
+	GammaFunctions::GammaVariate gv;
+	GammaFitData curveData( gv, times.front(), times.back());
+	curve->setData( curveData );
+    }
+    GammaFitData &gd = dynamic_cast<GammaFitData&>(curve->data());
+    GammaFunctions::GammaVariate &gv = gd.getGammaVariate();
+    gv.clearSamples();
+    const QwtData &tdd = sampleCurveset[ seginfo.segment ]->data();
+    for(unsigned i = seginfo.gammaStartIndex; i <= seginfo.gammaEndIndex; ++i) {
+      gv.addSample(tdd.x(i), tdd.y(i));
+    }
+    gv.findFromSamples();
+  }
   plot->replot();
 }
 
 
 
 TimeDensityDataPicker::TimeDensityDataPicker(QwtPlotMarker *markerX_, QwtPlotMarker *markerY_, 
-  const AnalyseDialog::CurveList &curveset_, QwtPlotCanvas *c):QwtPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft,
+  const AnalyseDialog::SegmentCurveMap &curveset_, QwtPlotCanvas *c):QwtPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft,
         QwtPicker::PointSelection,QwtPlotPicker::NoRubberBand, QwtPicker::AlwaysOn, c),
         markerX(markerX_),
         markerY(markerY_),
@@ -207,9 +303,9 @@ QwtText TimeDensityDataPicker::trackerText(const QPoint &p) const {
   minValues.min = 0; minValues.max = 0; minValues.mean = 0; minValues.stddev = 0; minValues.sampleCount = 0; minValues.segment = 0;
   QwtDoublePoint pdv;
   QPoint pv;
-  for(AnalyseDialog::CurveList::const_iterator it = curveset.begin(); it != curveset.end(); ++it) {
+  for(AnalyseDialog::SegmentCurveMap::const_iterator it = curveset.begin(); it != curveset.end(); ++it) {
     CTImageTreeItem::SegmentationValues values;
-    const TimeDensityData &data = dynamic_cast<const TimeDensityData&>((*it)->data());
+    const TimeDensityData &data = dynamic_cast<const TimeDensityData&>(it->second->data());
     for(unsigned i=0; i < data.size(); ++i) {
       pdv.setX( data.getTimeAndValues(i, values) );
       pdv.setY( values.mean );
@@ -225,7 +321,7 @@ QwtText TimeDensityDataPicker::trackerText(const QPoint &p) const {
     }
   }
   if (minDist < 25) {
-    BinaryImageTreeItem *binseg = dynamic_cast<BinaryImageTreeItem *>(minValues.segment);
+    const BinaryImageTreeItem *binseg = dynamic_cast<const BinaryImageTreeItem *>(minValues.segment);
     QString text( binseg->getName() );
     text += "\nTime:" + QString::number(minX) + " s";
     text += "\nMean:" + QString::number(minValues.mean) + " HU";

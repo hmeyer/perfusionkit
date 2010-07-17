@@ -5,18 +5,22 @@
 #include <itkImage.h>
 #include <itkImageRegionIterator.h>
 #include <QString>
+#include <boost/foreach.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
-#include <boost/serialization/map.hpp>
 #include <boost/serialization/split_free.hpp>
+#include <boost/serialization/map.hpp>
 
 #include <bitset>
 #include "imagedefinitions.h"
 #include "ctimagetreemodel.h"
+#include "ctimagetreeitem.h"
 
 
 
 BOOST_SERIALIZATION_SPLIT_FREE(itk::MetaDataDictionary)
 BOOST_SERIALIZATION_SPLIT_FREE(QString)
+BOOST_SERIALIZATION_SPLIT_FREE(CTImageTreeItem::SegmentationValueMap)
+
 
 namespace boost {
 namespace serialization {
@@ -179,6 +183,32 @@ inline void serialize(Archive & ar, typename itk::SmartPointer< itk::Image<Binar
 {
   boost::serialization::split_free(ar, i, version);
 }
+
+
+template<class Archive>
+inline void load(Archive & ar, CTImageTreeItem::SegmentationValueMap &svm, const unsigned int version)
+{
+  size_t s;
+  ar & s;
+  while(s) {
+    CTImageTreeItem::SegmentationValues sv;
+    ar & sv;
+    svm.insert(CTImageTreeItem::SegmentationValueMap::value_type(sv.segment, sv));
+    --s;
+  }
+}
+
+template<class Archive>
+inline void save(Archive & ar, const CTImageTreeItem::SegmentationValueMap &svm, const unsigned int version)
+{
+  size_t s = svm.size();
+  ar & s;
+  BOOST_FOREACH( const CTImageTreeItem::SegmentationValueMap::value_type &svm_value, svm ) {
+    const CTImageTreeItem::SegmentationValues &sv = svm_value.second;
+    ar & sv;
+  }
+}
+
 
 
 } // namespace serialization

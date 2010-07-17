@@ -1,1 +1,0 @@
-../itk/InsightToolkit-3.18.0/Wrapping/WrapITK/ExternalProjects/ItkVtkGlue/src/itkImageToVTKImageFilter.txx

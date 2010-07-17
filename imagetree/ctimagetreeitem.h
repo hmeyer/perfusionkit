@@ -8,7 +8,12 @@
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/set.hpp>
 
+#include <boost/serialization/split_free.hpp>
+#include <boost/foreach.hpp>
+
 class BinaryImageTreeItem;
+
+
 
 class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
 {
@@ -45,7 +50,7 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
       InterpolatedAccuray
     };
     struct SegmentationValues {
-      ITKVTKTreeItem<BinaryImageType> *segment;
+      const ITKVTKTreeItem<BinaryImageType> *segment;
       long unsigned mtime;
       double mean;
       double stddev;
@@ -57,7 +62,10 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
 	friend class boost::serialization::access;
 	template<class Archive>
 	void load(Archive & ar, const unsigned int version) {
-	  ar & segment; ar & mean; ar & stddev; ar & min; ar & max; ar & sampleCount; ar & accuracy;
+	  ITKVTKTreeItem<BinaryImageType> *nonconstseg;
+	  ar & nonconstseg;
+	  segment = nonconstseg;
+	  ar & mean; ar & stddev; ar & min; ar & max; ar & sampleCount; ar & accuracy;
 	  bool matchingMtime;
 	  ar & matchingMtime;
 	  if (matchingMtime) mtime = segment->getITKMTime();
@@ -86,9 +94,9 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     static void getUIDFromDict(const itk::MetaDataDictionary &dict, std::string &iUID);
     static inline bool isRealHUvalue(CTPixelType value) { return (value!=-2048)?true:false; }
     
+    typedef std::map< const ITKVTKTreeItem<BinaryImageType> *, SegmentationValues > SegmentationValueMap;
     
   protected:
-    typedef std::map< ITKVTKTreeItem<BinaryImageType> *, SegmentationValues > SegmentationValueMap;
     SegmentationValueMap segmentationValueCache;
     bool internalGetSegmentationValues( SegmentationValues &values) const;
     class ReaderProgress;
@@ -113,6 +121,9 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
       ar & segmentationValueCache;
     }
 };
+
+
+
 
 
 
