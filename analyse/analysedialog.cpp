@@ -2,84 +2,24 @@
 
 #include "ctimagetreeitem.h"
 #include "binaryimagetreeitem.h"
-#include <qwt_data.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_marker.h>
 #include <qwt_plot_grid.h>
 #include <qwt_symbol.h>
 #include <qwt_legend.h>
-#include <qwt_plot_picker.h>
 #include <vector>
 #include <QMessageBox>
 #include <QLabel>
 #include <QRadioButton>
 #include <QCheckBox>
 #include "gammaVariate.h"
-
-
-class TimeDensityData: public QwtData {
-public:
-    virtual QwtData *copy() const {
-        return new TimeDensityData(*this);
-    }
-    virtual size_t size() const {
-        return time.size();
-    }
-    virtual double x(size_t i) const {
-        return time[i];
-    }
-    virtual double y(size_t i) const {
-        return values[i].mean;
-    }
-    double getTimeAndValues( size_t i, CTImageTreeItem::SegmentationValues &v ) const {
-      v = values[i];
-      return time[i];
-    }
-    void pushPoint( double t, const CTImageTreeItem::SegmentationValues &v) {
-      if (time.size() == 0 || t> time[time.size()-1]) {
-	time.push_back(t);
-	values.push_back(v);
-      }
-    }
-private:
-  std::vector< double > time;
-  std::vector< CTImageTreeItem::SegmentationValues > values;
-};
-
-const unsigned GammaSamples = 500;
-class GammaFitData: public QwtData {
-public:
-  GammaFitData(const GammaFunctions::GammaVariate &g, double start, double end):
-    xstart(start), xend( end ), gamma(g) { }
-    virtual QwtData *copy() const {
-        return new GammaFitData(*this);
-    }
-    virtual size_t size() const {
-        return GammaSamples;
-    }
-    virtual double x(size_t i) const {
-        return xstart + (xend - xstart) / GammaSamples * i;
-    }
-    virtual double y(size_t i) const {
-        return gamma.computeY(x(i));
-    }
-    GammaFunctions::GammaVariate &getGammaVariate() { return gamma; }
-private:
-  double xstart, xend;
-  GammaFunctions::GammaVariate gamma;
-};
+#include "timedensitydata.h"
+#include "gammafitdata.h"
+#include "timedensitydatapicker.h"
 
 
 
-class TimeDensityDataPicker: public QwtPlotPicker {
-  public:
-  TimeDensityDataPicker(QwtPlotMarker *markerX_, QwtPlotMarker *markerY_, const AnalyseDialog::SegmentCurveMap &curveset_, QwtPlotCanvas *);
-  virtual QwtText trackerText(const QPoint &) const;
-  protected:
-    QwtPlotMarker *markerX;
-    QwtPlotMarker *markerY;
-    const AnalyseDialog::SegmentCurveMap &curveset;
-};
+
 
 
 AnalyseDialog::AnalyseDialog(QWidget * parent, Qt::WindowFlags f)
@@ -286,63 +226,3 @@ void AnalyseDialog::recalculateGamma(const SegmentListModel::SegmentInfo &seginf
 }
 
 
-
-TimeDensityDataPicker::TimeDensityDataPicker(QwtPlotMarker *markerX_, QwtPlotMarker *markerY_, 
-  const AnalyseDialog::SegmentCurveMap &curveset_, QwtPlotCanvas *c):QwtPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft,
-        QwtPicker::PointSelection,QwtPlotPicker::NoRubberBand, QwtPicker::AlwaysOn, c),
-        markerX(markerX_),
-        markerY(markerY_),
-        curveset(curveset_) {
-}
-
-QwtText TimeDensityDataPicker::trackerText(const QPoint &p) const {
-  int minDist = std::numeric_limits< int >::max();
-  double minX = 0;
-  CTImageTreeItem::SegmentationValues minValues;
-   // prevent Warning
-  minValues.min = 0; minValues.max = 0; minValues.mean = 0; minValues.stddev = 0; minValues.sampleCount = 0; minValues.segment = 0;
-  QwtDoublePoint pdv;
-  QPoint pv;
-  for(AnalyseDialog::SegmentCurveMap::const_iterator it = curveset.begin(); it != curveset.end(); ++it) {
-    CTImageTreeItem::SegmentationValues values;
-    const TimeDensityData &data = dynamic_cast<const TimeDensityData&>(it->second->data());
-    for(unsigned i=0; i < data.size(); ++i) {
-      pdv.setX( data.getTimeAndValues(i, values) );
-      pdv.setY( values.mean );
-      pv = transform(pdv);
-      int dx = pv.x() - p.x();
-      int dy = pv.y() - p.y();
-      int dist = dx * dx + dy * dy;
-      if (dist < minDist) {
-	minDist = dist;
-	minX = pdv.x();
-	minValues = values;
-      }
-    }
-  }
-  if (minDist < 25) {
-    const BinaryImageTreeItem *binseg = dynamic_cast<const BinaryImageTreeItem *>(minValues.segment);
-    QString text( binseg->getName() );
-    text += "\nTime:" + QString::number(minX) + " s";
-    text += "\nMean:" + QString::number(minValues.mean) + " HU";
-    text += "\nStdDev:" + QString::number(minValues.stddev) + " HU";
-    text += "\nMin:" + QString::number(minValues.min) + " HU";
-    text += "\nMax:" + QString::number(minValues.max) + " HU";
-    text += "\n#Samples:" + QString::number(minValues.sampleCount);
-    if (!markerX->isVisible() || markerX->xValue()!= minX || markerY->yValue()!=minValues.mean) {
-      markerX->setXValue(minX);
-      markerY->setYValue(minValues.mean);
-      markerX->setVisible(true);
-      markerY->setVisible(true);
-      const_cast<TimeDensityDataPicker*>(this)->canvas()->replot();
-    }
-    return text;
-  } else {
-    if (markerX->isVisible()) {
-      markerX->setVisible(false);
-      markerY->setVisible(false);
-      const_cast<TimeDensityDataPicker*>(this)->canvas()->replot();
-    }
-    return QwtText();
-  }
-}

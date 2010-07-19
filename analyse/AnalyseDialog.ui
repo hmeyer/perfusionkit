@@ -34,9 +34,22 @@
      </property>
      <widget class="QWidget" name="tabGammaFit">
       <attribute name="title">
-       <string>Tab 1</string>
+       <string>gamma fit</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0" rowspan="4">
+        <widget class="QListView" name="listSegments"/>
+       </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="QCheckBox" name="checkEnableGamma">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="text">
+          <string>enable gamma fit</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="1">
         <widget class="QLabel" name="label">
          <property name="sizePolicy">
@@ -47,6 +60,16 @@
          </property>
          <property name="text">
           <string>start</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QSlider" name="sliderStart">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
          </property>
         </widget>
        </item>
@@ -63,16 +86,6 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="2">
-        <widget class="QSlider" name="sliderStart">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
        <item row="2" column="2">
         <widget class="QSlider" name="sliderEnd">
          <property name="enabled">
@@ -83,67 +96,31 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="1" colspan="2">
-        <widget class="QCheckBox" name="checkEnableGamma">
-         <property name="enabled">
-          <bool>false</bool>
-         </property>
-         <property name="text">
-          <string>enable gamma fit</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0" rowspan="5">
-        <widget class="QListView" name="listSegments"/>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="tabPerfusion">
-      <attribute name="title">
-       <string>Tab 2</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout_2">
-       <item row="2" column="1">
+       <item row="3" column="2" colspan="2">
         <widget class="SegmentSelectButton" name="buttonArtery" native="true"/>
        </item>
-       <item row="0" column="0" rowspan="3">
-        <widget class="QColumnView" name="viewPerfusion"/>
-       </item>
-       <item row="1" column="1">
-        <widget class="QLabel" name="label_8">
+       <item row="3" column="1">
+        <widget class="QLabel" name="label_9">
          <property name="text">
-          <string>artery input:</string>
+          <string>artery input</string>
          </property>
         </widget>
-       </item>
-       <item row="0" column="1">
-        <spacer name="verticalSpacer">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>40</height>
-          </size>
-         </property>
-        </spacer>
        </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tabPatlak">
       <attribute name="title">
-       <string>Page</string>
+       <string>patlak</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="0" column="0">
-        <widget class="QColumnView" name="viewPatlak"/>
+        <widget class="QListView" name="viewPatlak"/>
        </item>
       </layout>
      </widget>
      <widget class="QWidget" name="tabSpeckRogalla">
       <attribute name="title">
-       <string>Page</string>
+       <string>GFR speck/rogalla</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_4">
        <item row="1" column="6">
