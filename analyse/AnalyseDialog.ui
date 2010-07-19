@@ -37,9 +37,6 @@
        <string>gamma fit</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0" rowspan="4">
-        <widget class="QListView" name="listSegments"/>
-       </item>
        <item row="0" column="1" colspan="2">
         <widget class="QCheckBox" name="checkEnableGamma">
          <property name="enabled">
@@ -67,6 +64,12 @@
         <widget class="QSlider" name="sliderStart">
          <property name="enabled">
           <bool>false</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
          </property>
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -103,6 +106,19 @@
         <widget class="QLabel" name="label_9">
          <property name="text">
           <string>artery input</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" rowspan="4">
+        <widget class="QTableView" name="listSegments">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+           <horstretch>4</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="selectionBehavior">
+          <enum>QAbstractItemView::SelectRows</enum>
          </property>
         </widget>
        </item>

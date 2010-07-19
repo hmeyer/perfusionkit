@@ -67,6 +67,9 @@ AnalyseDialog::AnalyseDialog(QWidget * parent, Qt::WindowFlags f)
   sliderEnd->setTracking(true);
   picker = new TimeDensityDataPicker(markerPickerX, markerPickerY, sampleCurveset, plot->canvas());
   listSegments->setModel( &segments );
+  listSegments->verticalHeader()->setVisible(false);
+  listSegments->resizeColumnsToContents();
+  buttonArtery->setSegmentListModel( &segments );
 }
 
 AnalyseDialog::~AnalyseDialog() {
@@ -179,25 +182,33 @@ void AnalyseDialog::on_listSegments_activated(const QModelIndex & index) {
   const SegmentListModel::SegmentInfo &seg = segments.getSegment( index );
   sliderStart->setValue(seg.gammaStartIndex);
   sliderEnd->setValue(seg.gammaEndIndex);
-  checkEnableGamma->setChecked(seg.enableGammaFit);
+  checkEnableGamma->setChecked(seg.gamma);
+  buttonArtery->setSelection(seg.arterySegment);
 }
 
 void AnalyseDialog::on_checkEnableGamma_toggled() {
   QModelIndexList indexList = listSegments->selectionModel()->selectedRows();
   if (indexList.size() == 1) {
     SegmentListModel::SegmentInfo &seg = segments.getSegment(indexList.at(0));
-    seg.enableGammaFit = checkEnableGamma->isChecked();
+    if (checkEnableGamma->isChecked())
+      seg.gamma.reset(new GammaFunctions::GammaVariate());
     recalculateGamma(seg);
   }
 }
 
 
+void AnalyseDialog::on_buttonArtery_selected(const SegmentListModel::SegmentInfo *segment) {
+  QModelIndexList indexList = listSegments->selectionModel()->selectedRows();
+  if (indexList.size() == 1) {
+    segments.setArterySegment(indexList.at(0), segment);
+  }
+}
 
 
-void AnalyseDialog::recalculateGamma(const SegmentListModel::SegmentInfo &seginfo) {
+void AnalyseDialog::recalculateGamma(SegmentListModel::SegmentInfo &seginfo) {
   const BinaryImageTreeItem *seg = seginfo.segment;
   CurvePtr &curve = gammaCurveset[ seg ];
-  if (!seginfo.enableGammaFit || seginfo.gammaEndIndex < seginfo.gammaStartIndex + 2) {
+  if (!seginfo.gamma || seginfo.gammaEndIndex < seginfo.gammaStartIndex + 2) {
     curve.reset();
   } else {
     if (!curve) {
@@ -209,18 +220,16 @@ void AnalyseDialog::recalculateGamma(const SegmentListModel::SegmentInfo &seginf
 	curve->setPen(pen);
 	curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 	curve->attach(plot);
-	GammaFunctions::GammaVariate gv;
-	GammaFitData curveData( gv, times.front(), times.back());
+	GammaFitData curveData( seginfo.gamma, times.front(), times.back());
 	curve->setData( curveData );
     }
-    GammaFitData &gd = dynamic_cast<GammaFitData&>(curve->data());
-    GammaFunctions::GammaVariate &gv = gd.getGammaVariate();
-    gv.clearSamples();
+    seginfo.gamma->clearSamples();
     const QwtData &tdd = sampleCurveset[ seginfo.segment ]->data();
     for(unsigned i = seginfo.gammaStartIndex; i <= seginfo.gammaEndIndex; ++i) {
-      gv.addSample(tdd.x(i), tdd.y(i));
+      seginfo.gamma->addSample(tdd.x(i), tdd.y(i));
     }
-    gv.findFromSamples();
+    seginfo.gamma->findFromSamples();
+    segments.refresh();
   }
   plot->replot();
 }

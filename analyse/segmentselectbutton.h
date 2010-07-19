@@ -10,11 +10,19 @@ class SegmentSelectButton : public QPushButton
   Q_OBJECT
   public:
   SegmentSelectButton(QWidget *parent = 0);
-  BinaryImageTreeItem *const getSelectedSegment(void) const { return selectedSegment; }
+  const SegmentListModel::SegmentInfo * getSelectedSegment(void) const { return selectedSegment; }
+  void setSegmentListModel(const SegmentListModel *model) { segmentList = model; }
+  void setSelection(const SegmentListModel::SegmentInfo *segment);
+  
+  signals:
+  void selected(const SegmentListModel::SegmentInfo *segment);
+  
   private slots:
-  void onClick(void);
+  void onClick();
   private:
-  BinaryImageTreeItem * const selectedSegment;
+  void updateText();
+  const SegmentListModel::SegmentInfo *selectedSegment;
+  const SegmentListModel *segmentList;
 };
 
 #endif // SEGMENTSELECTBUTTON_H

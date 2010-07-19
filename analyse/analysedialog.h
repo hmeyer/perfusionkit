@@ -36,9 +36,10 @@ class AnalyseDialog : public QDialog, private Ui_AnalyseDialog
       void on_listSegments_clicked(const QModelIndex & index);
       void on_listSegments_activated(const QModelIndex & index);
       void on_checkEnableGamma_toggled();
+      void on_buttonArtery_selected(const SegmentListModel::SegmentInfo *segment);
 
   private:
-    void recalculateGamma(const SegmentListModel::SegmentInfo &seg);
+    void recalculateGamma(SegmentListModel::SegmentInfo &seginfo);
   struct CTImageTimeCompareFunctor {
     typedef CTImageTreeItem * argT;
     bool operator()(const argT &x, const argT &y) const;
