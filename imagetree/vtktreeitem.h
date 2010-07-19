@@ -1,9 +1,11 @@
 #ifndef VTKTREEITEM_H
 #define VTKTREEITEM_H
 #include <treeitem.h>
+#include <boost/serialization/access.hpp>
 
 class QProgressDialog;
 class vtkImageData;
+
 
 class VTKTreeItem : public TreeItem
 {
@@ -17,9 +19,7 @@ class VTKTreeItem : public TreeItem
   private:
     friend class boost::serialization::access;
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version) {
-      ar & boost::serialization::base_object<TreeItem>(*this);
-    }
+    void serialize(Archive & ar, const unsigned int version);
 };
 
 

@@ -6,9 +6,6 @@
 #include <string>
 #include <vector>
 #include <boost/serialization/access.hpp>
-#include <boost/serialization/shared_ptr.hpp>
-#include <boost/serialization/vector.hpp>
-
 
 
 class CTImageTreeModel : public QAbstractItemModel {
@@ -48,17 +45,14 @@ class CTImageTreeModel : public QAbstractItemModel {
   public slots:
     bool removeCTImage(int srow);
     bool createSegment(int srow);
-
+    
   private:
     friend class boost::serialization::access;
-    CTImageTreeModel(QObject *parent = 0):QAbstractItemModel(parent),rootItem(this) {};
+    
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version) {
-      beginResetModel(); 
-      ar & HeaderFields;
-      ar & rootItem;
-      endResetModel(); 
-    }
+    void serialize(Archive & ar, const unsigned int version);
+    
+    CTImageTreeModel(QObject *parent = 0):QAbstractItemModel(parent),rootItem(this) {};
     void emitLayoutAboutToBeChanged() { emit layoutAboutToBeChanged(); }
     void emitLayoutChanged() { emit layoutChanged(); }
     QModelIndex createIndex(int r, int c, const TreeItem*p) const;

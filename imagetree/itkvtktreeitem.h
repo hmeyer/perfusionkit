@@ -12,6 +12,8 @@
 #include <set>
 #include <string>
 #include <boost/bind.hpp>
+#include <boost/serialization/base_object.hpp>
+
 
 template< class TImage >
 class ITKVTKTreeItem : public VTKTreeItem {
@@ -49,9 +51,7 @@ class ITKVTKTreeItem : public VTKTreeItem {
   private:
     friend class boost::serialization::access;
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version) {
-      ar & boost::serialization::base_object<VTKTreeItem>(*this);
-    }
+    void serialize(Archive & ar, const unsigned int version);
 };
 
 

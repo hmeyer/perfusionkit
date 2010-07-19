@@ -6,8 +6,10 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
 
+#include "ctimagetreemodel.h"
 #include "ctimagetreeitem.h"
 #include "binaryimagetreeitem.h"
+#include "serialization_helper.h"
 
 #include <boost/serialization/export.hpp>
 BOOST_CLASS_EXPORT_GUID(CTImageTreeItem, "CTImageTreeItem");

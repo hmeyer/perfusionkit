@@ -8,9 +8,7 @@
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <string>
 #include <QAbstractItemModel>
-
 #include <boost/serialization/access.hpp>
-#include <boost/serialization/vector.hpp>
 
 class CTImageTreeModel;
 
@@ -65,11 +63,7 @@ class TreeItem : boost::noncopyable {
   private:
     friend class boost::serialization::access;
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version) {
-      ar & model;
-      ar & parentItem;
-      ar & childItems;
-    }
+    void serialize(Archive & ar, const unsigned int version);
 };
 
 #endif // TREEITEM_H

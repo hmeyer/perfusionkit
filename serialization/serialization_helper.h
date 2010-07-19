@@ -8,8 +8,11 @@
 #include <boost/foreach.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/serialization/split_free.hpp>
+#include <boost/serialization/base_object.hpp>
+#include <boost/serialization/set.hpp>
 #include <boost/serialization/map.hpp>
-
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/shared_ptr.hpp>
 #include <bitset>
 #include "imagedefinitions.h"
 #include "ctimagetreemodel.h"
@@ -210,11 +213,74 @@ inline void save(Archive & ar, const CTImageTreeItem::SegmentationValueMap &svm,
 }
 
 
-
 } // namespace serialization
 }
 
 
+template<class Archive>
+void CTImageTreeModel::serialize(Archive & ar, const unsigned int version) {
+  beginResetModel(); 
+  ar & HeaderFields;
+  ar & rootItem;
+  endResetModel(); 
+}
+
+template<class Archive>
+void TreeItem::serialize(Archive & ar, const unsigned int version) {
+  ar & model;
+  ar & parentItem;
+  ar & childItems;
+}
+    
+template<class Archive>
+void VTKTreeItem::serialize(Archive & ar, const unsigned int version) {
+  ar & boost::serialization::base_object<TreeItem>(*this);
+}
+
+template<class TImage>
+template<class Archive>
+void ITKVTKTreeItem<TImage>::serialize(Archive & ar, const unsigned int version) {
+  ar & boost::serialization::base_object<VTKTreeItem>(*this);
+}
+
+template<class Archive>
+void BinaryImageTreeItem::serialize(Archive & ar, const unsigned int version) {
+  ar & name;
+  ar & color;
+  BinaryImageType::Pointer binIm = peekITKImage();
+  ar & binIm;
+  setITKImage( binIm );
+  ar & boost::serialization::base_object<BaseClass>(*this);
+}
+
+template<class Archive>
+void CTImageTreeItem::serialize(Archive & ar, const unsigned int version) {
+  ar & boost::serialization::base_object<BaseClass>(*this);
+  ar & itemUID;
+  ar & fnList;
+  ar & HeaderFields;
+  ar & dict;
+  ar & segmentationValueCache;
+}
+
+template<class Archive>
+void CTImageTreeItem::SegmentationValues::serialize(Archive & ar, const unsigned int version) {
+  ITKVTKTreeItem<BinaryImageType> *nonconstseg = const_cast<ITKVTKTreeItem<BinaryImageType> *>(segment);
+  ar & nonconstseg;
+  segment = nonconstseg;
+  ar & mean; ar & stddev; ar & min; ar & max; ar & sampleCount; ar & accuracy;
+  bool matchingMtime = mtime == segment->getITKMTime(); 
+  ar & matchingMtime;
+  if (matchingMtime)
+    mtime = segment->getITKMTime();
+  else mtime = 0; 
+}
+
+template<class Archive>
+void CTImageTreeItem::DicomTagType::serialize(Archive & ar, const unsigned int version) {
+  ar & name;
+  ar & tag;
+}
 
 
 

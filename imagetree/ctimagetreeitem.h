@@ -6,14 +6,8 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/serialization/access.hpp>
-#include <boost/serialization/set.hpp>
-
-#include <boost/serialization/split_free.hpp>
-#include <boost/foreach.hpp>
 
 class BinaryImageTreeItem;
-
-
 
 class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
 {
@@ -24,13 +18,10 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
       std::string tag;
       DicomTagType(const std::string &n, const std::string &t):name(n), tag(t) {}
       private:
-	friend class boost::serialization::access;
 	DicomTagType(){}
+	friend class boost::serialization::access;
 	template<class Archive>
-	void serialize(Archive & ar, const unsigned int version) {
-	  ar & name;
-	  ar & tag;
-	}
+	void serialize(Archive & ar, const unsigned int version);
     };
     typedef std::vector< DicomTagType > DicomTagList;
     typedef boost::shared_ptr< DicomTagList > DicomTagListPointer;
@@ -61,23 +52,7 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
       private:
 	friend class boost::serialization::access;
 	template<class Archive>
-	void load(Archive & ar, const unsigned int version) {
-	  ITKVTKTreeItem<BinaryImageType> *nonconstseg;
-	  ar & nonconstseg;
-	  segment = nonconstseg;
-	  ar & mean; ar & stddev; ar & min; ar & max; ar & sampleCount; ar & accuracy;
-	  bool matchingMtime;
-	  ar & matchingMtime;
-	  if (matchingMtime) mtime = segment->getITKMTime();
-	  else mtime = 0;
-	}
-	template<class Archive>
-	void save(Archive & ar, const unsigned int version) const {
-	  ar & segment; ar & mean; ar & stddev; ar & min; ar & max; ar & sampleCount; ar & accuracy;
-	  bool matchingMtime = segment->getITKMTime() == mtime;
-	  ar & matchingMtime;
-	}
-	BOOST_SERIALIZATION_SPLIT_MEMBER()
+	void serialize(Archive & ar, const unsigned int version);
     };
     bool getSegmentationValues( SegmentationValues &values) const;
     
@@ -112,14 +87,7 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     friend class boost::serialization::access;
     CTImageTreeItem():imageTime(-1) {}
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version) {
-      ar & boost::serialization::base_object<BaseClass>(*this);
-      ar & itemUID;
-      ar & fnList;
-      ar & HeaderFields;
-      ar & dict;
-      ar & segmentationValueCache;
-    }
+    void serialize(Archive & ar, const unsigned int version);
 };
 
 
