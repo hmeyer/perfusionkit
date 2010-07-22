@@ -12,17 +12,19 @@ SET( PerfusionkitSrc
 	analyse/analysedialog.cpp
 	analyse/gammaVariate.cpp
 	analyse/segmentlistmodel.cpp 
+	analyse/segmentinfo.cpp 
 	analyse/segmentselectbutton.cpp 
 	analyse/timedensitydata.cpp
 	analyse/gammafitdata.cpp
 	analyse/timedensitydatapicker.cpp
 
 	imagetree/vtktreeitem.cpp 
-	imagetree/ctimagetreemodel.cpp 
+	imagetree/ctimagetreemodel.cpp
+	imagetree/segmentationvalues.cpp
 	imagetree/ctimagetreeitem.cpp 
 	imagetree/binaryimagetreeitem.cpp 
 	imagetree/itkvtktreeitem.cpp 
-	imagetree/treeitem.cpp 
+	imagetree/treeitem.cpp
 
 	serialization/ctimagetreemodel_serializer.cpp 
 

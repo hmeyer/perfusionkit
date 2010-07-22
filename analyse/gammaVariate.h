@@ -25,8 +25,10 @@ class GammaVariate {
     void addSample(double t, double y);
     void clearSamples();
     double computeY( double t ) const;
-    double getMaxSlope( void );
-    double getMaximum( void );
+    double getMaxSlope( void ) const;
+    double getCenterOfGravity() const;
+    double getAUC() const;
+    double getMaximum( void ) const;
     
     void findFromSamples();
     void getParameters( double &t0_, double &tmax_, double &y0_, double &ymax_, double &alpha_ ) {

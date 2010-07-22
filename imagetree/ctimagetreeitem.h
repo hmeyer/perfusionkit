@@ -6,6 +6,7 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/serialization/access.hpp>
+#include "segmentationvalues.h"
 
 class BinaryImageTreeItem;
 
@@ -35,25 +36,7 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     virtual int columnCount() const;
     virtual const std::string &getUID() const { return itemUID; }
     double getTime() const;
-    enum Accuracy {
-      SimpleAccuracy,
-      NonMultiSamplingAccuracy,
-      InterpolatedAccuray
-    };
-    struct SegmentationValues {
-      const ITKVTKTreeItem<BinaryImageType> *segment;
-      long unsigned mtime;
-      double mean;
-      double stddev;
-      int min;
-      int max;
-      int sampleCount;
-      Accuracy accuracy;
-      private:
-	friend class boost::serialization::access;
-	template<class Archive>
-	void serialize(Archive & ar, const unsigned int version);
-    };
+
     bool getSegmentationValues( SegmentationValues &values) const;
     
     

@@ -63,7 +63,7 @@ bool CTImageTreeItem::internalGetSegmentationValues( SegmentationValues &values)
   BinaryImageType::Pointer segment = values.segment->getITKImage();
   BinaryIteratorType binIter( segment, segment->GetBufferedRegion() );
   ImageType::PointType point;
-  if (values.accuracy == SimpleAccuracy) {
+  if (values.accuracy == SegmentationValues::SimpleAccuracy) {
     ImageType::IndexType index;
     for(binIter.GoToBegin(); !binIter.IsAtEnd(); ++binIter) {
       if (binIter.Value() == BinaryPixelOn) {
@@ -80,7 +80,7 @@ bool CTImageTreeItem::internalGetSegmentationValues( SegmentationValues &values)
 	}
       }
     }
-  } else if (values.accuracy == NonMultiSamplingAccuracy) {
+  } else if (values.accuracy == SegmentationValues::NonMultiSamplingAccuracy) {
     ImageType::IndexType index;
     typedef std::set< ImageType::IndexType, IndexCompareFunctor > IndexSetType;
     IndexSetType indexSet;
@@ -104,7 +104,7 @@ bool CTImageTreeItem::internalGetSegmentationValues( SegmentationValues &values)
 	}
       }
     }
-  } else if (values.accuracy == InterpolatedAccuray) {
+  } else if (values.accuracy == SegmentationValues::InterpolatedAccuray) {
     typedef  itk::LinearInterpolateImageFunction< CTImageType > InterpolatorType;
     InterpolatorType::Pointer interpolator = InterpolatorType::New();
     interpolator->SetInputImage( image );

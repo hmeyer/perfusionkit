@@ -4,16 +4,17 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#include <numeric>
 #include <cmath>
+#include <boost/math/special_functions/gamma.hpp>
 #include <functional>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/casts.hpp>
 #include <boost/lambda/bind.hpp>
 #include <boost/foreach.hpp>
 
+#include <itkPowellOptimizer.h>
 
-#include "itkPowellOptimizer.h"
+#include "linearregression.h"
 
 using namespace boost::lambda;
 
@@ -74,11 +75,11 @@ double GammaVariate::computeY( double t ) const {
 }
 
 
-double GammaVariate::getMaximum( void ){
+double GammaVariate::getMaximum( void ) const {
   return y0max;
 }
 
-double GammaVariate::getMaxSlope( void ) {
+double GammaVariate::getMaxSlope( void ) const {
   double sqrt_alpha = std::sqrt( alpha );
   double slope = std::pow( (1.0 - 1.0 / sqrt_alpha) , alpha )
     * alpha * std::exp( sqrt_alpha ) / ( sqrt_alpha - 1.0 );
@@ -87,35 +88,18 @@ double GammaVariate::getMaxSlope( void ) {
   return slope;
 }
 
-
-template<class ForwardIt, class float_t>
-void LinearRegression(ForwardIt beginX, ForwardIt endX, ForwardIt beginY, float_t &b0, float_t &b1) {
-  unsigned int n = 0;
-  float_t sx = 0.0, sy = 0.0, sx2 = 0.0, sxy = 0.0;
-  while(beginX < endX) {
-    sx += *beginX;
-    sx2 += *beginX * *beginX;
-    sy += *beginY;
-    sxy += *beginX * *beginY;
-    n++;
-    beginX++;
-    beginY++;
-  }
-  float_t a = n;
-  float_t b = sx;
-  float_t c = sx;
-  float_t d = sx2;
-  float_t e = sy;
-  float_t f = sxy;
-  float_t detA = (a*d - b*c);
-  if (detA != 0) {
-    b0 = (e*d - b*f) / detA;
-    b1 = (a*f - e*c) / detA;
-  } else {
-    b0 = std::numeric_limits< float_t >::max();
-    b1 = std::numeric_limits< float_t >::max();
-  }
+double GammaVariate::getCenterOfGravity() const {
+  double beta = t0max / alpha;
+  return beta * ( alpha + 1 );
 }
+
+double GammaVariate::getAUC() const {
+  double beta = t0max / alpha;
+  double k = std::exp( alpha ) * y0max / std::pow(t0max, alpha);
+  double auc = k * std::pow( beta, alpha + 1) * boost::math::tgamma( alpha + 1 );
+  return auc;
+}
+
 
 
 double GammaVariate::distanceToSamples() const {

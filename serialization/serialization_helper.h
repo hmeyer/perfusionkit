@@ -194,7 +194,7 @@ inline void load(Archive & ar, CTImageTreeItem::SegmentationValueMap &svm, const
   size_t s;
   ar & s;
   while(s) {
-    CTImageTreeItem::SegmentationValues sv;
+    SegmentationValues sv;
     ar & sv;
     svm.insert(CTImageTreeItem::SegmentationValueMap::value_type(sv.segment, sv));
     --s;
@@ -207,7 +207,7 @@ inline void save(Archive & ar, const CTImageTreeItem::SegmentationValueMap &svm,
   size_t s = svm.size();
   ar & s;
   BOOST_FOREACH( const CTImageTreeItem::SegmentationValueMap::value_type &svm_value, svm ) {
-    const CTImageTreeItem::SegmentationValues &sv = svm_value.second;
+    const SegmentationValues &sv = svm_value.second;
     ar & sv;
   }
 }
@@ -264,7 +264,7 @@ void CTImageTreeItem::serialize(Archive & ar, const unsigned int version) {
 }
 
 template<class Archive>
-void CTImageTreeItem::SegmentationValues::serialize(Archive & ar, const unsigned int version) {
+void SegmentationValues::serialize(Archive & ar, const unsigned int version) {
   ITKVTKTreeItem<BinaryImageType> *nonconstseg = const_cast<ITKVTKTreeItem<BinaryImageType> *>(segment);
   ar & nonconstseg;
   segment = nonconstseg;

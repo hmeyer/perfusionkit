@@ -7,12 +7,12 @@
 
 class TimeDensityDataPicker: public QwtPlotPicker {
   public:
-  TimeDensityDataPicker(QwtPlotMarker *markerX_, QwtPlotMarker *markerY_, const AnalyseDialog::SegmentCurveMap &curveset_, QwtPlotCanvas *);
+  TimeDensityDataPicker(QwtPlotMarker *markerX_, QwtPlotMarker *markerY_, const SegmentListModel &segmentList_, QwtPlotCanvas *);
   virtual QwtText trackerText(const QPoint &) const;
   protected:
     QwtPlotMarker *markerX;
     QwtPlotMarker *markerY;
-    const AnalyseDialog::SegmentCurveMap &curveset;
+    const SegmentListModel &segmentList;
 };
 
 #endif // TIMEDENSITYDATAPICKER_H

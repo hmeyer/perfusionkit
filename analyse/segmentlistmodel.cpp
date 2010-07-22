@@ -1,6 +1,8 @@
 #include "segmentlistmodel.h"
+#include <qwt_plot_curve.h>
+#include "gammafitdata.h"
 #include "gammaVariate.h"
-
+#include "binaryimagetreeitem.h"
 
 SegmentListModel::SegmentListModel(QObject *parent):
   QAbstractListModel(parent) {
@@ -9,13 +11,18 @@ SegmentListModel::SegmentListModel(QObject *parent):
 
 QVariant SegmentListModel::data(const QModelIndex& index, int role) const {
   if (role == Qt::DisplayRole && index.row() < int(segments.size())) {
-    const SegmentInfo &seg = segments[index.row()];
+    const SegmentInfo &seg = *segments[index.row()];
     switch(index.column()) {
-      case 0: return seg.segment->getName();
-      case 1: if (seg.gamma) return seg.gamma->getMaxSlope();break;
-      case 2: if (seg.gamma) return seg.gamma->getMaximum();break;
-      case 3: if (seg.arterySegment != NULL) return seg.arterySegment->segment->getName(); break;
-      case 4: if (seg.gamma && seg.arterySegment!=NULL && seg.arterySegment->gamma) return seg.gamma->getMaxSlope() / seg.arterySegment->gamma->getMaximum();break;
+      case 0: return seg.getName();
+      case 1: if (seg.isGammaEnabled()) return seg.getGammaMaxSlope();break;
+      case 2: if (seg.isGammaEnabled()) return seg.getGammaMaximum();break;
+      case 3: if (seg.getArterySegment() != NULL) return seg.getArterySegment()->getName(); break;
+      case 4: if (seg.isGammaEnabled()) {
+	if (seg.getArterySegment()!=NULL && seg.getArterySegment()->isGammaEnabled())
+	  return seg.getGammaMaxSlope() / seg.getArterySegment()->getGammaMaximum();
+      } break;
+      case 5: if (seg.isGammaEnabled()) return seg.getGammaCenterOfGravity();break;
+      case 6: if (seg.isGammaEnabled()) return seg.getGammaAUC();break;
     }
   }
   return QVariant::Invalid;
@@ -29,18 +36,20 @@ QVariant SegmentListModel::headerData( int section, Qt::Orientation orientation,
       case 2: return tr("enhancement [HU]");
       case 3: return tr("artery");
       case 4: return tr("perfusion [/s]");
+      case 5: return tr("MTT [s]");
+      case 6: return tr("AUC");
     }
   }
   return QVariant::Invalid;
 }
 
 int SegmentListModel::columnCount(const QModelIndex & parent) const {
-  return 5;
+  return 7;
 }
 
 
-SegmentListModel::SegmentInfo &SegmentListModel::getSegment(const QModelIndex& index) {
-  return segments.at( index.row() );
+SegmentInfo &SegmentListModel::getSegment(const QModelIndex& index) {
+  return *segments.at( index.row() );
 }
 
 
@@ -51,7 +60,7 @@ int SegmentListModel::rowCount(const QModelIndex& parent) const
 
 void SegmentListModel::setArterySegment(const QModelIndex& index, const SegmentInfo *arterySegment) {
   if (index.row() < int(segments.size()) ) {
-    segments[index.row()].arterySegment = arterySegment;
+    segments[index.row()]->setArterySegment( arterySegment );
     emit dataChanged(this->index(index.row(),1), this->index(index.row(),4));
   }
 }
@@ -63,6 +72,7 @@ void SegmentListModel::refresh() {
 
 void SegmentListModel::addSegment( const BinaryImageTreeItem *seg ) {
   beginInsertRows(QModelIndex(), segments.size(), segments.size()+1);
-  segments.push_back(const_cast<BinaryImageTreeItem*>(seg));
+  SegmentInfoPtr p(new SegmentInfo(const_cast<BinaryImageTreeItem*>(seg)));
+  segments.push_back(p);
   endInsertRows();
 }

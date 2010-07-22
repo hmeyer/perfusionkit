@@ -2,7 +2,7 @@
 #define TIMEDENSITYDATA_H
 
 #include <qwt_data.h>
-#include "ctimagetreeitem.h"
+#include "segmentationvalues.h"
 
 class TimeDensityData: public QwtData {
 public:
@@ -18,19 +18,20 @@ public:
     virtual double y(size_t i) const {
         return values[i].mean;
     }
-    double getTimeAndValues( size_t i, CTImageTreeItem::SegmentationValues &v ) const {
+    double getTimeAndValues( size_t i, SegmentationValues &v ) const {
       v = values[i];
       return time[i];
     }
-    void pushPoint( double t, const CTImageTreeItem::SegmentationValues &v) {
+    void pushPoint( double t, const SegmentationValues &v) {
       if (time.size() == 0 || t> time[time.size()-1]) {
 	time.push_back(t);
 	values.push_back(v);
       }
+std::cerr << __FUNCTION__ << " :" << this << " size:" << size() << std::endl;
     }
 private:
   std::vector< double > time;
-  std::vector< CTImageTreeItem::SegmentationValues > values;
+  std::vector< SegmentationValues > values;
 };
 
 

@@ -1,29 +1,30 @@
 #include "timedensitydatapicker.h"
 #include <qwt_plot_curve.h>
 #include "timedensitydata.h"
+#include "binaryimagetreeitem.h"
 
 
 TimeDensityDataPicker::TimeDensityDataPicker(QwtPlotMarker *markerX_, QwtPlotMarker *markerY_, 
-  const AnalyseDialog::SegmentCurveMap &curveset_, QwtPlotCanvas *c):QwtPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft,
+  const SegmentListModel &segmentList_, QwtPlotCanvas *c):QwtPlotPicker(QwtPlot::xBottom, QwtPlot::yLeft,
         QwtPicker::PointSelection,QwtPlotPicker::NoRubberBand, QwtPicker::AlwaysOn, c),
         markerX(markerX_),
         markerY(markerY_),
-        curveset(curveset_) {
+        segmentList(segmentList_) {
 }
 
 QwtText TimeDensityDataPicker::trackerText(const QPoint &p) const {
   int minDist = std::numeric_limits< int >::max();
   double minX = 0;
-  CTImageTreeItem::SegmentationValues minValues;
+  SegmentationValues minValues;
    // prevent Warning
   minValues.min = 0; minValues.max = 0; minValues.mean = 0; minValues.stddev = 0; minValues.sampleCount = 0; minValues.segment = 0;
   QwtDoublePoint pdv;
   QPoint pv;
-  for(AnalyseDialog::SegmentCurveMap::const_iterator it = curveset.begin(); it != curveset.end(); ++it) {
-    CTImageTreeItem::SegmentationValues values;
-    const TimeDensityData &data = dynamic_cast<const TimeDensityData&>(it->second->data());
-    for(unsigned i=0; i < data.size(); ++i) {
-      pdv.setX( data.getTimeAndValues(i, values) );
+  for(SegmentListModel::const_iterator it = segmentList.begin(); it != segmentList.end(); ++it) {
+    SegmentationValues values;
+    const TimeDensityData *data = (*it)->getSampleData();
+    for(unsigned i=0; i < data->size(); ++i) {
+      pdv.setX( data->getTimeAndValues(i, values) );
       pdv.setY( values.mean );
       pv = transform(pdv);
       int dx = pv.x() - p.x();

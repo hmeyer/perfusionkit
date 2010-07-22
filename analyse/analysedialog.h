@@ -33,13 +33,15 @@ class AnalyseDialog : public QDialog, private Ui_AnalyseDialog
  public slots:
       void on_sliderStart_valueChanged(int val);
       void on_sliderEnd_valueChanged(int val);
-      void on_listSegments_clicked(const QModelIndex & index);
-      void on_listSegments_activated(const QModelIndex & index);
+      void on_tableGamma_clicked(const QModelIndex & index);
+      void on_tableGamma_activated(const QModelIndex & index);
+      void on_listPatlak_clicked(const QModelIndex & index);
+      void on_listPatlak_activated(const QModelIndex & index);
       void on_checkEnableGamma_toggled();
-      void on_buttonArtery_selected(const SegmentListModel::SegmentInfo *segment);
+      void on_buttonArtery_selected(const SegmentInfo *segment);
 
   private:
-    void recalculateGamma(SegmentListModel::SegmentInfo &seginfo);
+    void recalculateGamma(SegmentInfo &seginfo);
   struct CTImageTimeCompareFunctor {
     typedef CTImageTreeItem * argT;
     bool operator()(const argT &x, const argT &y) const;
@@ -49,8 +51,6 @@ class AnalyseDialog : public QDialog, private Ui_AnalyseDialog
   
   ImageSet images;
   DoubleVector times;
-  SegmentCurveMap sampleCurveset;
-  SegmentCurveMap gammaCurveset;
   QwtPlotMarker *markerStart, *markerEnd;
   QwtPlotMarker *markerPickerX, *markerPickerY;
   QwtPlotGrid *grid;

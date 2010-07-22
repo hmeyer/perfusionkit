@@ -4,27 +4,14 @@
 #include <qt4/QtCore/QAbstractItemModel>
 #include <vector>
 #include <boost/shared_ptr.hpp>
-#include "binaryimagetreeitem.h"
+#include "segmentinfo.h"
 
-namespace GammaFunctions {
-class GammaVariate;
-}
 
 class SegmentListModel : public QAbstractListModel
 {
   public:
-    struct SegmentInfo {
-      const BinaryImageTreeItem *segment;
-      unsigned gammaStartIndex;
-      unsigned gammaEndIndex;
-      double gammaStart;
-      double gammaEnd;
-      const SegmentInfo *arterySegment;
-      boost::shared_ptr<GammaFunctions::GammaVariate> gamma;
-      SegmentInfo(const BinaryImageTreeItem *s):segment(s), 
-	gammaStartIndex(0), gammaEndIndex(0), gammaStart(0), gammaEnd(0), arterySegment(NULL)  {}
-    };    
-    typedef std::vector<SegmentInfo> SegmentListType;
+    typedef boost::shared_ptr<SegmentInfo> SegmentInfoPtr;
+    typedef std::vector<SegmentInfoPtr> SegmentListType;
     typedef SegmentListType::iterator iterator;
     typedef SegmentListType::const_iterator const_iterator;
     SegmentListModel(QObject *parent = 0);
