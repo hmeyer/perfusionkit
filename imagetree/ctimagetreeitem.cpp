@@ -12,6 +12,11 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <sstream>
 #include <set>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/statistics/min.hpp>
+#include <boost/accumulators/statistics/max.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
 
 CTImageTreeItem::CTImageTreeItem(TreeItem * parent, DicomTagListPointer headerFields, const itk::MetaDataDictionary &_dict )
   :BaseClass(parent),HeaderFields(headerFields),dict(_dict),imageTime(-1) {
@@ -53,16 +58,16 @@ bool CTImageTreeItem::getSegmentationValues( SegmentationValues &values) const {
 }
 
 bool CTImageTreeItem::internalGetSegmentationValues( SegmentationValues &values) const {
-  values.min = itk::NumericTraits< int >::max();
-  values.max = itk::NumericTraits< int >::min();
-  values.mean = 0; values.stddev = 0; values.sampleCount = 0;
-  std::vector<int> samples;
   ImageType::Pointer image = getITKImage();
   ImageType::RegionType ctregion = image->GetBufferedRegion();
   typedef itk::ImageRegionConstIteratorWithIndex< BinaryImageType > BinaryIteratorType;
   BinaryImageType::Pointer segment = values.segment->getITKImage();
   BinaryIteratorType binIter( segment, segment->GetBufferedRegion() );
   ImageType::PointType point;
+  
+  using namespace boost::accumulators;
+  accumulator_set<double,features<tag::count, tag::min, tag::mean, tag::max, tag::variance> > acc;  
+  
   if (values.accuracy == SegmentationValues::SimpleAccuracy) {
     ImageType::IndexType index;
     for(binIter.GoToBegin(); !binIter.IsAtEnd(); ++binIter) {
@@ -72,10 +77,7 @@ bool CTImageTreeItem::internalGetSegmentationValues( SegmentationValues &values)
 	if (ctregion.IsInside(index)) {
 	  int t = image->GetPixel(index);
 	  if (isRealHUvalue(t)) {
-	    samples.push_back(t);
-	    values.mean += t;
-	    values.min = std::min( t, values.min );
-	    values.max = std::max( t, values.max );
+	    acc( t );
 	  }
 	}
       }
@@ -95,10 +97,7 @@ bool CTImageTreeItem::internalGetSegmentationValues( SegmentationValues &values)
 	    indexSet.insert(ret.first, index);
 	    int t = image->GetPixel(index);
 	    if (isRealHUvalue(t)) {
-	      samples.push_back(t);
-	      values.mean += t;
-	      values.min = std::min( t, values.min );
-	      values.max = std::max( t, values.max );
+	      acc( t );
 	    }
 	  }
 	}
@@ -116,25 +115,19 @@ bool CTImageTreeItem::internalGetSegmentationValues( SegmentationValues &values)
 	if (interpolator->IsInsideBuffer(index)) {
 	  int t = interpolator->EvaluateAtContinuousIndex(index);
 	  if (isRealHUvalue(t)) {
-	    samples.push_back(t);
-	    values.mean += t;
-	    values.min = std::min( t, values.min );
-	    values.max = std::max( t, values.max );
+	    acc( t );
 	  }
 	}
       }
     }
     
   }
-  if (samples.size() > 0) {
-    values.mean /= samples.size();
-    for(unsigned i=0;i<samples.size();i++) {
-      double t = samples[i] - values.mean;
-      values.stddev += t * t;
-    }
-    values.stddev = std::sqrt(values.stddev/samples.size());
-  }
-  values.sampleCount = samples.size();
+  values.sampleCount = count( acc );
+  values.min = min( acc );
+  values.mean = mean( acc );
+  values.max = max( acc );
+  values.stddev = std::sqrt( variance( acc ) );
+  
   values.mtime = segment->GetMTime();
   const_cast<CTImageTreeItem*>(this)->segmentationValueCache[ values.segment ] = values;
   return values.sampleCount > 0;
