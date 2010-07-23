@@ -1,7 +1,7 @@
 #ifndef LINEARREGRESSION_H
 #define LINEARREGRESSION_H
 
-#include <numeric>
+#include <limits>
 
 template<class ForwardIt, class float_t>
 void LinearRegression(ForwardIt beginX, ForwardIt endX, ForwardIt beginY, float_t &b0, float_t &b1) {

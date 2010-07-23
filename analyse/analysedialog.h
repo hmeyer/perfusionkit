@@ -35,13 +35,16 @@ class AnalyseDialog : public QDialog, private Ui_AnalyseDialog
       void on_sliderEnd_valueChanged(int val);
       void on_tableGamma_clicked(const QModelIndex & index);
       void on_tableGamma_activated(const QModelIndex & index);
-      void on_listPatlak_clicked(const QModelIndex & index);
-      void on_listPatlak_activated(const QModelIndex & index);
       void on_checkEnableGamma_toggled();
       void on_buttonArtery_selected(const SegmentInfo *segment);
+      void on_listPatlak_clicked(const QModelIndex & index);
+      void on_listPatlak_activated(const QModelIndex & index);
+      void on_sliderPatlakStart_valueChanged(int val);
+      void on_sliderPatlakEnd_valueChanged(int val);
 
   private:
-    void recalculateGamma(SegmentInfo &seginfo);
+    void recalculateData(SegmentInfo &seginfo);
+    void refreshPatlakData();
   struct CTImageTimeCompareFunctor {
     typedef CTImageTreeItem * argT;
     bool operator()(const argT &x, const argT &y) const;

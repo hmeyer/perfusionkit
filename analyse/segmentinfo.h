@@ -25,12 +25,11 @@ class SegmentInfo {
   inline void setSegment(BinaryImageTreeItem *seg) {segment = seg;}
   inline const SegmentInfo *getArterySegment() const {return arterySegment;}
   inline void setArterySegment(const SegmentInfo *seg) {arterySegment = seg;}
-  void attachSampleCurve(QwtPlot *plot);
+  void attachSampleCurves(QwtPlot *plot);
   void pushSample(double time, const SegmentationValues &value);
 
   bool isGammaEnabled() const;
   void setEnableGamma(bool e=true);
-  void attachGammaCurve(QwtPlot *plot);
   GammaFunctions::GammaVariate *getGamma();
   const GammaFunctions::GammaVariate *getGamma() const;
   double getGammaMaxSlope() const;
@@ -42,12 +41,19 @@ class SegmentInfo {
   inline unsigned getGammaStartIndex() const { return gammaStartIndex; }
   inline unsigned getGammaEndIndex() const { return gammaEndIndex; }
   
-  void attachPatlak(QwtPlot *plot);
-  void attachPatlakRegression(QwtPlot *plot);
+  bool attachPatlak(QwtPlot *plot);
+  void detachPatlak();
+  unsigned getPatlakStartIndex() const;
+  unsigned getPatlakEndIndex() const;
+  double getPatlakIntercept() const;
+  double getPatlakSlope() const;
+  void setPatlakStartIndex(unsigned index);
+  void setPatlakEndIndex(unsigned index);
   TimeDensityData *getSampleData();
   const TimeDensityData *getSampleData() const;
   void recalculateGamma();
   private:
+  bool createPatlak();
   unsigned gammaStartIndex;
   unsigned gammaEndIndex;
   const BinaryImageTreeItem *segment;
@@ -56,6 +62,7 @@ class SegmentInfo {
   QwtPlotCurve gammaCurve;
   QwtPlotCurve patlakCurve;
   QwtPlotCurve patlakRegression;
+  bool patlakCreated;
 };
 
 #endif // SEGMENTINFO_H

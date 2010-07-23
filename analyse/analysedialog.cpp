@@ -73,7 +73,6 @@ AnalyseDialog::AnalyseDialog(QWidget * parent, Qt::WindowFlags f)
   buttonArtery->setSegmentListModel( &segments );
   
   listPatlak->setModel( &segments );
-  plotPatlak->setTitle(tr("Patlak Plot"));
   plotPatlak->setAxisTitle(QwtPlot::xBottom, tr("Int C(t) dt / C(t) [/HU]"));
   plotPatlak->setAxisTitle(QwtPlot::yLeft, tr("C(t) / B(t)"));
 }
@@ -126,8 +125,7 @@ int AnalyseDialog::exec(void ) {
     ++imageIndex;
   }
   BOOST_FOREACH( SegmentInfo &currentSegment, segments) {
-    currentSegment.attachSampleCurve(plot);
-    currentSegment.attachGammaCurve(plot);
+    currentSegment.attachSampleCurves(plot);
   }
   return QDialog::exec();
 }
@@ -142,7 +140,7 @@ void AnalyseDialog::on_sliderStart_valueChanged(int val) {
   if (indexList.size() == 1) {
     SegmentInfo &seg = segments.getSegment(indexList[0]);
     seg.setGammaStartIndex(val);
-    recalculateGamma(seg);
+    recalculateData(seg);
   }
   plot->replot();
 }
@@ -152,7 +150,7 @@ void AnalyseDialog::on_sliderEnd_valueChanged(int val) {
   if (indexList.size() == 1) {
     SegmentInfo &seg = segments.getSegment(indexList.at(0));
     seg.setGammaEndIndex(val);
-    recalculateGamma(seg);
+    recalculateData(seg);
   }
   plot->replot();
 }
@@ -162,6 +160,7 @@ void AnalyseDialog::on_tableGamma_clicked(const QModelIndex & index) {
 }
 
 void AnalyseDialog::on_tableGamma_activated(const QModelIndex & index) {
+  tableGamma->selectionModel()->select(index, QItemSelectionModel::Rows);
   sliderStart->setEnabled(true);
   sliderEnd->setEnabled(true);
   checkEnableGamma->setEnabled(true);
@@ -182,7 +181,7 @@ void AnalyseDialog::on_checkEnableGamma_toggled() {
       seg.setEnableGamma(true);
     }
     else seg.setEnableGamma(false);
-    recalculateGamma(seg);
+    recalculateData(seg);
   }
 }
 
@@ -195,10 +194,26 @@ void AnalyseDialog::on_buttonArtery_selected(const SegmentInfo *segment) {
 }
 
 
-void AnalyseDialog::recalculateGamma(SegmentInfo &seginfo) {
+void AnalyseDialog::recalculateData(SegmentInfo &seginfo) {
   seginfo.recalculateGamma();
   segments.refresh();
   plot->replot();
+  refreshPatlakData();
+}
+
+void AnalyseDialog::refreshPatlakData() {
+  QModelIndexList indexList = listPatlak->selectionModel()->selectedRows();
+  if (indexList.size() == 1) {
+    labelBV->setText(QString::number(segments.getSegment(indexList[0]).getPatlakIntercept()));
+    labelClearance->setText(QString::number(segments.getSegment(indexList[0]).getPatlakSlope()));
+  } else {
+    labelBV->setText(QString());
+    labelClearance->setText(QString());
+  }
+  plotPatlak->replot();
+  labelBV->repaint();
+  labelPerm->repaint();
+  labelClearance->repaint();
 }
 
 void AnalyseDialog::on_listPatlak_clicked(const QModelIndex & index) {
@@ -206,5 +221,43 @@ void AnalyseDialog::on_listPatlak_clicked(const QModelIndex & index) {
 }
 
 void AnalyseDialog::on_listPatlak_activated(const QModelIndex & index) {
+  listPatlak->selectionModel()->select(index, QItemSelectionModel::Rows);
+  SegmentInfo &seg = segments.getSegment( index );
+  BOOST_FOREACH( SegmentInfo &currentSegment, segments) {
+    currentSegment.detachPatlak();
+  }
+  if (seg.attachPatlak( plotPatlak ) == false) {
+    QMessageBox::warning(this,tr("Analyse Error"),tr("You need to define an artery Segment and fit Gamma Functions to ") + seg.getName() + tr(" and its artery Segment"));
+    plotPatlak->replot();
+  } else {
+    refreshPatlakData();
+    sliderPatlakStart->setEnabled(true);
+    sliderPatlakEnd->setEnabled(true);
+    sliderPatlakStart->setValue(seg.getPatlakStartIndex());
+    sliderPatlakEnd->setValue(seg.getPatlakEndIndex());
+    sliderPatlakStart->setMaximum(images.size()-2);
+    sliderPatlakEnd->setMaximum(images.size()-2);
+  }
+}
+
+void AnalyseDialog::on_sliderPatlakStart_valueChanged(int val) {
+  markerStart->setXValue(times[val]);
+  QModelIndexList indexList = listPatlak->selectionModel()->selectedRows();
+  if (indexList.size() == 1) {
+    SegmentInfo &seg = segments.getSegment(indexList[0]);
+    seg.setPatlakStartIndex(val);
+    refreshPatlakData();
+  }
+  plot->replot();
+}
+void AnalyseDialog::on_sliderPatlakEnd_valueChanged(int val) {
+  markerEnd->setXValue(times[val]);
+  QModelIndexList indexList = listPatlak->selectionModel()->selectedRows();
+  if (indexList.size() == 1) {
+    SegmentInfo &seg = segments.getSegment(indexList.at(0));
+    seg.setPatlakEndIndex(val);
+    refreshPatlakData();
+  }
+  plot->replot();
 }
 

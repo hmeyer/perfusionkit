@@ -16,6 +16,8 @@ SET( PerfusionkitSrc
 	analyse/segmentselectbutton.cpp 
 	analyse/timedensitydata.cpp
 	analyse/gammafitdata.cpp
+	analyse/patlakdata.cpp
+	analyse/linearregressiondata.cpp
 	analyse/timedensitydatapicker.cpp
 
 	imagetree/vtktreeitem.cpp 

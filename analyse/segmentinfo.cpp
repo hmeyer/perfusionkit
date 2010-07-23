@@ -4,13 +4,16 @@
 #include "gammafitdata.h"
 #include "gammaVariate.h"
 #include "timedensitydata.h"
+#include "patlakdata.h"
+#include "linearregressiondata.h"
 #include <binaryimagetreeitem.h>
 #include <QObject>
 
 SegmentInfo::SegmentInfo(const BinaryImageTreeItem *s):
   gammaStartIndex(0), gammaEndIndex(0), segment(s), arterySegment(NULL),
   sampleCurve(s->getName()), gammaCurve(s->getName()+ QObject::tr(" Gamma Fit")),
-  patlakCurve(s->getName()), patlakRegression(s->getName() + QObject::tr(" linear Regression")) {
+  patlakCurve(s->getName()), patlakRegression(s->getName() + QObject::tr(" linear Regression")),
+  patlakCreated(false) {
     
     const RGBType &RGBColor = s->getColor();
     QColor color = QColor( RGBColor[0], RGBColor[1], RGBColor[2] );
@@ -30,24 +33,87 @@ SegmentInfo::SegmentInfo(const BinaryImageTreeItem *s):
     gammaCurve.setRenderHint(QwtPlotItem::RenderAntialiased, true);
     gammaCurve.setData( GammaFitData() );
     gammaCurve.setVisible(false);
-    
-    patlakCurve.setVisible(false);
-    patlakRegression.setVisible(false);
-    
+
+    patlakCurve.setRenderHint(QwtPlotItem::RenderAntialiased, true);
+    patlakCurve.setStyle(QwtPlotCurve::NoCurve);
+    symbol.setStyle( QwtSymbol::XCross );
+    symbol.setSize(8);
+    symbol.setPen(QPen(color));
+    symbol.setBrush(QBrush(color.darker(130)));
+    patlakCurve.setSymbol( symbol );
+    patlakRegression.setRenderHint(QwtPlotItem::RenderAntialiased, true);
 }
+
+bool SegmentInfo::createPatlak() {
+  if (patlakCreated) return true;
+  if (!isGammaEnabled() || arterySegment==NULL || !arterySegment->isGammaEnabled())
+    return false;
+  PatlakData pd(sampleCurve.data(), arterySegment->sampleCurve.data());
+  pd.setTissueBaseline(getGamma()->getBaseline());
+  pd.setArteryBaseline(arterySegment->getGamma()->getBaseline());
+  patlakCurve.setData( pd );
+  LinearRegressionData patlakRegressionData( patlakCurve.data() );
+  patlakRegression.setData(patlakRegressionData);
+  patlakCreated = true;
+  return true;
+}
+
+unsigned SegmentInfo::getPatlakStartIndex() const {
+  if (patlakCreated) {
+    return dynamic_cast<const PatlakData&>(patlakCurve.data()).getStartIndex();
+  } else return 0;
+}
+unsigned SegmentInfo::getPatlakEndIndex() const {
+  if (patlakCreated) {
+    return dynamic_cast<const PatlakData&>(patlakCurve.data()).getEndIndex();
+  } else return 0;
+}
+void SegmentInfo::setPatlakStartIndex(unsigned index) {
+  if (patlakCreated) {
+    dynamic_cast<PatlakData&>(patlakCurve.data()).setStartIndex(index);
+  }
+}
+void SegmentInfo::setPatlakEndIndex(unsigned index) {
+  if (patlakCreated) {
+    dynamic_cast<PatlakData&>(patlakCurve.data()).setEndIndex(index);
+  }
+}
+double SegmentInfo::getPatlakIntercept() const {
+  if (patlakCreated) {
+    return dynamic_cast<const LinearRegressionData&>(patlakRegression.data()).getIntercept();
+  } else return std::numeric_limits< double >::quiet_NaN();
+}
+double SegmentInfo::getPatlakSlope() const {
+  if (patlakCreated) {
+    return dynamic_cast<const LinearRegressionData&>(patlakRegression.data()).getSlope();
+  } else return std::numeric_limits< double >::quiet_NaN();
+}
+
+
+
 
 void SegmentInfo::pushSample(double time, const SegmentationValues &values) {
   dynamic_cast<TimeDensityData&>(sampleCurve.data()).pushPoint(time, values);
   dynamic_cast<GammaFitData&>(gammaCurve.data()).includeTime(time);
 }
 
-void SegmentInfo::attachSampleCurve(QwtPlot *plot) {
+void SegmentInfo::attachSampleCurves(QwtPlot *plot) {
   sampleCurve.attach(plot);
-}
-
-void SegmentInfo::attachGammaCurve(QwtPlot *plot) {
   gammaCurve.attach(plot);
 }
+
+bool SegmentInfo::attachPatlak(QwtPlot *plot) {
+  if (!createPatlak()) return false;
+  patlakCurve.attach(plot);
+  patlakRegression.attach(plot);
+  return true;
+}
+
+void SegmentInfo::detachPatlak() {
+  patlakCurve.detach();
+  patlakRegression.detach();
+}
+
 
 
 bool SegmentInfo::isGammaEnabled() const {

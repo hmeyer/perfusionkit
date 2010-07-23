@@ -80,6 +80,11 @@ double GammaVariate::getMaximum( void ) const {
   return y0max;
 }
 
+double GammaVariate::getBaseline( void ) const {
+  return y0;
+}
+
+
 double GammaVariate::getMaxSlope( void ) const {
   double sqrt_alpha = std::sqrt( alpha );
   double slope = std::pow( (1.0 - 1.0 / sqrt_alpha) , alpha )
