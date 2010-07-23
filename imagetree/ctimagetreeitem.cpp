@@ -82,7 +82,7 @@ bool CTImageTreeItem::internalGetSegmentationValues( SegmentationValues &values)
 	}
       }
     }
-  } else if (values.accuracy == SegmentationValues::NonMultiSamplingAccuracy) {
+  } else if (values.accuracy == SegmentationValues::PreventDoubleSamplingAccuracy) {
     ImageType::IndexType index;
     typedef std::set< ImageType::IndexType, IndexCompareFunctor > IndexSetType;
     IndexSetType indexSet;

@@ -10,7 +10,7 @@
 struct SegmentationValues {
   enum Accuracy {
     SimpleAccuracy,
-    NonMultiSamplingAccuracy,
+    PreventDoubleSamplingAccuracy,
     InterpolatedAccuray
   };
   const ITKVTKTreeItem<BinaryImageType> *segment;
