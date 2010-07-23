@@ -7,6 +7,7 @@
 #include <cmath>
 #include <boost/math/special_functions/gamma.hpp>
 #include <functional>
+#include <limits>
 #include <boost/lambda/lambda.hpp>
 #include <boost/lambda/casts.hpp>
 #include <boost/lambda/bind.hpp>
@@ -94,10 +95,14 @@ double GammaVariate::getCenterOfGravity() const {
 }
 
 double GammaVariate::getAUC() const {
-  double beta = t0max / alpha;
-  double k = std::exp( alpha ) * y0max / std::pow(t0max, alpha);
-  double auc = k * std::pow( beta, alpha + 1) * boost::math::tgamma( alpha + 1 );
-  return auc;
+  try {
+    double beta = t0max / alpha;
+    double k = std::exp( alpha ) * y0max / std::pow(t0max, alpha);
+    double auc = k * std::pow( beta, alpha + 1) * boost::math::tgamma( alpha + 1 );
+    return auc;
+  } catch (boost::exception &e) {
+    return std::numeric_limits< double >::quiet_NaN();
+  }
 }
 
 

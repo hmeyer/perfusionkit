@@ -2,16 +2,14 @@
 #define SEGMENTLISTMODEL_H
 
 #include <qt4/QtCore/QAbstractItemModel>
-#include <vector>
-#include <boost/shared_ptr.hpp>
+#include <boost/ptr_container/ptr_vector.hpp>
 #include "segmentinfo.h"
 
 
 class SegmentListModel : public QAbstractListModel
 {
   public:
-    typedef boost::shared_ptr<SegmentInfo> SegmentInfoPtr;
-    typedef std::vector<SegmentInfoPtr> SegmentListType;
+    typedef boost::ptr_vector<SegmentInfo> SegmentListType;
     typedef SegmentListType::iterator iterator;
     typedef SegmentListType::const_iterator const_iterator;
     SegmentListModel(QObject *parent = 0);

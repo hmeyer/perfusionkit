@@ -11,7 +11,7 @@ SegmentListModel::SegmentListModel(QObject *parent):
 
 QVariant SegmentListModel::data(const QModelIndex& index, int role) const {
   if (role == Qt::DisplayRole && index.row() < int(segments.size())) {
-    const SegmentInfo &seg = *segments[index.row()];
+    const SegmentInfo &seg = segments[index.row()];
     switch(index.column()) {
       case 0: return seg.getName();
       case 1: if (seg.isGammaEnabled()) return seg.getGammaMaxSlope();break;
@@ -49,7 +49,7 @@ int SegmentListModel::columnCount(const QModelIndex & parent) const {
 
 
 SegmentInfo &SegmentListModel::getSegment(const QModelIndex& index) {
-  return *segments.at( index.row() );
+  return segments.at( index.row() );
 }
 
 
@@ -60,7 +60,7 @@ int SegmentListModel::rowCount(const QModelIndex& parent) const
 
 void SegmentListModel::setArterySegment(const QModelIndex& index, const SegmentInfo *arterySegment) {
   if (index.row() < int(segments.size()) ) {
-    segments[index.row()]->setArterySegment( arterySegment );
+    segments[index.row()].setArterySegment( arterySegment );
     emit dataChanged(this->index(index.row(),1), this->index(index.row(),4));
   }
 }
@@ -72,7 +72,6 @@ void SegmentListModel::refresh() {
 
 void SegmentListModel::addSegment( const BinaryImageTreeItem *seg ) {
   beginInsertRows(QModelIndex(), segments.size(), segments.size()+1);
-  SegmentInfoPtr p(new SegmentInfo(const_cast<BinaryImageTreeItem*>(seg)));
-  segments.push_back(p);
+  segments.push_back(new SegmentInfo(const_cast<BinaryImageTreeItem*>(seg)));
   endInsertRows();
 }

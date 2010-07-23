@@ -86,9 +86,6 @@ void SegmentInfo::recalculateGamma() {
   const QwtData &tdd = sampleCurve.data();
   for(unsigned i = gammaStartIndex; i <= gammaEndIndex; ++i) {
     if (i < tdd.size()) gamma->addSample(tdd.x(i), tdd.y(i));
-    else {
-      std::cerr << "recalculateGamma:" << i << ">=" <<tdd.size() << std::endl;
-    }
   }
   gamma->findFromSamples();
 }
@@ -101,4 +98,8 @@ const QString &SegmentInfo::getName() const {
 
 TimeDensityData *SegmentInfo::getSampleData() {
   return &(dynamic_cast<TimeDensityData&>(sampleCurve.data())); 
+}
+
+const TimeDensityData *SegmentInfo::getSampleData() const {
+  return &(dynamic_cast<const TimeDensityData&>(sampleCurve.data())); 
 }

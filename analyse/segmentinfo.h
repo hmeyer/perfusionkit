@@ -45,6 +45,7 @@ class SegmentInfo {
   void attachPatlak(QwtPlot *plot);
   void attachPatlakRegression(QwtPlot *plot);
   TimeDensityData *getSampleData();
+  const TimeDensityData *getSampleData() const;
   void recalculateGamma();
   private:
   unsigned gammaStartIndex;

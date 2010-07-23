@@ -1,5 +1,6 @@
 #include "analysedialog.h"
 
+#include <boost/foreach.hpp>
 #include "ctimagetreeitem.h"
 #include "binaryimagetreeitem.h"
 #include <qwt_plot_curve.h>
@@ -114,19 +115,19 @@ int AnalyseDialog::exec(void ) {
     const CTImageTreeItem *ct = *ii;
     double relTime = ct->getTime() - firstTime;
     times.push_back(relTime);
-    for(SegmentListModel::iterator si = segments.begin(); si != segments.end(); ++si) {
-      values.segment = (*si)->getSegment();
+    BOOST_FOREACH( SegmentInfo &currentSegment, segments) {
+      values.segment = currentSegment.getSegment();
       if (ct->getSegmentationValues( values )) {
-	(*si)->pushSample(relTime, values);
+	currentSegment.pushSample(relTime, values);
       } else {
-	QMessageBox::warning(this,tr("Analyse Error"),tr("Could not apply Segment ") + (*si)->getName() + tr(" on image #") + QString::number(imageIndex));
+	QMessageBox::warning(this,tr("Analyse Error"),tr("Could not apply Segment ") + currentSegment.getName() + tr(" on image #") + QString::number(imageIndex));
       }
     }
     ++imageIndex;
   }
-  for(SegmentListModel::iterator si = segments.begin(); si != segments.end(); ++si) {
-    (*si)->attachSampleCurve(plot);
-    (*si)->attachGammaCurve(plot);
+  BOOST_FOREACH( SegmentInfo &currentSegment, segments) {
+    currentSegment.attachSampleCurve(plot);
+    currentSegment.attachGammaCurve(plot);
   }
   return QDialog::exec();
 }

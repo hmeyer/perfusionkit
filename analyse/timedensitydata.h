@@ -27,7 +27,6 @@ public:
 	time.push_back(t);
 	values.push_back(v);
       }
-std::cerr << __FUNCTION__ << " :" << this << " size:" << size() << std::endl;
     }
 private:
   std::vector< double > time;

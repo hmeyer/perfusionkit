@@ -1,4 +1,5 @@
 #include "timedensitydatapicker.h"
+#include <boost/foreach.hpp>
 #include <qwt_plot_curve.h>
 #include "timedensitydata.h"
 #include "binaryimagetreeitem.h"
@@ -20,9 +21,9 @@ QwtText TimeDensityDataPicker::trackerText(const QPoint &p) const {
   minValues.min = 0; minValues.max = 0; minValues.mean = 0; minValues.stddev = 0; minValues.sampleCount = 0; minValues.segment = 0;
   QwtDoublePoint pdv;
   QPoint pv;
-  for(SegmentListModel::const_iterator it = segmentList.begin(); it != segmentList.end(); ++it) {
+  BOOST_FOREACH( const SegmentInfo &currentSegment, segmentList) {
     SegmentationValues values;
-    const TimeDensityData *data = (*it)->getSampleData();
+    const TimeDensityData *data = currentSegment.getSampleData();
     for(unsigned i=0; i < data->size(); ++i) {
       pdv.setX( data->getTimeAndValues(i, values) );
       pdv.setY( values.mean );

@@ -15,15 +15,15 @@ SegmentSelectButton::SegmentSelectButton(QWidget *parent)
 void SegmentSelectButton::onClick() {
   if (segmentList && segmentList->rowCount()>0) {
     QStringList nameList;
-    BOOST_FOREACH(const SegmentListModel::SegmentInfoPtr seg, *segmentList) {
-      nameList << seg->getName();
+    BOOST_FOREACH(const SegmentInfo &seg, *segmentList) {
+      nameList << seg.getName();
     }
     bool ok;
     QString selectedName = QInputDialog::getItem(this, tr("Select Segment"), tr("Choose segment"), nameList, 0, false, &ok);
     if (!ok) return;
-    BOOST_FOREACH(const SegmentListModel::SegmentInfoPtr seg, *segmentList) {
-      if (seg->getName() == selectedName) {
-	selectedSegment = seg.get();
+    BOOST_FOREACH(const SegmentInfo &seg, *segmentList) {
+      if (seg.getName() == selectedName) {
+	selectedSegment = &seg;
 	updateText();
 	emit selected(selectedSegment);
 	break;
