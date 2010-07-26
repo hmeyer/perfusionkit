@@ -162,7 +162,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>BV:</string>
+              <string>fractional BV:</string>
              </property>
             </widget>
            </item>
@@ -294,7 +294,7 @@
            <item row="1" column="2">
             <widget class="QLabel" name="label_16">
              <property name="text">
-              <string>ml/min/ml</string>
+              <string>ml/min</string>
              </property>
             </widget>
            </item>

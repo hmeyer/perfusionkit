@@ -223,8 +223,9 @@ void AnalyseDialog::recalculateData(SegmentInfo &seginfo) {
 void AnalyseDialog::refreshPatlakData() {
   QModelIndexList indexList = listPatlak->selectionModel()->selectedRows();
   if (indexList.size() == 1) {
-    labelBV->setText(QString::number(segments.getSegment(indexList[0]).getPatlakIntercept()));
-    labelClearance->setText(QString::number(60 * segments.getSegment(indexList[0]).getPatlakSlope()));
+    const SegmentInfo &seg = segments.getSegment(indexList[0]);
+    labelBV->setText(QString::number(seg.getPatlakIntercept()));
+    labelClearance->setText(QString::number(60 * seg.getSegment()->getVolumeInML() * seg.getPatlakSlope()));
   } else {
     labelBV->setText(QString());
     labelClearance->setText(QString());
@@ -253,8 +254,8 @@ void AnalyseDialog::on_listPatlak_activated(const QModelIndex & index) {
     sliderPatlakEnd->setEnabled(true);
     sliderPatlakStart->setValue(seg.getPatlakStartIndex());
     sliderPatlakEnd->setValue(seg.getPatlakEndIndex());
-    sliderPatlakStart->setMaximum(images.size()-2);
-    sliderPatlakEnd->setMaximum(images.size()-2);
+    sliderPatlakStart->setMaximum(images.size()-1);
+    sliderPatlakEnd->setMaximum(images.size()-1);
   }
 }
 

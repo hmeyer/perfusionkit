@@ -16,8 +16,8 @@ class PatlakData : public QwtData
     inline void setArteryBaseline(double ab) { arteryBaseline = ab; }
     inline size_t getStartIndex() const { return startIndex; }
     inline size_t getEndIndex() const { return endIndex; }
-    inline void setStartIndex(size_t index) { startIndex = std::min(index,std::min(tissue.size(), artery.size())-2); }
-    inline void setEndIndex(size_t index) { endIndex = std::min(index,std::min(tissue.size(), artery.size())-2);  }
+    inline void setStartIndex(size_t index) { startIndex = std::min(index,std::min(tissue.size(), artery.size())-1); }
+    inline void setEndIndex(size_t index) { endIndex = std::min(index,std::min(tissue.size(), artery.size())-1);  }
   private:
     const QwtData &tissue;
     const QwtData &artery;
