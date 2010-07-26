@@ -19,6 +19,7 @@ SET( PerfusionkitSrc
 	analyse/patlakdata.cpp
 	analyse/linearregressiondata.cpp
 	analyse/timedensitydatapicker.cpp
+	analyse/clearancecalculator.cpp
 
 	imagetree/vtktreeitem.cpp 
 	imagetree/ctimagetreemodel.cpp

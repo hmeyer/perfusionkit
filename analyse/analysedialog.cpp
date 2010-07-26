@@ -17,6 +17,7 @@
 #include "timedensitydata.h"
 #include "gammafitdata.h"
 #include "timedensitydatapicker.h"
+#include "clearancecalculator.h"
 
 
 
@@ -71,6 +72,22 @@ AnalyseDialog::AnalyseDialog(QWidget * parent, Qt::WindowFlags f)
   tableGamma->verticalHeader()->setVisible(false);
   tableGamma->resizeColumnsToContents();
   buttonArtery->setSegmentListModel( &segments );
+  
+  buttonLeftCortex->setSegmentListModel( &segments );
+  buttonLeftArtery->setSegmentListModel( &segments );
+  buttonLeftVein->setSegmentListModel( &segments );
+  buttonRightCortex->setSegmentListModel( &segments );
+  buttonRightArtery->setSegmentListModel( &segments );
+  buttonRightVein->setSegmentListModel( &segments );
+  
+  connect(buttonLeftCortex,SIGNAL(selected(const SegmentInfo*)),this,SLOT(onClearanceParametersChanged()));
+  connect(buttonLeftArtery,SIGNAL(selected(const SegmentInfo*)),this,SLOT(onClearanceParametersChanged()));
+  connect(buttonLeftVein,SIGNAL(selected(const SegmentInfo*)),this,SLOT(onClearanceParametersChanged()));
+  connect(buttonRightCortex,SIGNAL(selected(const SegmentInfo*)),this,SLOT(onClearanceParametersChanged()));
+  connect(buttonRightArtery,SIGNAL(selected(const SegmentInfo*)),this,SLOT(onClearanceParametersChanged()));
+  connect(buttonRightVein,SIGNAL(selected(const SegmentInfo*)),this,SLOT(onClearanceParametersChanged()));
+  connect(sliderClearanceStart,SIGNAL(valueChanged(int)),this,SLOT(onSliderClearanceChanged()));
+  connect(sliderClearanceEnd,SIGNAL(valueChanged(int)),this,SLOT(onSliderClearanceChanged()));
   
   listPatlak->setModel( &segments );
   plotPatlak->setAxisTitle(QwtPlot::xBottom, tr("Int C(t) dt / C(t) [/HU]"));
@@ -127,6 +144,8 @@ int AnalyseDialog::exec(void ) {
   BOOST_FOREACH( SegmentInfo &currentSegment, segments) {
     currentSegment.attachSampleCurves(plot);
   }
+  sliderClearanceStart->setMaximum(images.size()-1);
+  sliderClearanceEnd->setMaximum(images.size()-1);
   return QDialog::exec();
 }
 
@@ -170,7 +189,7 @@ void AnalyseDialog::on_tableGamma_activated(const QModelIndex & index) {
   sliderStart->setValue(seg.getGammaStartIndex());
   sliderEnd->setValue(seg.getGammaEndIndex());
   checkEnableGamma->setChecked(seg.isGammaEnabled());
-  buttonArtery->setSelection(seg.getArterySegment());
+  buttonArtery->setSelectedSegment(seg.getArterySegment());
 }
 
 void AnalyseDialog::on_checkEnableGamma_toggled() {
@@ -205,14 +224,13 @@ void AnalyseDialog::refreshPatlakData() {
   QModelIndexList indexList = listPatlak->selectionModel()->selectedRows();
   if (indexList.size() == 1) {
     labelBV->setText(QString::number(segments.getSegment(indexList[0]).getPatlakIntercept()));
-    labelClearance->setText(QString::number(segments.getSegment(indexList[0]).getPatlakSlope()));
+    labelClearance->setText(QString::number(60 * segments.getSegment(indexList[0]).getPatlakSlope()));
   } else {
     labelBV->setText(QString());
     labelClearance->setText(QString());
   }
   plotPatlak->replot();
   labelBV->repaint();
-  labelPerm->repaint();
   labelClearance->repaint();
 }
 
@@ -259,5 +277,29 @@ void AnalyseDialog::on_sliderPatlakEnd_valueChanged(int val) {
     refreshPatlakData();
   }
   plot->replot();
+}
+
+void AnalyseDialog::on_tabWidget_currentChanged( int index ) {
+  if (index == 2) onSliderClearanceChanged();
+}
+
+
+void AnalyseDialog::onSliderClearanceChanged() {
+  markerStart->setXValue(times[sliderClearanceStart->value()]);
+  markerEnd->setXValue(times[sliderClearanceEnd->value()]);
+  plot->replot();
+  onClearanceParametersChanged();
+}
+
+void AnalyseDialog::onClearanceParametersChanged(void ) {
+  ClearanceCalculator calc(this);
+  if (buttonLeftCortex->getSelectedSegment()!=NULL && buttonLeftArtery->getSelectedSegment()==NULL)
+    buttonLeftArtery->setSelectedSegment( buttonLeftCortex->getSelectedSegment()->getArterySegment() );
+  if (buttonRightCortex->getSelectedSegment()!=NULL && buttonRightArtery->getSelectedSegment()==NULL)
+    buttonRightArtery->setSelectedSegment( buttonRightCortex->getSelectedSegment()->getArterySegment() );
+  labelLeftClearance->setText(QString::number(calc.getLeftCTClearance()));
+  labelRightClearance->setText(QString::number(calc.getRightCTClearance()));
+  labelLeftClearance->repaint();
+  labelRightClearance->repaint();
 }
 

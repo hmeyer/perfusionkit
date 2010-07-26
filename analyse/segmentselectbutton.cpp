@@ -32,7 +32,7 @@ void SegmentSelectButton::onClick() {
   }
 }
 
-void SegmentSelectButton::setSelection(const SegmentInfo *segment) {
+void SegmentSelectButton::setSelectedSegment(const SegmentInfo *segment) {
   selectedSegment = segment;
   updateText();
 }

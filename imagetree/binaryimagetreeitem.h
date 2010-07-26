@@ -25,6 +25,7 @@ class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
     void thresholdParent(double lower, double upper);
     void binaryDilate(int iterations);
     void binaryErode(int iterations);
+    double getVolumeInML(void) const;
   private:
     void createRandomColor();
     QString name;

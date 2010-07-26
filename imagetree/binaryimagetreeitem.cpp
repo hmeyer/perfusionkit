@@ -182,6 +182,18 @@ void BinaryImageTreeItem::binaryErode(int iterations) {
   getVTKImage()->Modified();
 }
 
+double BinaryImageTreeItem::getVolumeInML(void) const {
+  unsigned long voxelCount = 0;
+  typedef itk::ImageRegionConstIterator< ImageType > BinImageIterator;
+  BinImageIterator iterator = BinImageIterator( peekITKImage(), peekITKImage()->GetBufferedRegion() );
+  for(iterator.GoToBegin(); !iterator.IsAtEnd(); ++iterator) {
+    if (iterator.Get() == BinaryPixelOn) voxelCount++;
+  }
+  ImageType::SpacingType spacing = peekITKImage()->GetSpacing();
+  return std::abs(spacing[0] * spacing[1] * spacing[2] * voxelCount / 1000.0);
+}
+
+
 
 
 void BinaryImageTreeItem::createRandomColor() {

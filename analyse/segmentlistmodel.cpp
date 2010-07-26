@@ -19,7 +19,7 @@ QVariant SegmentListModel::data(const QModelIndex& index, int role) const {
       case 3: if (seg.getArterySegment() != NULL) return seg.getArterySegment()->getName(); break;
       case 4: if (seg.isGammaEnabled()) {
 	if (seg.getArterySegment()!=NULL && seg.getArterySegment()->isGammaEnabled())
-	  return seg.getGammaMaxSlope() / seg.getArterySegment()->getGammaMaximum();
+	  return 60 * seg.getGammaMaxSlope() / seg.getArterySegment()->getGammaMaximum();
       } break;
       case 5: if (seg.isGammaEnabled()) return seg.getGammaCenterOfGravity();break;
       case 6: if (seg.isGammaEnabled()) return seg.getGammaAUC();break;
@@ -35,7 +35,7 @@ QVariant SegmentListModel::headerData( int section, Qt::Orientation orientation,
       case 1: return tr("max slope [HU/s]");
       case 2: return tr("enhancement [HU]");
       case 3: return tr("artery");
-      case 4: return tr("perfusion [/s]");
+      case 4: return tr("perfusion [/min]");
       case 5: return tr("MTT [s]");
       case 6: return tr("AUC");
     }

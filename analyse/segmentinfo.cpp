@@ -144,6 +144,9 @@ double SegmentInfo::getGammaCenterOfGravity() const {
 double SegmentInfo::getGammaAUC() const {
   return getGamma()->getAUC();
 }
+double SegmentInfo::getGammaBaseline() const {
+  return getGamma()->getBaseline();
+}
 
 
 void SegmentInfo::recalculateGamma() {

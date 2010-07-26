@@ -36,6 +36,7 @@ class SegmentInfo {
   double getGammaMaximum() const;
   double getGammaCenterOfGravity() const;
   double getGammaAUC() const;
+  double getGammaBaseline() const;
   inline void setGammaStartIndex(unsigned index) { gammaStartIndex = index; }
   inline void setGammaEndIndex(unsigned index)  { gammaEndIndex = index; }
   inline unsigned getGammaStartIndex() const { return gammaStartIndex; }

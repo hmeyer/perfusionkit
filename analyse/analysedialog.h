@@ -25,11 +25,7 @@ class AnalyseDialog : public QDialog, private Ui_AnalyseDialog
   ~AnalyseDialog();
   void addImage(CTImageTreeItem *image);
   int exec(void);
-  
-  typedef boost::shared_ptr< QwtPlotCurve > CurvePtr;
-  typedef std::map< const BinaryImageTreeItem *, CurvePtr > SegmentCurveMap;
-  
-  
+
  public slots:
       void on_sliderStart_valueChanged(int val);
       void on_sliderEnd_valueChanged(int val);
@@ -41,8 +37,13 @@ class AnalyseDialog : public QDialog, private Ui_AnalyseDialog
       void on_listPatlak_activated(const QModelIndex & index);
       void on_sliderPatlakStart_valueChanged(int val);
       void on_sliderPatlakEnd_valueChanged(int val);
+      void on_tabWidget_currentChanged( int index );
+      void onSliderClearanceChanged();
+      void onClearanceParametersChanged(void);
 
   private:
+    friend class ClearanceCalculator;
+  
     void recalculateData(SegmentInfo &seginfo);
     void refreshPatlakData();
   struct CTImageTimeCompareFunctor {
