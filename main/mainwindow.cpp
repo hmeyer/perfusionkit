@@ -15,7 +15,7 @@ MainWindow::MainWindow():imageModel(CTModelHeaderFields),selectedCTImage(NULL),p
   setupUi( this );
   treeView->setModel( &imageModel );
   connect( treeView, SIGNAL( customContextMenuRequested(const QPoint &) ),
-		    this, SLOT( treeViewContextMenu(const QPoint &) ) );
+    this, SLOT( treeViewContextMenu(const QPoint &) ) );
 }
 
 MainWindow::~MainWindow() {
@@ -44,12 +44,12 @@ void MainWindow::segmentShow( BinaryImageTreeItem *segItem ) {
       setImage(dynamic_cast<VTKTreeItem*>(segItem->parent()));
     }
     ActionDispatch overlayAction(std::string("draw sphere on ") + segItem->getName().toStdString(), 
-				 boost::bind(&BinaryImageTreeItem::drawSphere, segItem, 
-					     boost::bind( &QSpinBox::value, spinBoxSize ),
-					     _3, _4, _5,
-					     boost::bind( &QCheckBox::checkState, checkErase )
-					     ),
-				 ActionDispatch::ClickingAction, ActionDispatch::UnRestricted );
+      boost::bind(&BinaryImageTreeItem::drawSphere, segItem, 
+        boost::bind( &QSpinBox::value, spinBoxSize ),
+        _3, _4, _5,
+        boost::bind( &QCheckBox::checkState, checkErase )
+      ),
+      ActionDispatch::ClickingAction, ActionDispatch::UnRestricted );
     mprView->addBinaryOverlay( segItem->getVTKImage(), segItem->getColor(), overlayAction);
     displayedSegments.insert( segItem );
     segItem->setActive();
@@ -94,11 +94,11 @@ void MainWindow::on_buttonRegionGrow_clicked() {
     BinaryImageTreeItem *seg = focusSegmentFromSelection();
     if (seg) {
       ActionDispatch regionGrowAction(std::string("click to region grow inside ") + seg->getName().toStdString(), 
-				 boost::bind(&BinaryImageTreeItem::regionGrow, seg, 
-					     _3, _4, _5,
-					     boost::function<void()>(boost::bind(&MainWindow::clearPendingAction, this))
-					     ),
-				 ActionDispatch::ClickingAction, ActionDispatch::UnRestricted );
+        boost::bind(&BinaryImageTreeItem::regionGrow, seg, 
+          _3, _4, _5,
+          boost::function<void()>(boost::bind(&MainWindow::clearPendingAction, this))
+        ),
+        ActionDispatch::ClickingAction, ActionDispatch::UnRestricted );
       pendingAction = mprView->addAction(regionGrowAction);
       mprView->activateAction(pendingAction);
     }
@@ -192,22 +192,22 @@ void MainWindow::setFiles(const QStringList &names) {
 
 void MainWindow::on_actionOpenFile_triggered() {
   QStringList fnames = QFileDialog::getOpenFileNames(
-                         this,
-                         tr("Select one or more files to open"),
-                         ".",
-                         "", 0, QFileDialog::ReadOnly|QFileDialog::HideNameFilterDetails);
-			 QString a;
-			 std::string x;
-			 x = a.toStdString();
+    this,
+    tr("Select one or more files to open"),
+    ".",
+    "", 0, QFileDialog::ReadOnly|QFileDialog::HideNameFilterDetails);
+    QString a;
+    std::string x;
+    x = a.toStdString();
   setFiles( fnames );
 }
 
 void MainWindow::on_actionOpenDirectory_triggered() {
   QString fname = QFileDialog::getExistingDirectory(
-                         this,
-                         tr("Select directoy to open"),
-                         ".",
-                         QFileDialog::ShowDirsOnly|QFileDialog::ReadOnly);
+    this,
+    tr("Select directoy to open"),
+    ".",
+    QFileDialog::ShowDirsOnly|QFileDialog::ReadOnly);
   DicomSelectorDialogPtr selectDialog( new DicomSelectorDialog( this ) );
   selectDialog->setFileOrDirectory( fname );
   loadDicomData( selectDialog );
@@ -267,9 +267,9 @@ void MainWindow::on_actionCubicInterpolation_triggered() {
 
 void MainWindow::on_actionSaveProject_triggered() {
   QString pname = QFileDialog::getSaveFileName( this,
-				tr("Save Project"),
-				"./unnamed.perfproj",
-				tr("Project Files (*.perfproj)"));
+    tr("Save Project"),
+    "./unnamed.perfproj",
+    tr("Project Files (*.perfproj)"));
   if (!pname.isEmpty()) {
     imageModel.saveModelToFile(pname.toStdString());
   }
@@ -277,9 +277,9 @@ void MainWindow::on_actionSaveProject_triggered() {
 
 void MainWindow::on_actionOpenProject_triggered() {
   QString pname = QFileDialog::getOpenFileName( this,
-				tr("Open Project"),
-				"./unnamed.perfproj",
-				tr("Project Files (*.perfproj)"));
+    tr("Open Project"),
+    "./unnamed.perfproj",
+    tr("Project Files (*.perfproj)"));
   if (!pname.isEmpty()) {
     setImage(NULL);
     imageModel.openModelFromFile(pname.toStdString());
