@@ -157,10 +157,13 @@ TreeItem *TreeItem::parent() {
 bool TreeItem::removeChildren(unsigned int position, unsigned int count) {
   if (position + count > childItems.size())
     return false;
-  model->beginRemoveRows(model->createIndex(position,0,this), position, position+count-1);
+// TODO: strange: the following does not work - WHY?  
+//  model->beginRemoveRows(model->createIndex(0,0,this), position, position+count-1);
+  model->beginResetModel();
   for (unsigned int row = 0; row < count; ++row)
     childItems.release( childItems.begin() + position );
-  model->endRemoveRows();
+//  model->endRemoveRows();
+  model->endResetModel();
   return true;
 }
 

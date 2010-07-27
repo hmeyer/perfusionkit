@@ -32,8 +32,7 @@ QVariant BinaryImageTreeItem::do_getData_DisplayRole(int c) const {
 }
 
 QVariant BinaryImageTreeItem::do_getData_BackgroundRole(int column) const {
-  QColor qcolor( color[0], color[1], color[2]);
-  return QBrush( qcolor );
+  return QBrush( color );
 }
 
 
@@ -200,36 +199,31 @@ void BinaryImageTreeItem::createRandomColor() {
   static boost::mt19937 rng;
   static boost::uniform_int<> rainbow(0,256*6);
   static boost::variate_generator<boost::mt19937&, boost::uniform_int<> > rainbowcolor(rng, rainbow);
-  int hue = rainbowcolor();     
+  int hue = rainbowcolor();
+  color = Qt::black;
   if (hue<256) {
     int ascend = hue;
-      color[0] = 255;
-      color[1] = ascend;
-      color[2] = 0;
+      color.setRed(255);
+      color.setGreen(ascend);
   } else if (hue<512) {
     int descend = 511-hue;
-      color[0] = descend;
-      color[1] = 255;
-      color[2] = 0;
+      color.setRed(descend);
+      color.setGreen(255);
   } else if (hue<768) {
     int ascend = hue-512;
-      color[0] = 0;
-      color[1] = 255;
-      color[2] = ascend;
+      color.setGreen(255);
+      color.setBlue(ascend);
   } else if (hue<1024) {
     int descend = 1023-hue;
-      color[0] = 0;
-      color[1] = descend;
-      color[2] = 255;
+      color.setGreen(descend);
+      color.setBlue(255);
   } else if (hue<1280) {
     int ascend = hue-1024;
-      color[0] = ascend;
-      color[1] = 0;
-      color[2] = 255;
+      color.setRed(ascend);
+      color.setBlue(255);
   } else { //if (color<1536) 
     int descend = 1535-hue;
-      color[0] = 255;
-      color[1] = 0;
-      color[2] = descend;
+      color.setRed(255);
+      color.setBlue(descend);
   }
 }

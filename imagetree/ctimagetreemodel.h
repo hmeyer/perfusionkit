@@ -43,8 +43,7 @@ class CTImageTreeModel : public QAbstractItemModel {
     friend class CTImageTreeItem;
     
   public slots:
-    bool removeCTImage(int srow);
-    bool createSegment(int srow);
+    bool removeItem(const QModelIndex &idx);
     
   private:
     friend class boost::serialization::access;

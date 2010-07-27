@@ -3,7 +3,8 @@
 
 #include "itkvtktreeitem.h"
 #include "imagedefinitions.h"
-#include "QString"
+#include <QString>
+#include <QColor>
 #include <boost/function.hpp>
 #include <boost/serialization/access.hpp>
 
@@ -21,7 +22,8 @@ class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
     void setName(const QString &_name) { name = _name; }
     void drawSphere( float radius, float x, float y, float z, bool erase );
     void regionGrow( float x, float y, float z, boost::function<void()> postGrowingAction);
-    const RGBType &getColor() const { return color;}
+    const QColor &getColor() const { return color;}
+    void setColor(const QColor &newColor) { color = newColor; }
     void thresholdParent(double lower, double upper);
     void binaryDilate(int iterations);
     void binaryErode(int iterations);
@@ -29,7 +31,7 @@ class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
   private:
     void createRandomColor();
     QString name;
-    RGBType color;
+    QColor color;
 
   private:
     BinaryImageTreeItem() {};

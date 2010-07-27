@@ -112,19 +112,14 @@ void CTImageTreeModel::insertItemCopy(const TreeItem& item) {
   rootItem.insertChild(item.clone(&rootItem));
 }
 
-bool CTImageTreeModel::removeCTImage(int srow) {
-  unsigned int row = static_cast<unsigned int>(srow);
-  if (row < rootItem.childCount()) {
-    bool result = rootItem.removeChildren( row );
-    return result;
-  }
-  return false;
-}
-
-bool CTImageTreeModel::createSegment(int srow) {
-  unsigned int row = static_cast<unsigned int>(srow);
-  if (row < rootItem.childCount()) {
-    return dynamic_cast<CTImageTreeItem&>(rootItem.child(row)).generateSegment();
+bool CTImageTreeModel::removeItem(const QModelIndex &idx) {
+  TreeItem &item = getItem(idx);
+  if (&item != &rootItem) {
+    TreeItem *parentItem = item.parent();
+    if (parentItem) {
+      bool result = parentItem->removeChildren(item.childNumber());
+      return result;
+    }
   }
   return false;
 }

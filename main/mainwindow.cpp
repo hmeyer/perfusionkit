@@ -4,6 +4,7 @@
 #include "analysedialog.h"
 #include "binaryimagetreeitem.h"
 #include <boost/assign.hpp>
+#include <boost/foreach.hpp>
 
 
 const CTImageTreeItem::DicomTagList MainWindow::CTModelHeaderFields = boost::assign::list_of
@@ -11,7 +12,7 @@ const CTImageTreeItem::DicomTagList MainWindow::CTModelHeaderFields = boost::ass
   (CTImageTreeItem::DicomTagType("#Slices",CTImageTreeItem::getNumberOfFramesTag()))
   (CTImageTreeItem::DicomTagType("AcquisitionDatetime","0008|002a"));
 
-MainWindow::MainWindow():imageModel(CTModelHeaderFields),selectedCTImage(NULL),pendingAction(-1) {
+MainWindow::MainWindow():imageModel(CTModelHeaderFields),displayedCTImage(NULL),pendingAction(-1) {
   setupUi( this );
   treeView->setModel( &imageModel );
   connect( treeView, SIGNAL( customContextMenuRequested(const QPoint &) ),
@@ -26,21 +27,21 @@ void MainWindow::setImage(VTKTreeItem *imageItem) {
   vtkImageData *vtkImage = NULL;
   if (imageItem != NULL)
     vtkImage = imageItem->getVTKImage();
-  if (imageItem != selectedCTImage) {
+  if (imageItem != displayedCTImage) {
     while(!displayedSegments.empty()) {
       segmentHide( *displayedSegments.begin() );
     }
     mprView->setImage( vtkImage );
     volumeView->setImage( vtkImage );
-    if (selectedCTImage != NULL) selectedCTImage->clearActiveDown();
-    selectedCTImage = imageItem;
-    if (selectedCTImage != NULL) selectedCTImage->setActive();
+    if (displayedCTImage != NULL) displayedCTImage->clearActiveDown();
+    displayedCTImage = imageItem;
+    if (displayedCTImage != NULL) displayedCTImage->setActive();
   }
 }
 
 void MainWindow::segmentShow( BinaryImageTreeItem *segItem ) {
   if (segItem) {
-    if (segItem->parent() != selectedCTImage) {
+    if (segItem->parent() != displayedCTImage) {
       setImage(dynamic_cast<VTKTreeItem*>(segItem->parent()));
     }
     ActionDispatch overlayAction(std::string("draw sphere on ") + segItem->getName().toStdString(), 
@@ -62,8 +63,8 @@ void MainWindow::segmentHide( BinaryImageTreeItem *segItem ) {
     DisplayedSegmentContainer::const_iterator it = displayedSegments.find( segItem );
     if (it != displayedSegments.end()) {
       mprView->removeBinaryOverlay( segItem->getVTKImage() );
+      displayedSegments.erase( it );
     }
-    displayedSegments.erase( it );
     segItem->setActive(false);
   }
 }
@@ -154,7 +155,7 @@ BinaryImageTreeItem *MainWindow::focusSegmentFromSelection(void) {
     TreeItem *item = &imageModel.getItem( selectedIndex[0] );
     if (typeid(*item) == typeid(CTImageTreeItem)) {
       CTImageTreeItem *ctitem = dynamic_cast<CTImageTreeItem*>(item);
-      if (ctitem != selectedCTImage)
+      if (ctitem != displayedCTImage)
 	setImage( ctitem );
       if (ctitem->childCount() == 0) {
 	item = ctitem->generateSegment();
@@ -293,7 +294,7 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex &index) {
   if (index.isValid()) {
     TreeItem &item = imageModel.getItem( index );
     if (typeid(item) == typeid(CTImageTreeItem)) {
-      if (&item == selectedCTImage) {
+      if (&item == displayedCTImage) {
 	setImage( NULL );
       } else {
 	setImage( dynamic_cast<CTImageTreeItem*>(&item) );
@@ -309,40 +310,70 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex &index) {
   }
 }
 
-void MainWindow::removeCTImage(int number) {
-  TreeItem &remitem = imageModel.getItem( imageModel.index( number, 0 ) );
-  VTKTreeItem *remitemPtr = dynamic_cast<VTKTreeItem*>(&remitem);
-  if (selectedCTImage == remitemPtr) {
-    setImage(NULL);
+void MainWindow::removeSelectedImages() {
+  QModelIndexList indexList = treeView->selectionModel()->selectedRows();
+  BOOST_FOREACH( const QModelIndex &idx, indexList) {
+    TreeItem &remitem = imageModel.getItem( idx );
+    if (typeid(remitem) == typeid(CTImageTreeItem)) {
+      VTKTreeItem *remitemPtr = dynamic_cast<VTKTreeItem*>(&remitem);
+      if (displayedCTImage == remitemPtr) {
+	setImage(NULL);
+      }
+    } else if (typeid(remitem) == typeid(BinaryImageTreeItem)) {
+      BinaryImageTreeItem *remitemPtr = dynamic_cast<BinaryImageTreeItem*>(&remitem);
+      segmentHide( remitemPtr );
+    }
+    imageModel.removeItem( idx );
   }
-  imageModel.removeCTImage(number);
 }
+
+void MainWindow::createSegmentForSelectedImage() {
+  QModelIndexList indexList = treeView->selectionModel()->selectedRows();
+  if (indexList.count() == 1) {
+    TreeItem &item = imageModel.getItem(indexList[0]);
+    if (typeid(item) == typeid(CTImageTreeItem)) {
+      dynamic_cast<CTImageTreeItem&>(item).generateSegment();
+    }
+  }
+}
+
+void MainWindow::changeColorForSelectedSegment() {
+  QModelIndexList indexList = treeView->selectionModel()->selectedRows();
+  if (indexList.count() == 1) {
+    TreeItem &item = imageModel.getItem(indexList[0]);
+    if (typeid(item) == typeid(BinaryImageTreeItem)) {
+      BinaryImageTreeItem &binItem = dynamic_cast<BinaryImageTreeItem&>(item);
+      QColor color = binItem.getColor();
+      color = QColorDialog::getColor(color, this, tr("Choose new Segment Color for ") + binItem.getName());
+      if (color.isValid())
+	binItem.setColor(color);
+    }
+  }
+}
+
+
 
 void MainWindow::treeViewContextMenu(const QPoint &pos) {
   QModelIndex idx = treeView->indexAt(pos);
-  if (idx.isValid()) {
-    TreeItem &item = imageModel.getItem(idx);
-    if ( item.depth() == 1 ) {
-      QMenu cm;
-      
-      QSignalMapper delMapper;
-      QAction* delAction = cm.addAction("&Delete");
-      delMapper.setMapping(delAction, idx.row());
-      connect( delAction, SIGNAL( triggered() ),
-	&delMapper, SLOT( map()  ) );
-      connect( &delMapper, SIGNAL( mapped(int) ),
-	this, SLOT( removeCTImage(int)  ) );
-
-      QSignalMapper addSegMapper;
-      QAction* addSegAction = cm.addAction("&Add Segment");
-      addSegMapper.setMapping(addSegAction, idx.row());
-      connect( addSegAction, SIGNAL( triggered() ),
-	&addSegMapper, SLOT( map()  ) );
-      connect( &addSegMapper, SIGNAL( mapped(int) ),
-	&imageModel, SLOT( createSegment(int) ) );
-
-      cm.exec(treeView->mapToGlobal(pos));
+  QModelIndexList indexList = treeView->selectionModel()->selectedRows();
+  if (indexList.count()>0) {
+    QMenu cm;
+    if (indexList.count() == 1) {
+      TreeItem &item = imageModel.getItem(indexList[0]);
+      if (typeid(item) == typeid(CTImageTreeItem)) {
+	QAction* addSegAction = cm.addAction("&Add Segment");
+	connect( addSegAction, SIGNAL( triggered() ),
+	  this, SLOT( createSegmentForSelectedImage())  );
+      } else if (typeid(item) == typeid(BinaryImageTreeItem)) {
+	QAction* addSegAction = cm.addAction("&Change Color");
+	connect( addSegAction, SIGNAL( triggered() ),
+	  this, SLOT( changeColorForSelectedSegment())  );
+      }
     }
+    QAction* addSegAction = cm.addAction("&Delete");
+    connect( addSegAction, SIGNAL( triggered() ),
+      this, SLOT( removeSelectedImages()  ) );
+    cm.exec(treeView->mapToGlobal(pos));
   }
 }
 

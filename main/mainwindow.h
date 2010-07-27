@@ -46,7 +46,9 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
       void on_actionOpenProject_triggered();
       void on_treeView_doubleClicked(const QModelIndex &index);
       void treeViewContextMenu(const QPoint &pos);
-      void removeCTImage(int number);
+      void removeSelectedImages();
+      void createSegmentForSelectedImage();
+      void changeColorForSelectedSegment();
       void on_buttonDraw_clicked();
       void on_buttonThreshold_clicked();
       void on_buttonRegionGrow_clicked();
@@ -67,7 +69,7 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
 
   
   CTImageTreeModel imageModel;
-  VTKTreeItem *selectedCTImage;
+  VTKTreeItem *displayedCTImage;
   
   typedef std::set< BinaryImageTreeItem* > DisplayedSegmentContainer;
   DisplayedSegmentContainer displayedSegments;

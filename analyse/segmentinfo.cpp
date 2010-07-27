@@ -6,7 +6,7 @@
 #include "timedensitydata.h"
 #include "patlakdata.h"
 #include "linearregressiondata.h"
-#include <binaryimagetreeitem.h>
+#include "binaryimagetreeitem.h"
 #include <QObject>
 
 SegmentInfo::SegmentInfo(const BinaryImageTreeItem *s):
@@ -15,8 +15,7 @@ SegmentInfo::SegmentInfo(const BinaryImageTreeItem *s):
   patlakCurve(s->getName()), patlakRegression(s->getName() + QObject::tr(" linear Regression")),
   patlakCreated(false) {
     
-    const RGBType &RGBColor = s->getColor();
-    QColor color = QColor( RGBColor[0], RGBColor[1], RGBColor[2] );
+    QColor color = s->getColor();
     sampleCurve.setPen(QPen(color));
     sampleCurve.setRenderHint(QwtPlotItem::RenderAntialiased, true);
     QwtSymbol symbol; 

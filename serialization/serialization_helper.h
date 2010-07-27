@@ -212,10 +212,18 @@ inline void save(Archive & ar, const CTImageTreeItem::SegmentationValueMap &svm,
   }
 }
 
+template<class Archive>
+void serialize(Archive & ar, QColor &color, const unsigned int version) {
+  unsigned char t;
+  t = color.red(); ar & t; color.setRed(t);
+  t = color.green(); ar & t; color.setGreen(t);
+  t = color.blue(); ar & t; color.setBlue(t);
+}
+
+
 
 } // namespace serialization
 }
-
 
 template<class Archive>
 void CTImageTreeModel::serialize(Archive & ar, const unsigned int version) {
