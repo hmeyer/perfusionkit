@@ -6,6 +6,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/assign.hpp>
 #include "ctimagetreemodel.h"
+#include "dicomtagtype.h"
 
 class DicomSelectorDialog : public QDialog, private Ui_DicomSelectDialog
 {
@@ -21,7 +22,7 @@ class DicomSelectorDialog : public QDialog, private Ui_DicomSelectDialog
   private:
   CTImageTreeModel ctImageModel;
   QStringList fileNames;
-  static const CTImageTreeItem::DicomTagList HeaderFields;
+  static const DicomTagList HeaderFields;
 };
 
 

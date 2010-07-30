@@ -11,7 +11,7 @@
 class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
   public:
     typedef ITKVTKTreeItem< BinaryImageType > BaseClass;
-    BinaryImageTreeItem(TreeItem * parent, BinaryImageType::Pointer itkImage, const QString &name);
+    BinaryImageTreeItem(TreeItem * parent, ImageType::Pointer itkImage, const QString &name);
     virtual TreeItem *clone(TreeItem *clonesParent=NULL) const;
     virtual int columnCount() const;
     virtual QVariant do_getData_DisplayRole(int c) const;
@@ -34,6 +34,7 @@ class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
     QColor color;
 
   private:
+    ConnectorHandle imageKeeper;
     BinaryImageTreeItem() {};
     friend class boost::serialization::access;
     template<class Archive>

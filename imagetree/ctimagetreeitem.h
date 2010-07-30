@@ -7,6 +7,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/serialization/access.hpp>
 #include "segmentationvalues.h"
+#include "dicomtagtype.h"
 
 class BinaryImageTreeItem;
 
@@ -14,18 +15,6 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
 {
   public:
     typedef ITKVTKTreeItem< CTImageType > BaseClass;
-    struct DicomTagType {
-      std::string name;
-      std::string tag;
-      DicomTagType(const std::string &n, const std::string &t):name(n), tag(t) {}
-      private:
-	DicomTagType(){}
-	friend class boost::serialization::access;
-	template<class Archive>
-	void serialize(Archive & ar, const unsigned int version);
-    };
-    typedef std::vector< DicomTagType > DicomTagList;
-    typedef boost::shared_ptr< DicomTagList > DicomTagListPointer;
     CTImageTreeItem(TreeItem * parent, DicomTagListPointer headerFields, const itk::MetaDataDictionary &_dict=itk::MetaDataDictionary());
 
     virtual TreeItem *clone(TreeItem *clonesParent=NULL) const;
@@ -48,7 +37,7 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     static const std::string &getSeriesInstanceUIDTag();
     static const std::string &getSOPInstanceUIDTag();
     static const std::string &getAcquisitionDatetimeTag();
-    ImageType::Pointer getITKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) const;
+    void retrieveITKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0);
     static void getUIDFromDict(const itk::MetaDataDictionary &dict, std::string &iUID);
     static inline bool isRealHUvalue(CTPixelType value) { return (value!=-2048)?true:false; }
     

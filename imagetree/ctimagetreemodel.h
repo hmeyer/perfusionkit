@@ -2,17 +2,17 @@
 #define CTIMAGETREEMODEL_H
 
 #include <QAbstractItemModel>
-#include "ctimagetreeitem.h"
 #include <string>
 #include <vector>
 #include <boost/serialization/access.hpp>
+#include <itkMetaDataDictionary.h>
+#include "vtkconnectordatabase.h"
+#include "dicomtagtype.h"
 
 
 class CTImageTreeModel : public QAbstractItemModel {
   Q_OBJECT
   public:
-    typedef CTImageTreeItem::DicomTagListPointer DicomTagListPointer;
-    typedef CTImageTreeItem::DicomTagList DicomTagList;
     CTImageTreeModel(const DicomTagList &header, QObject *parent = 0);
     ~CTImageTreeModel();
 
@@ -38,9 +38,15 @@ class CTImageTreeModel : public QAbstractItemModel {
     
     void openModelFromFile(const std::string &fname);
     void saveModelToFile(const std::string &fname) const;
+    
+    size_t getMaxImageMemoryUsage() const { return maxImageMemoryUsage; }
+    void setMaxImageMemoryUsage(size_t s);
+    void initMaxMemoryUsage();
+    void registerConnectorData(VTKConnectorDataBasePtr p);
   
     friend class TreeItem;
     friend class CTImageTreeItem;
+    
     
   public slots:
     bool removeItem(const QModelIndex &idx);
@@ -48,15 +54,20 @@ class CTImageTreeModel : public QAbstractItemModel {
   private:
     friend class boost::serialization::access;
     
+    static const QString MaxImageMemoryUsageSettingName;
+    
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version);
     
-    CTImageTreeModel(QObject *parent = 0):QAbstractItemModel(parent),rootItem(this) {};
+    CTImageTreeModel(QObject *parent = 0):QAbstractItemModel(parent),rootItem(this) {initMaxMemoryUsage();};
     void emitLayoutAboutToBeChanged() { emit layoutAboutToBeChanged(); }
     void emitLayoutChanged() { emit layoutChanged(); }
     QModelIndex createIndex(int r, int c, const TreeItem*p) const;
     DicomTagListPointer HeaderFields;
     TreeItem rootItem;
+    size_t maxImageMemoryUsage;
+    typedef std::list<VTKConnectorDataBasePtr> ConnectorDataStorageType;
+    ConnectorDataStorageType ConnectorDataStorage;
 };
 
 

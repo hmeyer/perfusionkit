@@ -45,13 +45,13 @@ class TreeItem : boost::noncopyable {
     int childNumber() const;
     virtual bool setData(int column, const QVariant &value);
     CTImageTreeModel *getModel(void) { return model; }
-    void clearActiveDown(void);
+    void clearActiveDown(void) const;
     bool isActive(void) const { return active; }
-    void setActive(bool act=true);
-    void toggleActive(void) { setActive(!active); }
+    void setActive(bool act=true) const;
+    void toggleActive(void) const { setActive(!active); }
     
   protected:
-    QModelIndex getIndex(int column=0);
+    QModelIndex getIndex(int column=0) const;
     CTImageTreeModel *model;
     TreeItem():active(false) {};
   private:

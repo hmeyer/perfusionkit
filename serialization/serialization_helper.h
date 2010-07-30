@@ -17,6 +17,7 @@
 #include "imagedefinitions.h"
 #include "ctimagetreemodel.h"
 #include "ctimagetreeitem.h"
+#include <binaryimagetreeitem.h>
 
 
 
@@ -240,25 +241,21 @@ void TreeItem::serialize(Archive & ar, const unsigned int version) {
   ar & childItems;
 }
     
-template<class Archive>
-void VTKTreeItem::serialize(Archive & ar, const unsigned int version) {
-  ar & boost::serialization::base_object<TreeItem>(*this);
-}
-
 template<class TImage>
 template<class Archive>
 void ITKVTKTreeItem<TImage>::serialize(Archive & ar, const unsigned int version) {
-  ar & boost::serialization::base_object<VTKTreeItem>(*this);
+  ar & boost::serialization::base_object<TreeItem>(*this);
 }
 
 template<class Archive>
 void BinaryImageTreeItem::serialize(Archive & ar, const unsigned int version) {
   ar & name;
   ar & color;
-  BinaryImageType::Pointer binIm = peekITKImage();
+  ImageType::Pointer binIm = peekITKImage();
   ar & binIm;
-  setITKImage( binIm );
   ar & boost::serialization::base_object<BaseClass>(*this);
+  setITKImage( binIm );
+  imageKeeper = getVTKConnector();
 }
 
 template<class Archive>
@@ -285,7 +282,7 @@ void SegmentationValues::serialize(Archive & ar, const unsigned int version) {
 }
 
 template<class Archive>
-void CTImageTreeItem::DicomTagType::serialize(Archive & ar, const unsigned int version) {
+void DicomTagType::serialize(Archive & ar, const unsigned int version) {
   ar & name;
   ar & tag;
 }

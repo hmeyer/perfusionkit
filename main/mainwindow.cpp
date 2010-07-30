@@ -6,13 +6,12 @@
 #include <boost/assign.hpp>
 #include <boost/foreach.hpp>
 
+const DicomTagList MainWindow::CTModelHeaderFields = boost::assign::list_of
+  (DicomTagType("Patient Name", "0010|0010"))
+  (DicomTagType("#Slices",CTImageTreeItem::getNumberOfFramesTag()))
+  (DicomTagType("AcquisitionDatetime","0008|002a"));
 
-const CTImageTreeItem::DicomTagList MainWindow::CTModelHeaderFields = boost::assign::list_of
-  (CTImageTreeItem::DicomTagType("Patient Name", "0010|0010"))
-  (CTImageTreeItem::DicomTagType("#Slices",CTImageTreeItem::getNumberOfFramesTag()))
-  (CTImageTreeItem::DicomTagType("AcquisitionDatetime","0008|002a"));
-
-MainWindow::MainWindow():imageModel(CTModelHeaderFields),displayedCTImage(NULL),pendingAction(-1) {
+MainWindow::MainWindow():imageModel(CTModelHeaderFields),pendingAction(-1) {
   setupUi( this );
   treeView->setModel( &imageModel );
   connect( treeView, SIGNAL( customContextMenuRequested(const QPoint &) ),
@@ -23,46 +22,50 @@ MainWindow::~MainWindow() {
 }
 
 
-void MainWindow::setImage(VTKTreeItem *imageItem) {
+void MainWindow::setImage(const CTImageTreeItem *imageItem) {
   vtkImageData *vtkImage = NULL;
-  if (imageItem != NULL)
-    vtkImage = imageItem->getVTKImage();
-  if (imageItem != displayedCTImage) {
+  CTImageTreeItem::ConnectorHandle connectorPtr;
+  if (imageItem) {
+    connectorPtr = imageItem->getVTKConnector();
+    vtkImage = connectorPtr->getVTKImageData();
+  }
+  if (connectorPtr != displayedCTImage) {
     while(!displayedSegments.empty()) {
-      segmentHide( *displayedSegments.begin() );
+      segmentHide( dynamic_cast<const BinaryImageTreeItem*>((*displayedSegments.begin())->getBaseItem()) );
     }
     mprView->setImage( vtkImage );
     volumeView->setImage( vtkImage );
-    if (displayedCTImage != NULL) displayedCTImage->clearActiveDown();
-    displayedCTImage = imageItem;
-    if (displayedCTImage != NULL) displayedCTImage->setActive();
+    if (displayedCTImage && displayedCTImage->getBaseItem()) displayedCTImage->getBaseItem()->clearActiveDown();
+    displayedCTImage = connectorPtr;
+    if (displayedCTImage && displayedCTImage->getBaseItem()) displayedCTImage->getBaseItem()->setActive();
   }
 }
 
-void MainWindow::segmentShow( BinaryImageTreeItem *segItem ) {
+void MainWindow::segmentShow( const BinaryImageTreeItem *segItem ) {
   if (segItem) {
-    if (segItem->parent() != displayedCTImage) {
-      setImage(dynamic_cast<VTKTreeItem*>(segItem->parent()));
+    if (displayedCTImage && displayedCTImage->getBaseItem() != segItem->parent()) {
+      setImage(dynamic_cast<const CTImageTreeItem*>(segItem->parent()));
     }
     ActionDispatch overlayAction(std::string("draw sphere on ") + segItem->getName().toStdString(), 
-      boost::bind(&BinaryImageTreeItem::drawSphere, segItem, 
+      boost::bind(&BinaryImageTreeItem::drawSphere, const_cast<BinaryImageTreeItem*>(segItem), 
         boost::bind( &QSpinBox::value, spinBoxSize ),
         _3, _4, _5,
         boost::bind( &QCheckBox::checkState, checkErase )
       ),
       ActionDispatch::ClickingAction, ActionDispatch::UnRestricted );
-    mprView->addBinaryOverlay( segItem->getVTKImage(), segItem->getColor(), overlayAction);
-    displayedSegments.insert( segItem );
+    BinaryImageTreeItem::ConnectorHandle segmentConnector = segItem->getVTKConnector();
+    mprView->addBinaryOverlay( segmentConnector->getVTKImageData(), segItem->getColor(), overlayAction);
+    displayedSegments.insert( segmentConnector );
     segItem->setActive();
   }
 }
 
-void MainWindow::segmentHide( BinaryImageTreeItem *segItem ) {
+void MainWindow::segmentHide( const BinaryImageTreeItem *segItem ) {
   if (segItem) {
     clearPendingAction();
-    DisplayedSegmentContainer::const_iterator it = displayedSegments.find( segItem );
+    DisplayedSegmentContainer::const_iterator it = displayedSegments.find( segItem->getVTKConnector() );
     if (it != displayedSegments.end()) {
-      mprView->removeBinaryOverlay( segItem->getVTKImage() );
+      mprView->removeBinaryOverlay( (*it)->getVTKImageData() );
       displayedSegments.erase( it );
     }
     segItem->setActive(false);
@@ -72,7 +75,7 @@ void MainWindow::segmentHide( BinaryImageTreeItem *segItem ) {
 void MainWindow::on_buttonDraw_clicked() {
   BinaryImageTreeItem *seg = focusSegmentFromSelection();
   if (seg)
-    mprView->activateOverlayAction(seg->getVTKImage());
+    mprView->activateOverlayAction(seg->getVTKConnector()->getVTKImageData());
 }
 
 void MainWindow::on_buttonThreshold_clicked() {
@@ -155,7 +158,7 @@ BinaryImageTreeItem *MainWindow::focusSegmentFromSelection(void) {
     TreeItem *item = &imageModel.getItem( selectedIndex[0] );
     if (typeid(*item) == typeid(CTImageTreeItem)) {
       CTImageTreeItem *ctitem = dynamic_cast<CTImageTreeItem*>(item);
-      if (ctitem != displayedCTImage)
+      if (ctitem != displayedCTImage->getBaseItem())
 	setImage( ctitem );
       if (ctitem->childCount() == 0) {
 	item = ctitem->generateSegment();
@@ -294,14 +297,14 @@ void MainWindow::on_treeView_doubleClicked(const QModelIndex &index) {
   if (index.isValid()) {
     TreeItem &item = imageModel.getItem( index );
     if (typeid(item) == typeid(CTImageTreeItem)) {
-      if (&item == displayedCTImage) {
+      if (displayedCTImage && &item == displayedCTImage->getBaseItem()) {
 	setImage( NULL );
       } else {
 	setImage( dynamic_cast<CTImageTreeItem*>(&item) );
       }
     } else if (typeid(item) == typeid(BinaryImageTreeItem)) {
       BinaryImageTreeItem *SegItem = dynamic_cast<BinaryImageTreeItem*>(&item);
-      if (displayedSegments.find( SegItem )==displayedSegments.end()) {
+      if (displayedSegments.find( SegItem->getVTKConnector() )==displayedSegments.end()) {
 	segmentShow( SegItem );
       } else {
 	segmentHide( SegItem );
@@ -315,8 +318,8 @@ void MainWindow::removeSelectedImages() {
   BOOST_FOREACH( const QModelIndex &idx, indexList) {
     TreeItem &remitem = imageModel.getItem( idx );
     if (typeid(remitem) == typeid(CTImageTreeItem)) {
-      VTKTreeItem *remitemPtr = dynamic_cast<VTKTreeItem*>(&remitem);
-      if (displayedCTImage == remitemPtr) {
+      CTImageTreeItem *remitemPtr = dynamic_cast<CTImageTreeItem*>(&remitem);
+      if (displayedCTImage && displayedCTImage->getBaseItem() == remitemPtr) {
 	setImage(NULL);
       }
     } else if (typeid(remitem) == typeid(BinaryImageTreeItem)) {
@@ -381,5 +384,15 @@ void MainWindow::clearPendingAction() {
   if (pendingAction != -1) {
     mprView->removeAction( pendingAction );
     pendingAction = -1;
+  }
+}
+
+void MainWindow::on_actionMemoryUsage_triggered() {
+  bool ok;
+  int maxMemoryUsageInMB = QInputDialog::getInt(this, 
+    tr("Memory Usage"), tr("maximum memory usage (approx.) [MB]:"), 
+    imageModel.getMaxImageMemoryUsage() / (1024 * 1024), 256, 1024*100, 1, &ok);
+  if (ok) {
+    imageModel.setMaxImageMemoryUsage(maxMemoryUsageInMB * 1024 * 1024);
   }
 }

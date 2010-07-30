@@ -1,7 +1,8 @@
 #ifndef ITKVTKTREEITEM_H
 #define ITKVTKTREEITEM_H
 
-#include <vtktreeitem.h>
+#include "treeitem.h"
+#include "ctimagetreemodel.h"
 #include <itkImageToVTKImageFilter.h>
 #include <itkCommand.h>
 #include <itkImageSeriesReader.h>
@@ -13,37 +14,94 @@
 #include <string>
 #include <boost/bind.hpp>
 #include <boost/serialization/base_object.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/weak_ptr.hpp>
+#include "vtkconnectordatabase.h"
 
 
 template< class TImage >
-class ITKVTKTreeItem : public VTKTreeItem {
+class ITKVTKTreeItem : public TreeItem {
   public:
-    typedef ITKVTKTreeItem< TImage > MyType;
+    typedef ITKVTKTreeItem< TImage > Self;
     typedef TImage ImageType;
-    ITKVTKTreeItem(TreeItem * parent, const typename TImage::Pointer itkI = typename TImage::Pointer()): VTKTreeItem(parent), itkImage(itkI), connector(0) {}
-    virtual typename TImage::Pointer getITKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) const;
-    virtual vtkImageData *getVTKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) {
-      if (connector.IsNull()) {
-	connector = ConnectorType::New();
-	connector->SetInput( getITKImage(progress, progressScale, progressBase) );
-      }
-      connector->Update();
-      return connector->GetOutput();
+    typedef itk::ImageToVTKImageFilter< ImageType > ConnectorType;
+    
+    class ConnectorData : public VTKConnectorDataBase {
+      public:
+	virtual vtkImageData *getVTKImageData() const {
+	  if (connector.IsNotNull()) return connector->GetOutput();
+	  return NULL;
+	}
+	virtual size_t getSize() const {
+	  if (itkImage) {
+	    typename ImageType::RegionType reg = itkImage->GetBufferedRegion();
+	    return reg.GetSize(0) * reg.GetSize(1) * reg.GetSize(2) * sizeof(typename ImageType::PixelType);
+	  }
+	  return 0;
+	}
+	ConnectorData(
+	  ITKVTKTreeItem<TImage> *baseItem_, 
+	  typename ImageType::Pointer itkImage_)
+	    :VTKConnectorDataBase(baseItem_), connector(ConnectorType::New()) {
+	      setITKImage( itkImage_ );
+	    }
+	typename ConnectorType::Pointer getConnector() const { return connector; }
+	typename ImageType::Pointer getITKImage() const { return itkImage; }
+	void setITKImage(typename ImageType::Pointer i) { 
+	  itkImage = i;
+	  connector->SetInput(i);
+	  connector->Update();
+	}
+      private:
+      typename ImageType::Pointer itkImage;
+      typename ConnectorType::Pointer connector;
+    };
+    typedef VTKConnectorDataBasePtr ConnectorHandle;
+   
+    ITKVTKTreeItem(TreeItem * parent, typename ImageType::Pointer itkI = typename ImageType::Pointer())
+      :TreeItem(parent) { setITKImage( itkI ); }
+    typename ImageType::Pointer getITKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) const;
+    virtual void retrieveITKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) {}
+    virtual ConnectorHandle getVTKConnector(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) const {
+      ConnectorHandle connData( weakConnector.lock());
+      if (!connData) {
+	const_cast<ITKVTKTreeItem<TImage>*>(this)->retrieveITKImage(progress, progressScale, progressBase);
+	connData = weakConnector.lock();
+      } else { 	model->registerConnectorData(connData); }
+      dynamic_cast<ConnectorData*>(connData.get())->getConnector()->Update();
+      return connData;
     }
-    unsigned long getITKMTime(void) const {if (itkImage.IsNotNull()) return itkImage->GetMTime(); else return 0;}
-    ~ITKVTKTreeItem() { if (connector.IsNotNull()) connector->Delete(); connector=0; }
+    unsigned long getITKMTime(void) const {
+      typename ImageType::Pointer fullPtr = peekITKImage();
+      if (fullPtr.IsNotNull()) return fullPtr->GetMTime(); else return 0;
+    }
+    ~ITKVTKTreeItem() { }
   protected:
     inline typename ImageType::Pointer peekITKImage(void) const { 
-      return const_cast< MyType* >(this)->itkImage; 
+      ConnectorHandle tHand = weakConnector.lock();
+      if (tHand) {
+	return dynamic_cast<ConnectorData*>(tHand.get())->getITKImage();
+      }
+      return typename ImageType::Pointer();
     }
     inline void setITKImage(typename ImageType::Pointer image) { 
-      itkImage = image; 
-      if (connector.IsNotNull()) connector->SetInput(image);
+      if (image) {
+	ConnectorHandle connData( weakConnector.lock() );
+	if (!connData) {
+	  connData.reset(new ConnectorData(this, image));
+	  weakConnector = connData;
+	} else {
+	  ConnectorData *conn =  dynamic_cast<ConnectorData*>(connData.get());
+	  conn->setITKImage(image);
+	}
+	model->registerConnectorData(connData);
+      }
     }
+  protected:
+
   private:
-    typename ImageType::Pointer itkImage;
-    typedef itk::ImageToVTKImageFilter< ImageType >   ConnectorType;
-    typename ConnectorType::Pointer connector;
+    typedef boost::weak_ptr<VTKConnectorDataBasePtr::value_type> WeakConnectorHandle;
+    WeakConnectorHandle weakConnector;
     
   protected:
     ITKVTKTreeItem() {}
@@ -58,8 +116,11 @@ class ITKVTKTreeItem : public VTKTreeItem {
 
 
 template< class TImage >
-typename TImage::Pointer  ITKVTKTreeItem<TImage>::getITKImage(QProgressDialog *progress, int progressScale, int progressBase) const {
-  return itkImage;
+typename ITKVTKTreeItem<TImage>::ImageType::Pointer ITKVTKTreeItem<TImage>::getITKImage(QProgressDialog *progress, int progressScale, int progressBase) const {
+  typename ImageType::Pointer iptr = peekITKImage();
+  if (iptr.IsNull()) const_cast<ITKVTKTreeItem<TImage>*>(this)->retrieveITKImage();
+  return peekITKImage();
 }
+
 
 #endif // ITKVTKTREEITEM_H

@@ -184,21 +184,21 @@ Qt::ItemFlags TreeItem::flags(int column) const {
   return Qt::NoItemFlags;
 }
 
-void TreeItem::setActive(bool act) {
+void TreeItem::setActive(bool act) const {
   if (active==act) return;
-  active = act;
-  model->dataChanged(
+  const_cast<TreeItem*>(this)->active = act;
+  const_cast<TreeItem*>(this)->model->dataChanged(
     getIndex(0),
     getIndex(columnCount()-1));
 }
 
-QModelIndex TreeItem::getIndex(int column) {
-  return model->createIndex(childNumber(),column,parentItem);
+QModelIndex TreeItem::getIndex(int column) const {
+  return const_cast<TreeItem*>(this)->model->createIndex(childNumber(),column,parentItem);
 }
 
 
-void TreeItem::clearActiveDown(void) {
+void TreeItem::clearActiveDown(void) const {
   setActive(false);
-  for(ChildListType::iterator i = childItems.begin(); i != childItems.end(); ++i)
+  for(ChildListType::const_iterator i = childItems.begin(); i != childItems.end(); ++i)
     i->clearActiveDown();
 }

@@ -21,13 +21,14 @@ SET( PerfusionkitSrc
 	analyse/timedensitydatapicker.cpp
 	analyse/clearancecalculator.cpp
 
-	imagetree/vtktreeitem.cpp 
 	imagetree/ctimagetreemodel.cpp
 	imagetree/segmentationvalues.cpp
 	imagetree/ctimagetreeitem.cpp 
 	imagetree/binaryimagetreeitem.cpp 
 	imagetree/itkvtktreeitem.cpp 
 	imagetree/treeitem.cpp
+	imagetree/vtkconnectordatabase.cpp
+	imagetree/dicomtagtype.cpp
 
 	serialization/ctimagetreemodel_serializer.cpp 
 

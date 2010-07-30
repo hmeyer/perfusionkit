@@ -12,8 +12,9 @@
 #include <QMessageBox>
 
 
-BinaryImageTreeItem::BinaryImageTreeItem(TreeItem * parent, BinaryImageType::Pointer itkImage, const QString &name)
+BinaryImageTreeItem::BinaryImageTreeItem(TreeItem * parent, ImageType::Pointer itkImage, const QString &name)
   :BaseClass(parent, itkImage), name(name) {
+    imageKeeper = getVTKConnector();
     createRandomColor();
 }
 
@@ -59,9 +60,11 @@ void BinaryImageTreeItem::drawSphere( float radius, float x, float y, float z, b
   itk::ContinuousIndex< double, ImageDimension > idx;
   ImageType::PointType point;
   point[0] = x;point[1] = y;point[2] = z;
-  peekITKImage()->TransformPhysicalPointToContinuousIndex(point, idx);
-  ImageType::SpacingType spacing = peekITKImage()->GetSpacing();
-  ImageType::SizeType size = peekITKImage()->GetBufferedRegion().GetSize();
+  ImageType::Pointer itkIm = getITKImage();
+  if (itkIm.IsNull()) return;
+  itkIm->TransformPhysicalPointToContinuousIndex(point, idx);
+  ImageType::SpacingType spacing = itkIm->GetSpacing();
+  ImageType::SizeType size = itkIm->GetBufferedRegion().GetSize();
   
   
   long start[3],end[3];
@@ -79,7 +82,7 @@ void BinaryImageTreeItem::drawSphere( float radius, float x, float y, float z, b
   DrawRegion.SetSize( itSize );
   DrawRegion.SetIndex( itIndex );
   typedef itk::ImageRegionIterator< ImageType > BinImageIterator;
-  BinImageIterator iterator = BinImageIterator( peekITKImage(), DrawRegion );
+  BinImageIterator iterator = BinImageIterator( itkIm, DrawRegion );
   iterator.GoToBegin();
   float brushRadius2 = radius * radius;
 
@@ -103,28 +106,29 @@ void BinaryImageTreeItem::drawSphere( float radius, float x, float y, float z, b
 		  }
 	  }
   }
-  peekITKImage()->Modified();
-  getVTKImage()->Modified();
+  itkIm->Modified();
+  dynamic_cast<ConnectorData*>(getVTKConnector().get())->getConnector()->Modified();
 }
 
 void BinaryImageTreeItem::regionGrow( float x, float y, float z, boost::function<void()> clearAction) {
   ImageType::IndexType idx;
   ImageType::PointType point;
   point[0] = x;point[1] = y;point[2] = z;
-  peekITKImage()->TransformPhysicalPointToIndex(point, idx);
-  ImageType::PixelType p = peekITKImage()->GetPixel(idx);
+  ImageType::Pointer itkIm = getITKImage();
+  if (itkIm.IsNull()) return;
+  itkIm->TransformPhysicalPointToIndex(point, idx);
+  ImageType::PixelType p = itkIm->GetPixel(idx);
   if (p == BinaryPixelOn) {
     typedef itk::ConnectedThresholdImageFilter< ImageType, ImageType > RegionGrowFilterType;
-    RegionGrowFilterType::Pointer regionGrower = RegionGrowFilterType::New();
-    regionGrower->SetInput( peekITKImage() );
-    regionGrower->SetLower(BinaryPixelOn);
-    regionGrower->SetUpper(BinaryPixelOn);
-    regionGrower->SetReplaceValue(BinaryPixelOn);
-    regionGrower->SetSeed(idx);
-    regionGrower->Update();
-    BinaryImageType::Pointer result = regionGrower->GetOutput();
+    RegionGrowFilterType::Pointer filter = RegionGrowFilterType::New();
+    filter->SetInput( itkIm );
+    filter->SetLower(BinaryPixelOn);
+    filter->SetUpper(BinaryPixelOn);
+    filter->SetReplaceValue(BinaryPixelOn);
+    filter->SetSeed(idx);
+    filter->Update();
+    ImageType::Pointer result = filter->GetOutput();
     setITKImage( result );
-    getVTKImage()->Modified();
     clearAction();
   } else {
     QMessageBox::information(0,QObject::tr("Region Grow Error"),QObject::tr("Click on a part of the segmentation"));
@@ -133,25 +137,26 @@ void BinaryImageTreeItem::regionGrow( float x, float y, float z, boost::function
 
 
 void BinaryImageTreeItem::thresholdParent(double lower, double upper) {
-  CTImageType::Pointer parentImage = dynamic_cast<CTImageTreeItem*>(parent())->getITKImage();
+  CTImageTreeItem::ImageType::Pointer parentImagePointer = dynamic_cast<CTImageTreeItem*>(parent())->getITKImage();
   typedef itk::BinaryThresholdImageFilter< CTImageType, BinaryImageType > ThresholdFilterType;
-  ThresholdFilterType::Pointer thresholder = ThresholdFilterType::New();
-  thresholder->SetInput( parentImage );
-  thresholder->SetLowerThreshold( lower );
-  thresholder->SetUpperThreshold( upper );
-  thresholder->SetInsideValue( BinaryPixelOn );
-  thresholder->SetOutsideValue( BinaryPixelOff );
-  thresholder->Update();
-  BinaryImageType::Pointer thresholdImage = thresholder->GetOutput();
-  setITKImage( thresholdImage );
-  getVTKImage()->Modified();
+  ThresholdFilterType::Pointer filter = ThresholdFilterType::New();
+  filter->SetInput( parentImagePointer );
+  filter->SetLowerThreshold( lower );
+  filter->SetUpperThreshold( upper );
+  filter->SetInsideValue( BinaryPixelOn );
+  filter->SetOutsideValue( BinaryPixelOff );
+  filter->Update();
+  ImageType::Pointer result = filter->GetOutput();
+  setITKImage( result );
 }
 
 void BinaryImageTreeItem::binaryDilate(int iterations) {
+  ImageType::Pointer itkIm = getITKImage();
+  if (itkIm.IsNull()) return;
   typedef itk::BinaryBallStructuringElement< BinaryPixelType, ImageDimension > KernelType;
   typedef itk::BinaryDilateImageFilter< BinaryImageType, BinaryImageType, KernelType > FilterType;
   FilterType::Pointer filter = FilterType::New();
-  filter->SetInput( getITKImage() );
+  filter->SetInput( itkIm );
   KernelType kernel;
   kernel.SetRadius( iterations );
   kernel.CreateStructuringElement();
@@ -159,16 +164,17 @@ void BinaryImageTreeItem::binaryDilate(int iterations) {
   filter->SetForegroundValue(BinaryPixelOn);
   filter->SetKernel( kernel );
   filter->Update();
-  BinaryImageType::Pointer result = filter->GetOutput();
+  ImageType::Pointer result = filter->GetOutput();
   setITKImage( result );
-  getVTKImage()->Modified();
 }
 
 void BinaryImageTreeItem::binaryErode(int iterations) {
+  ImageType::Pointer itkIm = getITKImage();
+  if (itkIm.IsNull()) return;
   typedef itk::BinaryBallStructuringElement< BinaryPixelType, ImageDimension > KernelType;
   typedef itk::BinaryErodeImageFilter< BinaryImageType, BinaryImageType, KernelType > FilterType;
   FilterType::Pointer filter = FilterType::New();
-  filter->SetInput( getITKImage() );
+  filter->SetInput( itkIm );
   KernelType kernel;
   kernel.SetRadius( iterations );
   kernel.CreateStructuringElement();
@@ -176,19 +182,20 @@ void BinaryImageTreeItem::binaryErode(int iterations) {
   filter->SetForegroundValue(BinaryPixelOn);
   filter->SetKernel( kernel );
   filter->Update();
-  BinaryImageType::Pointer result = filter->GetOutput();
+  ImageType::Pointer result = filter->GetOutput();
   setITKImage( result );
-  getVTKImage()->Modified();
 }
 
 double BinaryImageTreeItem::getVolumeInML(void) const {
+  ImageType::Pointer itkIm = getITKImage();
+  if (itkIm.IsNull()) return -1;
   unsigned long voxelCount = 0;
   typedef itk::ImageRegionConstIterator< ImageType > BinImageIterator;
-  BinImageIterator iterator = BinImageIterator( peekITKImage(), peekITKImage()->GetBufferedRegion() );
+  BinImageIterator iterator = BinImageIterator( itkIm, itkIm->GetBufferedRegion() );
   for(iterator.GoToBegin(); !iterator.IsAtEnd(); ++iterator) {
     if (iterator.Get() == BinaryPixelOn) voxelCount++;
   }
-  ImageType::SpacingType spacing = peekITKImage()->GetSpacing();
+  ImageType::SpacingType spacing = itkIm->GetSpacing();
   return std::abs(spacing[0] * spacing[1] * spacing[2] * voxelCount / 1000.0);
 }
 

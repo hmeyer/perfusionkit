@@ -84,7 +84,6 @@ void MultiPlanarReformatWidget::setImage(vtkImageData *image/**<[in] Volume (3D)
     m_image = NULL;
     vtkRenderWindow *window = this->GetRenderWindow();
     window->RemoveRenderer( m_renderer );
-    this->update();
   } else {
     vtkRenderWindow *window = this->GetRenderWindow();
     window->RemoveRenderer( m_renderer );
@@ -110,11 +109,10 @@ void MultiPlanarReformatWidget::setImage(vtkImageData *image/**<[in] Volume (3D)
     m_reslicePlaneTransform->SetElement(2, 3, center[2]);
 
     m_reslice->SetInput( m_image );
-    window->AddRenderer(m_renderer);
-    this->update();
-    
     m_reslice->SetOutputSpacing(1,1,1);
+    window->AddRenderer(m_renderer);
   }
+  this->update();
 }
 
 

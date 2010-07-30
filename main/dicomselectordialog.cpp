@@ -11,14 +11,14 @@
 #include "imagedefinitions.h"
 #include "ctimagetreeitem.h"
 
-const CTImageTreeItem::DicomTagList DicomSelectorDialog::HeaderFields = boost::assign::list_of
-  (CTImageTreeItem::DicomTagType("Patient Name", "0010|0010"))
-  (CTImageTreeItem::DicomTagType("#Slices",CTImageTreeItem::getNumberOfFramesTag()))
-  (CTImageTreeItem::DicomTagType("AcquisitionDatetime","0008|002a"))
-  (CTImageTreeItem::DicomTagType("SeriesDate","0008|0021"))
-  (CTImageTreeItem::DicomTagType("SeriesTime","0008|0031"))
-  (CTImageTreeItem::DicomTagType("Date of Birth","0010|0030"))
-  (CTImageTreeItem::DicomTagType("Series Description","0008|103e"));
+const DicomTagList DicomSelectorDialog::HeaderFields = boost::assign::list_of
+  (DicomTagType("Patient Name", "0010|0010"))
+  (DicomTagType("#Slices",CTImageTreeItem::getNumberOfFramesTag()))
+  (DicomTagType("AcquisitionDatetime","0008|002a"))
+  (DicomTagType("SeriesDate","0008|0021"))
+  (DicomTagType("SeriesTime","0008|0031"))
+  (DicomTagType("Date of Birth","0010|0030"))
+  (DicomTagType("Series Description","0008|103e"));
   
 DicomSelectorDialog::DicomSelectorDialog(QWidget * parent, Qt::WindowFlags f):
   QDialog( parent, f ), ctImageModel(HeaderFields) {

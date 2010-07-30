@@ -1,20 +1,65 @@
 #include "ctimagetreemodel.h"
 #include <QProgressDialog>
 #include <QApplication>
+#include <QSettings>
 #include <boost/make_shared.hpp>
+#include <boost/foreach.hpp>
 #include "ctimagetreemodel_serializer.h"
+#include "ctimagetreeitem.h"
+
+
+const QString CTImageTreeModel::MaxImageMemoryUsageSettingName("MaxImageMemoryUsage");
 
 
 CTImageTreeModel::CTImageTreeModel(const DicomTagList &header, QObject *parent)
   : QAbstractItemModel(parent), rootItem( this ) {
     HeaderFields = boost::make_shared<DicomTagList>(header);
+    initMaxMemoryUsage();
 }
+
+void CTImageTreeModel::initMaxMemoryUsage() {
+    QSettings settings;
+    unsigned defaultMaxUsage = 2048UL * 1024UL * 1024UL;
+    maxImageMemoryUsage = settings.value(MaxImageMemoryUsageSettingName, defaultMaxUsage ).toULongLong();
+}
+
 
 CTImageTreeModel::~CTImageTreeModel() {}
 
 bool CTImageTreeModel::hasChildren ( const QModelIndex & parent) const {
   return (getItem(parent).childCount() > 0);
 }
+
+void CTImageTreeModel::setMaxImageMemoryUsage(size_t s) { 
+  maxImageMemoryUsage = s;
+  QSettings settings;
+  settings.setValue(MaxImageMemoryUsageSettingName, static_cast<unsigned long long>(maxImageMemoryUsage));
+}
+
+void CTImageTreeModel::registerConnectorData(VTKConnectorDataBasePtr p) {
+  ConnectorDataStorageType::iterator it = std::find(ConnectorDataStorage.begin(), ConnectorDataStorage.end(), p);
+  if (it != ConnectorDataStorage.end()) ConnectorDataStorage.erase(it);
+  ConnectorDataStorage.push_back(p);
+  size_t sum = 0;
+  BOOST_FOREACH(VTKConnectorDataBasePtr &ptr, ConnectorDataStorage) {
+    sum += ptr->getSize();
+  }
+  bool deleted = true;
+  while (deleted && sum > maxImageMemoryUsage) {
+    deleted = false;
+    ConnectorDataStorageType::iterator it = ConnectorDataStorage.begin();
+    while(it != ConnectorDataStorage.end()) {
+      if (it->unique()) {
+	sum -= (*it)->getSize();
+	ConnectorDataStorage.erase(it);
+	deleted = true;
+	break;
+      }
+      ++it;
+    }
+  }
+}
+
 
 QVariant CTImageTreeModel::headerData(int section, Qt::Orientation orientation, int role) const {
   if (role == Qt::DisplayRole) {
@@ -131,7 +176,7 @@ void CTImageTreeModel::loadAllImages(void) {
   progressDialog.setWindowModality(Qt::WindowModal);
   const int scalePerVolume = progressScale/rootItem.childCount();
   for(unsigned int i=0; i < rootItem.childCount(); i++) {
-    dynamic_cast<CTImageTreeItem&>(rootItem.child(i)).getVTKImage(&progressDialog, scalePerVolume, scalePerVolume*i );
+    dynamic_cast<CTImageTreeItem&>(rootItem.child(i)).getVTKConnector(&progressDialog, scalePerVolume, scalePerVolume*i );
     if (progressDialog.wasCanceled()) break;
   }
 }

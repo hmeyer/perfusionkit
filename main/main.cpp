@@ -26,8 +26,12 @@ class applicationClass : public QApplication {
 
 int main( int argc, char **argv ) {
   QApplication app(argc, argv);
+  
+  QCoreApplication::setOrganizationName("UHN");
+  QCoreApplication::setOrganizationDomain("uhn.on.ca");
+  QCoreApplication::setApplicationName("perfusionkit");  
+  
 //  applicationClass app(argc, argv);
-
 
   MainWindow window;
   QStringList args = app.arguments();

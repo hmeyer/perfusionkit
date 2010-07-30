@@ -5,6 +5,8 @@
 #include <QObject>
 #include "ui_MainWindow.h"
 #include "ctimagetreemodel.h"
+#include "binaryimagetreeitem.h"
+#include "ctimagetreeitem.h"
 #include <vector>
 #include <auto_ptr.h>
 #include <boost/shared_ptr.hpp>
@@ -14,7 +16,6 @@ class VolumeProjectionWidget;
 class MultiPlanarReformatWidget;
 class QSplitter;
 class DicomSelectorDialog;
-class BinaryImageTreeItem;
 
 
 
@@ -32,6 +33,7 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
  public slots:
       void on_actionOpenDirectory_triggered();
       void on_actionOpenFile_triggered();
+      void on_actionMemoryUsage_triggered();
       void on_actionExit_triggered();
       void on_actionAbout_triggered();
      
@@ -63,18 +65,19 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
   typedef std::auto_ptr<DicomSelectorDialog> DicomSelectorDialogPtr;
   
   void loadDicomData(DicomSelectorDialogPtr dicomSelector);
-  void setImage(VTKTreeItem *imageItem);
-  void segmentShow( BinaryImageTreeItem *segItem );
-  void segmentHide( BinaryImageTreeItem *segItem );
+  void setImage(const CTImageTreeItem *imageItem);
+  void segmentShow(const BinaryImageTreeItem *segItem );
+  void segmentHide(const BinaryImageTreeItem *segItem );
 
   
   CTImageTreeModel imageModel;
-  VTKTreeItem *displayedCTImage;
+  CTImageTreeItem::ConnectorHandle displayedCTImage;
   
-  typedef std::set< BinaryImageTreeItem* > DisplayedSegmentContainer;
+  typedef std::set< BinaryImageTreeItem::ConnectorHandle > DisplayedSegmentContainer;
   DisplayedSegmentContainer displayedSegments;
-  static const CTImageTreeItem::DicomTagList CTModelHeaderFields;
+  static const DicomTagList CTModelHeaderFields;
   int pendingAction;
+  int maxMemoryUsageInMB;
 };
 
 
