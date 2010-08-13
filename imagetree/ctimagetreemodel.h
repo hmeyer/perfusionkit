@@ -37,12 +37,15 @@ class CTImageTreeModel : public QAbstractItemModel {
     TreeItem &getItem(const QModelIndex &index);
     
     void openModelFromFile(const std::string &fname);
-    void saveModelToFile(const std::string &fname) const;
+    void saveModelToFile(const std::string &fname);
     
     size_t getMaxImageMemoryUsage() const { return maxImageMemoryUsage; }
     void setMaxImageMemoryUsage(size_t s);
     void initMaxMemoryUsage();
     void registerConnectorData(VTKConnectorDataBasePtr p);
+    
+    void setSerializationPath( const std::string p ) { serializationPath = p; }
+    const std::string &getSerializationPath() const { return serializationPath; }
   
     friend class TreeItem;
     friend class CTImageTreeItem;
@@ -68,6 +71,7 @@ class CTImageTreeModel : public QAbstractItemModel {
     size_t maxImageMemoryUsage;
     typedef std::list<VTKConnectorDataBasePtr> ConnectorDataStorageType;
     ConnectorDataStorageType ConnectorDataStorage;
+    std::string serializationPath;
 };
 
 

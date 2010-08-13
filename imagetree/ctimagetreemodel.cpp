@@ -192,7 +192,7 @@ void CTImageTreeModel::openModelFromFile(const std::string &fname) {
   deserializeCTImageTreeModelFromFile( *this, fname );
 }
 
-void CTImageTreeModel::saveModelToFile(const std::string &fname) const {
+void CTImageTreeModel::saveModelToFile(const std::string &fname) {
   serializeCTImageTreeModelToFile(*this, fname);
 }
 

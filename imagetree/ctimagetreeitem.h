@@ -6,6 +6,7 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <boost/serialization/access.hpp>
+#include <boost/serialization/split_member.hpp>
 #include "segmentationvalues.h"
 #include "dicomtagtype.h"
 
@@ -58,8 +59,11 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
   private:
     friend class boost::serialization::access;
     CTImageTreeItem():imageTime(-1) {}
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version);
+    void load(Archive & ar, const unsigned int version);
+    template<class Archive>
+    void save(Archive & ar, const unsigned int version) const;
 };
 
 

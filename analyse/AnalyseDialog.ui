@@ -48,7 +48,7 @@
         <string>gamma fit</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="0" column="1" colspan="2">
+        <item row="0" column="1" colspan="3">
          <widget class="QCheckBox" name="checkEnableGamma">
           <property name="enabled">
            <bool>false</bool>
@@ -67,11 +67,11 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>start</string>
+           <string>start [s]:</string>
           </property>
          </widget>
         </item>
-        <item row="1" column="2">
+        <item row="1" column="3">
          <widget class="QSlider" name="sliderStart">
           <property name="enabled">
            <bool>false</bool>
@@ -90,11 +90,11 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>end</string>
+           <string>end [s]:</string>
           </property>
          </widget>
         </item>
-        <item row="2" column="2">
+        <item row="2" column="3">
          <widget class="QSlider" name="sliderEnd">
           <property name="enabled">
            <bool>false</bool>
@@ -104,7 +104,7 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="2" colspan="2">
+        <item row="3" column="3" colspan="2">
          <widget class="SegmentSelectButton" name="buttonArtery" native="true"/>
         </item>
         <item row="3" column="1">
@@ -121,6 +121,20 @@
           </property>
           <property name="selectionBehavior">
            <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QLabel" name="labelStartTime">
+          <property name="text">
+           <string>0</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QLabel" name="labelEndTime">
+          <property name="text">
+           <string>0</string>
           </property>
          </widget>
         </item>

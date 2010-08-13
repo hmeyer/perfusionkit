@@ -5,7 +5,7 @@
 #include "ctimagetreemodel.h"
 
 void deserializeCTImageTreeModelFromFile(CTImageTreeModel &model, const std::string &fname);
-void serializeCTImageTreeModelToFile(const CTImageTreeModel &model, const std::string &fname);
+void serializeCTImageTreeModelToFile(CTImageTreeModel &model, const std::string &fname);
 
 
 

@@ -18,6 +18,8 @@
 #include "ctimagetreemodel.h"
 #include "ctimagetreeitem.h"
 #include <binaryimagetreeitem.h>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 
 
 
@@ -258,15 +260,96 @@ void BinaryImageTreeItem::serialize(Archive & ar, const unsigned int version) {
   imageKeeper = getVTKConnector();
 }
 
+boost::filesystem::path normalize( const boost::filesystem::path &p_) {
+  boost::filesystem::path p = p_;
+  p = p.normalize();
+  if (p.root_directory().empty()) return p;
+  boost::filesystem::path result;
+  bool lastWasRoot = false;
+  for(boost::filesystem::path::const_iterator i = p.begin(); i != p.end(); ++i) {
+    if (result.empty()) {
+      if (*i == p.root_directory()) {
+	lastWasRoot = true;
+	result /= *i;
+      }
+    } else {
+      if (lastWasRoot) {
+	if (*i != ".." && *i != ".") {
+	  result /= *i;
+	  lastWasRoot = false;
+	}
+      } else result /= *i;
+    }
+  }
+  return result;
+}
+
+boost::filesystem::path absoluteDirectory( const boost::filesystem::path &p_) {
+  boost::filesystem::path p = p_;
+  if (!p.is_complete()) p = boost::filesystem::current_path() / p;
+  return normalize(p).branch_path();
+}
+
+boost::filesystem::path fromAtoB( const boost::filesystem::path &a, const boost::filesystem::path &b) {
+  if (a.root_path() != b.root_path()) return boost::filesystem::path();
+  boost::filesystem::path::const_iterator ia = a.begin();  
+  boost::filesystem::path::const_iterator ib = b.begin();  
+  boost::filesystem::path result;
+  while(ia != a.end() && ib != b.end() && *ia == *ib) {
+    ia++;
+    ib++;
+  }
+  while(ia != a.end()) {
+    result /= "..";
+    ia++;
+  }
+  while(ib != b.end()) {
+    result /= *ib;
+    ib++;
+  }
+  return result;
+}
+
 template<class Archive>
-void CTImageTreeItem::serialize(Archive & ar, const unsigned int version) {
+void CTImageTreeItem::load(Archive & ar, const unsigned int version) {
   ar & boost::serialization::base_object<BaseClass>(*this);
   ar & itemUID;
-  ar & fnList;
+  size_t fnListLength;
+  ar & fnListLength;
+  std::string fn;
+  boost::filesystem::path serPath( absoluteDirectory( model->getSerializationPath() ) );
+  for(;fnListLength != 0; --fnListLength) {
+    ar & fn;
+    boost::filesystem::path fnPath( fn );
+    if (!fnPath.is_complete()) {
+      fnPath = normalize( serPath / fnPath );
+    }
+    fnList.insert(fnPath.string());
+  }
   ar & HeaderFields;
   ar & dict;
   ar & segmentationValueCache;
 }
+
+template<class Archive>
+void CTImageTreeItem::save(Archive & ar, const unsigned int version) const {
+  ar & boost::serialization::base_object<BaseClass>(*this);
+  ar & itemUID;
+  const size_t fnListLength = fnList.size();
+  ar & fnListLength;
+  boost::filesystem::path serPath( absoluteDirectory( model->getSerializationPath() ) );
+  BOOST_FOREACH( const std::string &name, fnList ) {
+    boost::filesystem::path fnPath( name );
+    boost::filesystem::path newFnPath = fromAtoB( serPath, fnPath );
+    newFnPath = normalize(newFnPath);
+    if (newFnPath.empty()) newFnPath = fnPath;
+    ar & newFnPath.string();
+  }
+  ar & HeaderFields;
+  ar & dict;
+  ar & segmentationValueCache;
+}
+
 
 template<class Archive>
 void SegmentationValues::serialize(Archive & ar, const unsigned int version) {

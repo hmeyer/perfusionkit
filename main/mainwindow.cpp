@@ -89,7 +89,7 @@ void MainWindow::on_buttonThreshold_clicked() {
       100, -4000, 4000, 1, &ok);
     if (ok) {
       seg->thresholdParent(lower, upper);
-      mprView->repaint();
+      mprView->update();
     }
   }
 }
@@ -116,7 +116,7 @@ void MainWindow::on_buttonDilate_clicked() {
       1, 1, 100, 1, &ok);
     if (!ok) return;
     seg->binaryDilate(iterations);
-    mprView->repaint();
+    mprView->update();
   }
 }
 
@@ -128,7 +128,7 @@ void MainWindow::on_buttonErode_clicked() {
       1, 1, 100, 1, &ok);
     if (!ok) return;
     seg->binaryErode(iterations);
-    mprView->repaint();
+    mprView->update();
   }
 }
 
@@ -142,6 +142,18 @@ void MainWindow::on_buttonAnalyse_clicked() {
 	myDia.addImage( dynamic_cast<CTImageTreeItem*>(item) );
       }
     }
+  }
+  std::list<TreeItem *> itemList;
+  itemList.push_back( &imageModel.getItem(QModelIndex()) );
+  while(!itemList.empty()) {
+    TreeItem *currentItem = itemList.back();
+    itemList.pop_back();
+    int cnum = currentItem->childCount();
+    for(int i = 0; i < cnum; i++ ) {
+      itemList.push_back( &currentItem->child(i) );
+    }
+    if (typeid(*currentItem) == typeid(BinaryImageTreeItem))
+      myDia.addSegment( dynamic_cast<BinaryImageTreeItem*>(currentItem) );
   }
   myDia.exec();
 }
@@ -266,13 +278,15 @@ void MainWindow::on_actionLoadAllSeries_triggered() {
 
 void MainWindow::on_actionCubicInterpolation_triggered() {
   mprView->setCubicInterpolation( actionCubicInterpolation->isChecked() );
-  mprView->repaint();
+  mprView->update();
 }
 
 void MainWindow::on_actionSaveProject_triggered() {
-  QString pname = QFileDialog::getSaveFileName( this,
+  QString pname( QString::fromStdString( imageModel.getSerializationPath() ) );
+  if (pname.isEmpty()) pname = "./unnamed.perfproj";
+  pname = QFileDialog::getSaveFileName( this,
     tr("Save Project"),
-    "./unnamed.perfproj",
+    pname,
     tr("Project Files (*.perfproj)"));
   if (!pname.isEmpty()) {
     imageModel.saveModelToFile(pname.toStdString());
