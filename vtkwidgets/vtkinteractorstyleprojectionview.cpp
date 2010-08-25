@@ -69,7 +69,7 @@ int vtkInteractorStyleProjectionView::addAction(const std::string &label, const 
   
 int vtkInteractorStyleProjectionView::addAction(const ActionDispatch &action) {
   int index = -1;
-  if (m_actionList.size()) index = (m_actionList.end()--)->first;
+  if (m_actionList.size()) index = m_actionList.rbegin()->first;
   index++;
   m_actionList.insert( ActionListType::value_type( index, action ) );
   return index;
