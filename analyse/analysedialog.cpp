@@ -132,7 +132,7 @@ int AnalyseDialog::exec(void ) {
       if (ct->getSegmentationValues( values )) {
 	currentSegment.pushSample(relTime, values);
       } else {
-	QMessageBox::warning(this,tr("Analyse Error"),tr("Could not apply Segment ") + currentSegment.getName() + tr(" on image #") + QString::number(imageIndex));
+	std::cerr << "Analyse Error: Could not apply Segment " << currentSegment.getName().toStdString() << " on image #" << imageIndex << std::endl;
       }
     }
     ++imageIndex;
