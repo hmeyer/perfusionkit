@@ -105,7 +105,7 @@ double GammaVariate::getAUC() const {
     double k = std::exp( alpha ) * y0max / std::pow(t0max, alpha);
     double auc = k * std::pow( beta, alpha + 1) * boost::math::tgamma( alpha + 1 );
     return auc;
-  } catch (boost::exception &e) {
+  } catch (boost::exception &) {
     return std::numeric_limits< double >::quiet_NaN();
   }
 }
