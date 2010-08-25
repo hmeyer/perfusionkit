@@ -10,6 +10,7 @@
 #include <vtkRenderer.h>
 #include <vtkImageData.h>
 #include <vtkRenderWindow.h>
+#include <vtkTransform.h>
 #include <algorithm>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
@@ -40,6 +41,12 @@ MultiPlanarReformatWidget::MultiPlanarReformatWidget(QWidget* parent, Qt::WFlags
   m_renderer->AddActor(m_actor);
 
   // Set up the interaction
+  vtkTransform *transform = vtkTransform::New();
+  transform->SetMatrix( m_reslicePlaneTransform );
+  transform->RotateX(180);
+  m_reslicePlaneTransform->DeepCopy( transform->GetMatrix() );
+  transform->Delete();
+  
   m_interactorStyle->SetImageMapToWindowLevelColors( m_colormap );
   m_interactorStyle->SetOrientationMatrix( m_reslicePlaneTransform );
 

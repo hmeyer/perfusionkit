@@ -52,14 +52,14 @@ QwtText TimeDensityDataPicker::trackerText(const QPoint &p) const {
       markerY->setYValue(minValues.mean);
       markerX->setVisible(true);
       markerY->setVisible(true);
-      const_cast<TimeDensityDataPicker*>(this)->canvas()->replot();
+      const_cast<TimeDensityDataPicker*>(this)->canvas()->update();
     }
     return text;
   } else {
     if (markerX->isVisible()) {
       markerX->setVisible(false);
       markerY->setVisible(false);
-      const_cast<TimeDensityDataPicker*>(this)->canvas()->replot();
+      const_cast<TimeDensityDataPicker*>(this)->canvas()->update();
     }
     return QwtText();
   }

@@ -27,10 +27,11 @@ void deserializeCTImageTreeModelFromFile(CTImageTreeModel &model, const std::str
   inStreamFilter.push(zlib_decompressor());
   inStreamFilter.push(inFileStream);
   boost::archive::binary_iarchive ia( inStreamFilter );
+  model.setSerializationPath( fname );
   ia >> model;
 }
 
-void serializeCTImageTreeModelToFile(const CTImageTreeModel &model, const std::string &fname) {
+void serializeCTImageTreeModelToFile(CTImageTreeModel &model, const std::string &fname) {
   using namespace std;
   using namespace boost::iostreams;
   ofstream outFileStream( fname.c_str(), ios_base::out | ios_base::binary );
@@ -38,6 +39,7 @@ void serializeCTImageTreeModelToFile(const CTImageTreeModel &model, const std::s
   outStreamFilter.push(zlib_compressor());
   outStreamFilter.push(outFileStream);
   boost::archive::binary_oarchive oa( outStreamFilter );
+  model.setSerializationPath( fname );
   oa << model;
 }
 

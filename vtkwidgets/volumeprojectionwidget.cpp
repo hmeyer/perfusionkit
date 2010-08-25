@@ -49,7 +49,7 @@ VolumeProjectionWidget::VolumeProjectionWidget(QWidget* parent, Qt::WFlags f):
   m_volume->SetMapper( m_volumeMapper );
   m_volume->SetProperty( m_volumeProperty );
   m_renderer->AddViewProp( m_volume );
-
+  
 //  m_renderer->GetActiveCamera()->SetEyeAngle(m_renderer->GetActiveCamera()->GetEyeAngle()*2);
   
   // Set up the interaction

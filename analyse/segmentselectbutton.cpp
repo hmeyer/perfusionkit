@@ -43,5 +43,5 @@ void SegmentSelectButton::updateText() {
   } else {
     setText( tr("not selected") );
   }
-  repaint();
+  update();
 }

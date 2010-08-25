@@ -60,7 +60,7 @@ AnalyseDialog::AnalyseDialog(QWidget * parent, Qt::WindowFlags f)
   markerPickerY->setVisible(false);
   markerPickerX->attach(plot);
   markerPickerY->attach(plot);
-
+  
   
   grid->enableX(true); grid->enableX(false);
   grid->attach(plot);
@@ -105,16 +105,12 @@ AnalyseDialog::~AnalyseDialog() {
 
 void AnalyseDialog::addImage(CTImageTreeItem *image) {
   images.insert(image);
-  int childNum = image->childCount();
-  for(int i = 0; i < childNum; ++i) {
-    TreeItem *child = &image->child(i);
-    if (typeid(*child) == typeid(BinaryImageTreeItem)) {
-      const BinaryImageTreeItem *seg = dynamic_cast<BinaryImageTreeItem*>(child);
-      segments.addSegment(seg);
-    }
-  }
   sliderStart->setRange(0, images.size()-1 );
   sliderEnd->setRange(0, images.size()-1 );
+}
+
+void AnalyseDialog::addSegment(BinaryImageTreeItem *segment) {
+  segments.addSegment(segment);
 }
 
 
@@ -136,7 +132,7 @@ int AnalyseDialog::exec(void ) {
       if (ct->getSegmentationValues( values )) {
 	currentSegment.pushSample(relTime, values);
       } else {
-	QMessageBox::warning(this,tr("Analyse Error"),tr("Could not apply Segment ") + currentSegment.getName() + tr(" on image #") + QString::number(imageIndex));
+	std::cerr << "Analyse Error: Could not apply Segment " << currentSegment.getName().toStdString() << " on image #" << imageIndex << std::endl;
       }
     }
     ++imageIndex;
@@ -157,6 +153,7 @@ void AnalyseDialog::on_sliderStart_valueChanged(int val) {
   markerStart->setXValue(times[val]);
   QModelIndexList indexList = tableGamma->selectionModel()->selectedRows();
   if (indexList.size() == 1) {
+    labelStartTime->setText( QString::number(times[val]) );
     SegmentInfo &seg = segments.getSegment(indexList[0]);
     seg.setGammaStartIndex(val);
     recalculateData(seg);
@@ -167,6 +164,7 @@ void AnalyseDialog::on_sliderEnd_valueChanged(int val) {
   markerEnd->setXValue(times[val]);
   QModelIndexList indexList = tableGamma->selectionModel()->selectedRows();
   if (indexList.size() == 1) {
+    labelEndTime->setText( QString::number(times[val]) );
     SegmentInfo &seg = segments.getSegment(indexList.at(0));
     seg.setGammaEndIndex(val);
     recalculateData(seg);
@@ -231,8 +229,8 @@ void AnalyseDialog::refreshPatlakData() {
     labelClearance->setText(QString());
   }
   plotPatlak->replot();
-  labelBV->repaint();
-  labelClearance->repaint();
+  labelBV->update();
+  labelClearance->update();
 }
 
 void AnalyseDialog::on_listPatlak_clicked(const QModelIndex & index) {
@@ -300,7 +298,7 @@ void AnalyseDialog::onClearanceParametersChanged(void ) {
     buttonRightArtery->setSelectedSegment( buttonRightCortex->getSelectedSegment()->getArterySegment() );
   labelLeftClearance->setText(QString::number(calc.getLeftCTClearance()));
   labelRightClearance->setText(QString::number(calc.getRightCTClearance()));
-  labelLeftClearance->repaint();
-  labelRightClearance->repaint();
+  labelLeftClearance->update();
+  labelRightClearance->update();
 }
 

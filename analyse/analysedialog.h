@@ -24,6 +24,7 @@ class AnalyseDialog : public QDialog, private Ui_AnalyseDialog
   AnalyseDialog(QWidget * parent = 0, Qt::WindowFlags f = 0);
   ~AnalyseDialog();
   void addImage(CTImageTreeItem *image);
+  void addSegment(BinaryImageTreeItem *segment);
   int exec(void);
 
  public slots:
