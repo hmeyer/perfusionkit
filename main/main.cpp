@@ -18,7 +18,7 @@ class applicationClass : public QApplication {
     }
   bool notify(QObject *receiver, QEvent *e)
     {
-      cout << "Notify()! receiver:" << receiver->objectName().toStdString() << endl;
+      cout << "Notify()! receiver:" << receiver->objectName().toAscii().data() << endl;
       return QApplication::notify(receiver, e);
     } 
  };

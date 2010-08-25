@@ -46,7 +46,7 @@ void MainWindow::segmentShow( const BinaryImageTreeItem *segItem ) {
     if (displayedCTImage && displayedCTImage->getBaseItem() != segItem->parent()) {
       setImage(dynamic_cast<const CTImageTreeItem*>(segItem->parent()));
     }
-    ActionDispatch overlayAction(std::string("draw sphere on ") + segItem->getName().toStdString(), 
+    ActionDispatch overlayAction(std::string("draw sphere on ") + segItem->getName().toAscii().data(), 
       boost::bind(&BinaryImageTreeItem::drawSphere, const_cast<BinaryImageTreeItem*>(segItem), 
         boost::bind( &QSpinBox::value, spinBoxSize ),
         _3, _4, _5,
@@ -97,7 +97,7 @@ void MainWindow::on_buttonThreshold_clicked() {
 void MainWindow::on_buttonRegionGrow_clicked() {
     BinaryImageTreeItem *seg = focusSegmentFromSelection();
     if (seg) {
-      ActionDispatch regionGrowAction(std::string("click to region grow inside ") + seg->getName().toStdString(), 
+      ActionDispatch regionGrowAction(std::string("click to region grow inside ") + seg->getName().toAscii().data(), 
         boost::bind(&BinaryImageTreeItem::regionGrow, seg, 
           _3, _4, _5,
           boost::function<void()>(boost::bind(&MainWindow::clearPendingAction, this))
@@ -200,9 +200,6 @@ void MainWindow::on_actionOpenFile_triggered() {
     tr("Select one or more files to open"),
     ".",
     "", 0, QFileDialog::ReadOnly|QFileDialog::HideNameFilterDetails);
-    QString a;
-    std::string x;
-    x = a.toStdString();
   setFiles( fnames );
 }
 
@@ -275,7 +272,7 @@ void MainWindow::on_actionSaveProject_triggered() {
     "./unnamed.perfproj",
     tr("Project Files (*.perfproj)"));
   if (!pname.isEmpty()) {
-    imageModel.saveModelToFile(pname.toStdString());
+    imageModel.saveModelToFile(pname.toAscii().data());
   }
 }
 
@@ -286,7 +283,7 @@ void MainWindow::on_actionOpenProject_triggered() {
     tr("Project Files (*.perfproj)"));
   if (!pname.isEmpty()) {
     setImage(NULL);
-    imageModel.openModelFromFile(pname.toStdString());
+    imageModel.openModelFromFile(pname.toAscii().data());
   }
 }
 

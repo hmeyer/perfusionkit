@@ -145,7 +145,7 @@ QVariant CTImageTreeItem::do_getData_DisplayRole(int column) const {
   if ((*HeaderFields)[ column ].tag == getNumberOfFramesTag()) return getNumberOfSlices();
   std::string val;
   itk::ExposeMetaData( dict, (*HeaderFields)[ column ].tag, val );
-  return QString::fromStdString( val );
+  return QString::fromAscii( val.c_str() );
 }
 
 QVariant CTImageTreeItem::do_getData_ForegroundRole(int column) const {

@@ -43,8 +43,8 @@ void DicomSelectorDialog::exec() {
     while( index < fileNames.size() ) {
       indexProgress.setValue(index);
       if (indexProgress.wasCanceled()) break;
-      if ( boost::filesystem::is_directory( fileNames[index].toStdString() ) ) {
-	boost::filesystem::path fpath( fileNames.takeAt(index).toStdString() );
+      if ( boost::filesystem::is_directory( fileNames[index].toAscii().data() ) ) {
+	boost::filesystem::path fpath( fileNames.takeAt(index).toAscii().data() );
 	QList< boost::filesystem::path > pathList;
 	boost::filesystem::directory_iterator end_itr; // default construction yields past-the-end
 	pathList.push_back( fpath );
@@ -79,7 +79,7 @@ void DicomSelectorDialog::exec() {
     for(int i = 0; i < fileNames.size(); i++) {
       metaReadProgress.setValue(i);
       if (metaReadProgress.wasCanceled()) break;
-      boost::filesystem::path fpath( fileNames[i].toStdString() );
+      boost::filesystem::path fpath( fileNames[i].toAscii().data() );
       if ( boost::filesystem::is_regular_file( fpath ) ) {
 	try {
 	  ReaderType::Pointer reader = ReaderType::New();
@@ -87,6 +87,8 @@ void DicomSelectorDialog::exec() {
 	  reader->GenerateOutputInformation();
 	  ctImageModel.appendFilename( reader->GetMetaDataDictionary(), fpath.string() );
 	} catch (itk::ImageFileReaderException &ifrExep) {
+	  std::cerr << "Exception caught !" << std::endl;
+	  std::cerr << ifrExep << std::endl;
 	} catch (itk::ExceptionObject & excep) {
 	  std::cerr << "Exception caught !" << std::endl;
 	  std::cerr << excep << std::endl;

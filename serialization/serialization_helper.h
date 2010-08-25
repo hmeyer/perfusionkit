@@ -64,13 +64,13 @@ void load(Archive & ar, QString &s, const unsigned int version)
 {
   std::string string;
   ar & string;
-  s = QString::fromStdString(string);
+  s = QString::fromAscii(string.c_str());
 }
 
 template<class Archive>
 void save(Archive & ar, const QString &s, const unsigned int version)
 {
-  std::string string = s.toStdString();
+  std::string string( s.toAscii().data() );
   ar & string;
 }
 
@@ -130,14 +130,15 @@ inline void load(Archive & ar, typename itk::SmartPointer< itk::Image<BinaryPixe
   i->Allocate();
   itk::ImageRegionIterator<ImageType> it(i,region);
   
-  unsigned long ulongVal = 0;
-  typedef std::bitset< sizeof( ulongVal ) > UlongBitSet;
+  unsigned long long ulongVal = 0;
+  typedef std::bitset< 8 * sizeof( ulongVal ) > UlongBitSet;
   UlongBitSet bitValues;
   size_t sizeCount = bitValues.size();
   for(it.GoToBegin(); !it.IsAtEnd(); ++it) {
     if (sizeCount == bitValues.size()) {
       ar & ulongVal;
-      bitValues = UlongBitSet(ulongVal);
+	  UlongBitSet tb( ulongVal );
+      std::swap( bitValues, tb );
       sizeCount = 0;
     }
     it.Value() = bitValues[sizeCount]? BinaryPixelOn : BinaryPixelOff;

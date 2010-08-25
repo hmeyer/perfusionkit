@@ -64,7 +64,7 @@ void CTImageTreeModel::registerConnectorData(VTKConnectorDataBasePtr p) {
 QVariant CTImageTreeModel::headerData(int section, Qt::Orientation orientation, int role) const {
   if (role == Qt::DisplayRole) {
     if ( section < 0 || section >= int(HeaderFields->size()) ) return QVariant::Invalid;
-    return QString::fromStdString((*HeaderFields)[section].name);
+	return QString::fromAscii((*HeaderFields)[section].name.c_str());
   } else {
     return QVariant::Invalid;
   }  
@@ -77,6 +77,7 @@ void CTImageTreeModel::sort(int column, Qt::SortOrder order) {
 
 QModelIndex CTImageTreeModel::index(int row, int column, const QModelIndex &parent) const {
   const TreeItem &pItem = getItem(parent);
+  if (pItem.childCount() == 0) return QModelIndex();
   if (row >= int(pItem.childCount())) row = pItem.childCount()-1;
   const TreeItem &childItem = pItem.child(row);
   return createIndex(row, column, &childItem);
