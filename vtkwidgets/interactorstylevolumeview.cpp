@@ -281,7 +281,7 @@ void InteractorStyleVolumeView::StopState()
 bool InteractorStyleVolumeView::updateRestricted() {
   switch( State ) {
     case VTKIS_ROTATE:
-      m_restricted = this->Interactor->GetControlKey();
+      m_restricted = this->Interactor->GetControlKey() != 0;
 	return m_restricted;
     default:
       m_restricted = false; return false;

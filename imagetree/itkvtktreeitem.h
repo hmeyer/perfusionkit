@@ -24,6 +24,7 @@ class ITKVTKTreeItem : public TreeItem {
   public:
     typedef ITKVTKTreeItem< TImage > Self;
     typedef TImage ImageType;
+    typedef typename ImageType::Pointer ImagePointerType;
     typedef itk::ImageToVTKImageFilter< ImageType > ConnectorType;
     
     class ConnectorData : public VTKConnectorDataBase {
@@ -58,7 +59,7 @@ class ITKVTKTreeItem : public TreeItem {
     };
     typedef VTKConnectorDataBasePtr ConnectorHandle;
    
-    ITKVTKTreeItem(TreeItem * parent, typename ImageType::Pointer itkI = typename ImageType::Pointer())
+    ITKVTKTreeItem(TreeItem * parent, ImagePointerType itkI = ImagePointerType())
       :TreeItem(parent) { setITKImage( itkI ); }
     typename ImageType::Pointer getITKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) const;
     virtual void retrieveITKImage(QProgressDialog *progress = NULL, int progressScale=0, int progressBase=0) {}

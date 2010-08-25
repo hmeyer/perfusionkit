@@ -14,7 +14,7 @@ namespace GammaFunctions {
 class GammaVariate;
 }
 
-class SegmentationValues;
+struct SegmentationValues;
 
 
 class SegmentInfo {
