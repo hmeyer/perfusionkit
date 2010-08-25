@@ -68,22 +68,42 @@ SET ( QVTKMocHeaders
 
 #FIND_PATH(MYLIBS itkbasics.h ../myLibs ../../myLibs)
 
-FIND_PATH(QWTLIB include/qwt.h)
+FIND_PATH(QWT_INCLUDE_DIR qwt.h)
+FIND_PATH(QWT_LIBRARY_DIR libqwt.so)
+IF(WIN32)
+  SET(QWT_LIBRARIES qwt5)
+ELSE(WIN32)
+  SET(QWT_LIBRARIES qwt)
+ENDIF(WIN32)
 
 
 FIND_PACKAGE ( VTK )
 IF ( VTK_FOUND )
-      INCLUDE( ${USE_VTK_FILE} )
+      INCLUDE( ${VTK_USE_FILE} )
 ELSE(VTK_FOUND)
   MESSAGE(FATAL_ERROR "Cannot build without VTK.  Please set VTK_DIR.")
 ENDIF( VTK_FOUND )
 
 FIND_PACKAGE ( ITK )
 IF ( ITK_FOUND )
-      INCLUDE( ${USE_ITK_FILE} )
+      INCLUDE( ${ITK_USE_FILE} )
 ELSE(ITK_FOUND)
   MESSAGE(FATAL_ERROR "Cannot build without ITK.  Please set ITK_DIR.")
 ENDIF( ITK_FOUND )
+
+FIND_PACKAGE ( GDCM REQUIRED )
+INCLUDE( ${GDCM_USE_FILE} )
+
+IF(WIN32)
+  SET(GDCM_LIBRARY_DIRS "${GDCM_DIR}/bin")
+  SET(GDCM_LIBRARIES gdcmcharls.lib gdcmCommon.lib gdcmDICT.lib
+	gdcmDSED.lib gdcmexpat.lib gdcmgetopt.lib gdcmIOD.lib gdcmjpeg8.lib 
+	gdcmjpeg12.lib gdcmjpeg16.lib gdcmMSFF.lib gdcmopenjpeg.lib gdcmzlib.lib)
+ELSE(WIN32)
+  SET(GDCM_LIBRARIES gdcmcharls gdcmCommon gdcmDICT
+	gdcmDSED gdcmexpat.lib gdcmgetopt gdcmIOD gdcmjpeg8 
+	gdcmjpeg12 gdcmjpeg16 gdcmMSFF gdcmopenjpeg gdcmzlib)
+ENDIF(WIN32)
 
 
 SET(Boost_USE_STATIC_LIBS   ON)
@@ -113,11 +133,13 @@ INCLUDE_DIRECTORIES(
 	${HeaderDirs}
   	${QT_INCLUDE_DIR} ${QT_QTGUI_INCLUDE_DIR} ${QT_QTCORE_INCLUDE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
-	${QWTLIB}/include
+	${QWT_INCLUDE_DIR}
 )
 
-LINK_DIRECTORIES( ${LINK_DIRECTORIES} 
-  ${QWTLIB}/lib
+LINK_DIRECTORIES(
+  ${Boost_LIBRARY_DIRS}
+  ${QWT_LIBRARY_DIR}
+  ${GDCM_LIBRARY_DIRS}
 )
 
 QT4_WRAP_UI( PerfusionkitSrc ${UIS} )
@@ -135,7 +157,8 @@ TARGET_LINK_LIBRARIES ( perfusionkit
   vtkRendering vtkGraphics vtkHybrid
   vtkImaging vtkIO vtkFiltering vtkCommon
   vtkVolumeRendering
+  ${GDCM_LIBRARIES}
   ${Boost_LIBRARIES}
-  qwt
+  ${QWT_LIBRARIES}
   )
 
