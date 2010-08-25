@@ -3,7 +3,7 @@
 
 #include <QList>
 #include <QVariant>
-#include <auto_ptr.h>
+#include <memory>
 #include <boost/noncopyable.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <string>

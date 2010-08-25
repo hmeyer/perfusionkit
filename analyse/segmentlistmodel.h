@@ -1,7 +1,7 @@
 #ifndef SEGMENTLISTMODEL_H
 #define SEGMENTLISTMODEL_H
 
-#include <qt4/QtCore/QAbstractItemModel>
+#include <QAbstractItemModel>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include "segmentinfo.h"
 

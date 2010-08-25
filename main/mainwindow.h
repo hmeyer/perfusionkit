@@ -8,7 +8,7 @@
 #include "binaryimagetreeitem.h"
 #include "ctimagetreeitem.h"
 #include <vector>
-#include <auto_ptr.h>
+#include <memory>
 #include <boost/shared_ptr.hpp>
 
 class vtkImageData;
