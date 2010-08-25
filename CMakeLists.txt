@@ -100,9 +100,6 @@ IF(WIN32)
 	gdcmDSED.lib gdcmexpat.lib gdcmgetopt.lib gdcmIOD.lib gdcmjpeg8.lib 
 	gdcmjpeg12.lib gdcmjpeg16.lib gdcmMSFF.lib gdcmopenjpeg.lib gdcmzlib.lib)
 ELSE(WIN32)
-  SET(GDCM_LIBRARIES gdcmcharls gdcmCommon gdcmDICT
-	gdcmDSED gdcmexpat.lib gdcmgetopt gdcmIOD gdcmjpeg8 
-	gdcmjpeg12 gdcmjpeg16 gdcmMSFF gdcmopenjpeg gdcmzlib)
 ENDIF(WIN32)
 
 
