@@ -13,6 +13,7 @@ const QString CTImageTreeModel::MaxImageMemoryUsageSettingName("MaxImageMemoryUs
 
 CTImageTreeModel::CTImageTreeModel(const DicomTagList &header, QObject *parent)
   : QAbstractItemModel(parent), rootItem( this ) {
+    std::cerr << __FUNCTION__ << "[" << this << "]::ctorFull" << std::endl;
     HeaderFields = boost::make_shared<DicomTagList>(header);
     initMaxMemoryUsage();
 }
@@ -24,7 +25,9 @@ void CTImageTreeModel::initMaxMemoryUsage() {
 }
 
 
-CTImageTreeModel::~CTImageTreeModel() {}
+CTImageTreeModel::~CTImageTreeModel() {
+    std::cerr << __FUNCTION__ << "[" << this << "]::dtor" << std::endl;
+}
 
 bool CTImageTreeModel::hasChildren ( const QModelIndex & parent) const {
   return (getItem(parent).childCount() > 0);
@@ -37,6 +40,7 @@ void CTImageTreeModel::setMaxImageMemoryUsage(size_t s) {
 }
 
 void CTImageTreeModel::registerConnectorData(VTKConnectorDataBasePtr p) {
+std::cerr << __FUNCTION__ << "ConnectorDataStorage.size():" << ConnectorDataStorage.size() << std::endl;
   ConnectorDataStorageType::iterator it = std::find(ConnectorDataStorage.begin(), ConnectorDataStorage.end(), p);
   if (it != ConnectorDataStorage.end()) ConnectorDataStorage.erase(it);
   ConnectorDataStorage.push_back(p);

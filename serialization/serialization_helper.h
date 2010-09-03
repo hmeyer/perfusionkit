@@ -21,12 +21,15 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 
+#include <typeinfo>
+
 
 
 BOOST_SERIALIZATION_SPLIT_FREE(itk::MetaDataDictionary)
 BOOST_SERIALIZATION_SPLIT_FREE(QString)
 BOOST_SERIALIZATION_SPLIT_FREE(CTImageTreeItem::SegmentationValueMap)
 
+std::string indent;
 
 namespace boost {
 namespace serialization {
@@ -231,34 +234,82 @@ void serialize(Archive & ar, QColor &color, const unsigned int version) {
 
 template<class Archive>
 void CTImageTreeModel::serialize(Archive & ar, const unsigned int version) {
+  ar.register_type(static_cast<TreeItem*>(NULL));
+  ar.register_type(static_cast<ITKVTKTreeItem<BinaryImageType>*>(NULL));
+  ar.register_type(static_cast<ITKVTKTreeItem<CTImageType>*>(NULL));
+  ar.register_type(static_cast<CTImageTreeItem*>(NULL));
+  ar.register_type(static_cast<BinaryImageTreeItem*>(NULL));
+//  ar.register_type(static_cast<WatershedSegmentTreeItem*>(NULL));
+  
+std::cerr << indent << typeid(this).name() << "[" << this << "]::" << __FUNCTION__ << std::endl;
+  indent += "  ";
   beginResetModel(); 
   ar & HeaderFields;
   ar & rootItem;
   endResetModel(); 
+  indent = indent.substr(0, indent.length()-2 );
 }
 
 template<class Archive>
 void TreeItem::serialize(Archive & ar, const unsigned int version) {
+std::cerr << indent << typeid(this).name() << "[" << this << "]::" << __FUNCTION__ << std::endl;
+  indent += "  ";
   ar & model;
   ar & parentItem;
   ar & childItems;
+  indent = indent.substr(0, indent.length()-2 );
 }
-    
+  
+/*
 template<class TImage>
 template<class Archive>
 void ITKVTKTreeItem<TImage>::serialize(Archive & ar, const unsigned int version) {
-  ar & boost::serialization::base_object<TreeItem>(*this);
+std::cerr << indent << typeid(this).name() << "[" << this << "]::" << __FUNCTION__ << std::endl;
+  indent += "  ";
+  ar & boost::serialization::base_object<BaseClass>(*this);
+  indent = indent.substr(0, indent.length()-2 );
 }
+*/
+
+template<>
+template<class Archive>
+void ITKVTKTreeItem<CTImageType>::serialize(Archive & ar, const unsigned int version) {
+std::cerr << indent << typeid(this).name() << "[" << this << "]::" << __FUNCTION__ << std::endl;
+  indent += "  ";
+  ar & boost::serialization::base_object<BaseClass>(*this);
+  int i = 8;
+  ar & i;
+  indent = indent.substr(0, indent.length()-2 );
+}
+
+template<>
+template<class Archive>
+void ITKVTKTreeItem<BinaryImageType>::serialize(Archive & ar, const unsigned int version) {
+std::cerr << indent << typeid(this).name() << "[" << this << "]::" << __FUNCTION__ << std::endl;
+  indent += "  ";
+std::cerr << indent << typeid(this).name() << "[" << this << "]::" << __FUNCTION__ << " :before base serialization: model=" << model << std::endl;
+  ar & boost::serialization::base_object<BaseClass>(*this);
+  int i = 8;
+  ar & i;
+std::cerr << indent << typeid(this).name() << "[" << this << "]::" << __FUNCTION__ << " :after base serialization: model=" << model << std::endl;
+  indent = indent.substr(0, indent.length()-2 );
+}
+
 
 template<class Archive>
 void BinaryImageTreeItem::serialize(Archive & ar, const unsigned int version) {
+std::cerr << indent << typeid(this).name() << "[" << this << "]::" << __FUNCTION__ << std::endl;
+  indent += "  ";
   ar & name;
   ar & color;
   ImageType::Pointer binIm = peekITKImage();
   ar & binIm;
-  ar & boost::serialization::base_object<BaseClass>(*this);
+std::cerr << indent << typeid(this).name() << "[" << this << "]::" << __FUNCTION__ << " :before base serialization: model=" << model << std::endl;
+  ar & boost::serialization::base_object<TreeItem>(*this);
+std::cerr << indent << typeid(this).name() << "[" << this << "]::" << __FUNCTION__ << " :after base serialization: model=" << model << std::endl;
   setITKImage( binIm );
   imageKeeper = getVTKConnector();
+  indent = indent.substr(0, indent.length()-2 );
 }
 
 boost::filesystem::path normalize( const boost::filesystem::path &p_) {
@@ -313,6 +364,8 @@ boost::filesystem::path fromAtoB( const boost::filesystem::path &a, const boost:
 
 template<class Archive>
 void CTImageTreeItem::load(Archive & ar, const unsigned int version) {
+std::cerr << indent << typeid(this).name() << "[" << this << "]::" << __FUNCTION__ << std::endl;
+  indent += "  ";
   ar & boost::serialization::base_object<BaseClass>(*this);
   ar & itemUID;
   size_t fnListLength;
@@ -330,10 +383,13 @@ void CTImageTreeItem::load(Archive & ar, const unsigned int version) {
   ar & HeaderFields;
   ar & dict;
   ar & segmentationValueCache;
+  indent = indent.substr(0, indent.length()-2 );
 }
 
 template<class Archive>
 void CTImageTreeItem::save(Archive & ar, const unsigned int version) const {
+std::cerr << indent << typeid(this).name() << "[" << this << "]::" << __FUNCTION__ << std::endl;
+  indent += "  ";
   ar & boost::serialization::base_object<BaseClass>(*this);
   ar & itemUID;
   const size_t fnListLength = fnList.size();
@@ -349,6 +405,7 @@ void CTImageTreeItem::save(Archive & ar, const unsigned int version) const {
   ar & HeaderFields;
   ar & dict;
   ar & segmentationValueCache;
+  indent = indent.substr(0, indent.length()-2 );
 }
 
 

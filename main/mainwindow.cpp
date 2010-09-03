@@ -2,6 +2,7 @@
 #include <QtGui>
 #include "dicomselectordialog.h"
 #include "analysedialog.h"
+#include "watershedsegmenttreeitem.h"
 #include "binaryimagetreeitem.h"
 #include <boost/assign.hpp>
 #include <boost/foreach.hpp>
@@ -138,7 +139,7 @@ void MainWindow::on_buttonAnalyse_clicked() {
   for(QModelIndexList::Iterator index = selectedIndex.begin(); index != selectedIndex.end(); ++index) {
     if (index->isValid()) {
       TreeItem *item = &imageModel.getItem( *index );
-      if (typeid(*item) == typeid(CTImageTreeItem)) {
+      if (item->isA(typeid(CTImageTreeItem))) {
 	myDia.addImage( dynamic_cast<CTImageTreeItem*>(item) );
       }
     }
@@ -152,11 +153,28 @@ void MainWindow::on_buttonAnalyse_clicked() {
     for(int i = 0; i < cnum; i++ ) {
       itemList.push_back( &currentItem->child(i) );
     }
-    if (typeid(*currentItem) == typeid(BinaryImageTreeItem))
+    if (currentItem->isA(typeid(BinaryImageTreeItem)))
       myDia.addSegment( dynamic_cast<BinaryImageTreeItem*>(currentItem) );
   }
   myDia.exec();
 }
+
+void MainWindow::on_buttonWatershed_clicked() {
+  QModelIndexList selectedIndex = treeView->selectionModel()->selectedRows();
+  if (selectedIndex.size() == 1 && selectedIndex[0].isValid()) {
+    TreeItem *item = &imageModel.getItem( selectedIndex[0] );
+    if (item->isA(typeid(CTImageTreeItem))) {
+      CTImageTreeItem *ctitem = dynamic_cast<CTImageTreeItem*>(item);
+      WatershedSegmentTreeItem *watershedItem = WatershedSegmentTreeItem::Generate(ctitem);
+      if (watershedItem)
+	ctitem->insertChild(watershedItem);
+      return;
+    }
+  }
+  QMessageBox::warning(this,tr("Watershed Error"),tr("Select one volume to segment."));
+  return;
+}
+
 
 
 BinaryImageTreeItem *MainWindow::focusSegmentFromSelection(void) {
@@ -168,7 +186,7 @@ BinaryImageTreeItem *MainWindow::focusSegmentFromSelection(void) {
   }
   if (selectedIndex[0].isValid()) {
     TreeItem *item = &imageModel.getItem( selectedIndex[0] );
-    if (typeid(*item) == typeid(CTImageTreeItem)) {
+    if (item->isA(typeid(CTImageTreeItem))) {
       CTImageTreeItem *ctitem = dynamic_cast<CTImageTreeItem*>(item);
       if (ctitem != displayedCTImage->getBaseItem())
 	setImage( ctitem );
@@ -181,7 +199,7 @@ BinaryImageTreeItem *MainWindow::focusSegmentFromSelection(void) {
 	return  NULL;
       }
     }
-    if (typeid(*item) == typeid(BinaryImageTreeItem)) {
+    if (item->isA(typeid(BinaryImageTreeItem))) {
       BinaryImageTreeItem *seg = dynamic_cast<BinaryImageTreeItem*>(item);
       segmentShow(seg);
       return seg;
@@ -201,9 +219,11 @@ void MainWindow::on_actionExit_triggered() {
 }
 
 void MainWindow::setFiles(const QStringList &names) {
-  DicomSelectorDialogPtr selectDialog( new DicomSelectorDialog( this ) );
-  selectDialog->setFilesOrDirectories( names );
-  loadDicomData( selectDialog );
+  if (!names.empty()) {
+    DicomSelectorDialogPtr selectDialog( new DicomSelectorDialog( this ) );
+    selectDialog->setFilesOrDirectories( names );
+    loadDicomData( selectDialog );
+  }
 }
 
 void MainWindow::on_actionOpenFile_triggered() {
@@ -302,18 +322,16 @@ void MainWindow::on_actionOpenProject_triggered() {
 }
 
 
-
-
 void MainWindow::on_treeView_doubleClicked(const QModelIndex &index) {
   if (index.isValid()) {
     TreeItem &item = imageModel.getItem( index );
-    if (typeid(item) == typeid(CTImageTreeItem)) {
+    if (item.isA(typeid(CTImageTreeItem))) {
       if (displayedCTImage && &item == displayedCTImage->getBaseItem()) {
 	setImage( NULL );
       } else {
 	setImage( dynamic_cast<CTImageTreeItem*>(&item) );
       }
-    } else if (typeid(item) == typeid(BinaryImageTreeItem)) {
+    } else if (item.isA(typeid(BinaryImageTreeItem))) {
       BinaryImageTreeItem *SegItem = dynamic_cast<BinaryImageTreeItem*>(&item);
       if (displayedSegments.find( SegItem->getVTKConnector() )==displayedSegments.end()) {
 	segmentShow( SegItem );
@@ -328,12 +346,12 @@ void MainWindow::removeSelectedImages() {
   QModelIndexList indexList = treeView->selectionModel()->selectedRows();
   BOOST_FOREACH( const QModelIndex &idx, indexList) {
     TreeItem &remitem = imageModel.getItem( idx );
-    if (typeid(remitem) == typeid(CTImageTreeItem)) {
+    if (remitem.isA(typeid(CTImageTreeItem))) {
       CTImageTreeItem *remitemPtr = dynamic_cast<CTImageTreeItem*>(&remitem);
       if (displayedCTImage && displayedCTImage->getBaseItem() == remitemPtr) {
 	setImage(NULL);
       }
-    } else if (typeid(remitem) == typeid(BinaryImageTreeItem)) {
+    } else if (remitem.isA(typeid(BinaryImageTreeItem))) {
       BinaryImageTreeItem *remitemPtr = dynamic_cast<BinaryImageTreeItem*>(&remitem);
       segmentHide( remitemPtr );
     }
@@ -345,7 +363,7 @@ void MainWindow::createSegmentForSelectedImage() {
   QModelIndexList indexList = treeView->selectionModel()->selectedRows();
   if (indexList.count() == 1) {
     TreeItem &item = imageModel.getItem(indexList[0]);
-    if (typeid(item) == typeid(CTImageTreeItem)) {
+    if (item.isA(typeid(CTImageTreeItem))) {
       dynamic_cast<CTImageTreeItem&>(item).generateSegment();
     }
   }
@@ -355,7 +373,7 @@ void MainWindow::changeColorForSelectedSegment() {
   QModelIndexList indexList = treeView->selectionModel()->selectedRows();
   if (indexList.count() == 1) {
     TreeItem &item = imageModel.getItem(indexList[0]);
-    if (typeid(item) == typeid(BinaryImageTreeItem)) {
+    if (item.isA(typeid(BinaryImageTreeItem))) {
       BinaryImageTreeItem &binItem = dynamic_cast<BinaryImageTreeItem&>(item);
       QColor color = binItem.getColor();
       color = QColorDialog::getColor(color, this, tr("Choose new Segment Color for ") + binItem.getName());
@@ -363,6 +381,30 @@ void MainWindow::changeColorForSelectedSegment() {
 	binItem.setColor(color);
     }
   }
+}
+
+void MainWindow::setupSelectedWatershedSegment() {
+  QModelIndexList indexList = treeView->selectionModel()->selectedRows();
+  if (indexList.count() == 1) {
+    TreeItem &item = imageModel.getItem(indexList[0]);
+    if (item.isA(typeid(WatershedSegmentTreeItem))) {
+      WatershedSegmentTreeItem &wsitem = dynamic_cast<WatershedSegmentTreeItem&>(item);
+      wsitem.setup();
+      mprView->update();
+    }
+  }  
+}
+
+void MainWindow::updateSelectedWatershedSegment() {
+  QModelIndexList indexList = treeView->selectionModel()->selectedRows();
+  if (indexList.count() == 1) {
+    TreeItem &item = imageModel.getItem(indexList[0]);
+    if (item.isA(typeid(WatershedSegmentTreeItem))) {
+      WatershedSegmentTreeItem &wsitem = dynamic_cast<WatershedSegmentTreeItem&>(item);
+      wsitem.update();
+      mprView->update();
+    }
+  }  
 }
 
 
@@ -374,14 +416,22 @@ void MainWindow::treeViewContextMenu(const QPoint &pos) {
     QMenu cm;
     if (indexList.count() == 1) {
       TreeItem &item = imageModel.getItem(indexList[0]);
-      if (typeid(item) == typeid(CTImageTreeItem)) {
+      if (item.isA(typeid(CTImageTreeItem))) {
 	QAction* addSegAction = cm.addAction("&Add Segment");
 	connect( addSegAction, SIGNAL( triggered() ),
 	  this, SLOT( createSegmentForSelectedImage())  );
-      } else if (typeid(item) == typeid(BinaryImageTreeItem)) {
+      } else if (item.isA(typeid(BinaryImageTreeItem))) {
 	QAction* addSegAction = cm.addAction("&Change Color");
 	connect( addSegAction, SIGNAL( triggered() ),
 	  this, SLOT( changeColorForSelectedSegment())  );
+	if (item.isA(typeid(WatershedSegmentTreeItem))) {
+	  QAction* setupAction = cm.addAction("&Setup");
+	  connect( setupAction, SIGNAL( triggered() ),
+	    this, SLOT( setupSelectedWatershedSegment())  );
+	  QAction* updateAction = cm.addAction("&Update");
+	  connect( updateAction, SIGNAL( triggered() ),
+	    this, SLOT( updateSelectedWatershedSegment())  );
+	}      
       }
     }
     QAction* addSegAction = cm.addAction("&Delete");

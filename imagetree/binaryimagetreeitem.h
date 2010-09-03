@@ -25,9 +25,17 @@ class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
     const QColor &getColor() const { return color;}
     void setColor(const QColor &newColor) { color = newColor; }
     void thresholdParent(double lower, double upper);
+    bool watershedParent(const BinaryImageTreeItem *includedSegment, const BinaryImageTreeItem *excludedSegment);
     void binaryDilate(int iterations);
     void binaryErode(int iterations);
     double getVolumeInML(void) const;
+    virtual bool isA(const std::type_info &other) const { 
+      if (typeid(BinaryImageTreeItem)==other) return true;
+      if (typeid(BaseClass)==other) return true;
+      if (typeid(BaseClass::BaseClass)==other) return true;
+      return false;
+    }
+    
   private:
     void createRandomColor();
     QString name;

@@ -1,6 +1,7 @@
 #ifndef TREEITEM_H
 #define TREEITEM_H
 
+#include <QString>
 #include <QList>
 #include <QVariant>
 #include <memory>
@@ -9,8 +10,10 @@
 #include <string>
 #include <QAbstractItemModel>
 #include <boost/serialization/access.hpp>
+#include <iostream>
 
 class CTImageTreeModel;
+class BinaryImageTreeItem;
 
 class TreeItem : boost::noncopyable {
   public:
@@ -39,6 +42,7 @@ class TreeItem : boost::noncopyable {
     void sortChildren( int column, bool ascending=true );
     bool insertChild(TreeItem *child, unsigned int position);
     bool insertChild(TreeItem *child);
+    bool claimChild(TreeItem *child);
     TreeItem *parent();
     const TreeItem *parent() const;
     bool removeChildren(unsigned int position, unsigned int count=1);
@@ -49,11 +53,15 @@ class TreeItem : boost::noncopyable {
     bool isActive(void) const { return active; }
     void setActive(bool act=true) const;
     void toggleActive(void) const { setActive(!active); }
+    const BinaryImageTreeItem* userSelectSegment(const QString &dialogTitle, const QString &dialogMessage) const ;
+    virtual bool isA(const std::type_info &other) const { return (typeid(TreeItem)==other) ? true : false; }
+    
     
   protected:
     QModelIndex getIndex(int column=0) const;
     CTImageTreeModel *model;
-    TreeItem():active(false) {};
+    TreeItem():model(NULL),parentItem(NULL),active(false) {    
+      std::cerr << __FUNCTION__ << "[" << this << "]::ctor()" << std::endl;};
   private:
     typedef boost::ptr_vector<TreeItem> ChildListType;
     ChildListType childItems;

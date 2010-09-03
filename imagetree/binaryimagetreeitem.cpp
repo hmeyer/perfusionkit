@@ -11,7 +11,6 @@
 
 #include <QMessageBox>
 
-
 BinaryImageTreeItem::BinaryImageTreeItem(TreeItem * parent, ImageType::Pointer itkImage, const QString &name)
   :BaseClass(parent, itkImage), name(name) {
     imageKeeper = getVTKConnector();

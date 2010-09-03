@@ -25,6 +25,7 @@ SET( PerfusionkitSrc
 	imagetree/segmentationvalues.cpp
 	imagetree/ctimagetreeitem.cpp 
 	imagetree/binaryimagetreeitem.cpp 
+	imagetree/watershedsegmenttreeitem.cpp 
 	imagetree/itkvtktreeitem.cpp 
 	imagetree/treeitem.cpp
 	imagetree/vtkconnectordatabase.cpp

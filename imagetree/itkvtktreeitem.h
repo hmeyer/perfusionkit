@@ -13,15 +13,14 @@
 #include <set>
 #include <string>
 #include <boost/bind.hpp>
-#include <boost/serialization/base_object.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
 #include "vtkconnectordatabase.h"
 
-
 template< class TImage >
 class ITKVTKTreeItem : public TreeItem {
   public:
+    typedef TreeItem BaseClass;
     typedef ITKVTKTreeItem< TImage > Self;
     typedef TImage ImageType;
     typedef typename ImageType::Pointer ImagePointerType;
@@ -69,7 +68,7 @@ class ITKVTKTreeItem : public TreeItem {
 	const_cast<ITKVTKTreeItem<TImage>*>(this)->retrieveITKImage(progress, progressScale, progressBase);
 	connData = weakConnector.lock();
       } else { 	model->registerConnectorData(connData); }
-      dynamic_cast<ConnectorData*>(connData.get())->getConnector()->Update();
+//      dynamic_cast<ConnectorData*>(connData.get())->getConnector()->Update();
       return connData;
     }
     unsigned long getITKMTime(void) const {
@@ -77,6 +76,12 @@ class ITKVTKTreeItem : public TreeItem {
       if (fullPtr.IsNotNull()) return fullPtr->GetMTime(); else return 0;
     }
     ~ITKVTKTreeItem() { }
+    virtual bool isA(const std::type_info &other) const { 
+      if (typeid(Self)==other) return true;
+      if (typeid(BaseClass)==other) return true;
+      return false;
+    }
+    
   protected:
     inline typename ImageType::Pointer peekITKImage(void) const { 
       ConnectorHandle tHand = weakConnector.lock();
