@@ -4,6 +4,7 @@
 #include <binaryimagetreeitem.h>
 #include <ctimagetreeitem.h>
 #include <QString>
+#include <boost/serialization/access.hpp>
 
 #include <itkBinaryThresholdImageFilter.h>
 #include <itkAddImageFilter.h>
@@ -43,6 +44,12 @@ class WatershedSegmentTreeItem : public BinaryImageTreeItem
     
     BinaryImageTreeItem *inside, *outside;
     
+  private:
+    void initFilters(void);
+    WatershedSegmentTreeItem() {initFilters();};
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version);
     
     
 };

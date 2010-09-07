@@ -63,7 +63,6 @@ class CTImageTreeModel : public QAbstractItemModel {
     void serialize(Archive & ar, const unsigned int version);
     
     CTImageTreeModel(QObject *parent = 0):QAbstractItemModel(parent),rootItem(this) {
-      std::cerr << __FUNCTION__ << "[" << this << "]::ctorShort" << std::endl;
       initMaxMemoryUsage();
     }
     void emitLayoutAboutToBeChanged() { emit layoutAboutToBeChanged(); }

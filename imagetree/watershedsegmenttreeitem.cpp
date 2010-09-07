@@ -21,10 +21,14 @@ WatershedSegmentTreeItem *WatershedSegmentTreeItem::Generate(CTImageTreeItem * p
   return item;
 }
     
-    
 WatershedSegmentTreeItem::WatershedSegmentTreeItem(CTImageTreeItem * parent, 
 						   const QString &name)
 :BinaryImageTreeItem(parent, ImageType::Pointer(), name) {
+  initFilters();
+  gaussGradMag->SetInput( parent->getITKImage() );
+}
+
+void WatershedSegmentTreeItem::initFilters(void) {
   thresholdInside = ThresholdBin2LabFilterType::New();
   thresholdInside->SetLowerThreshold( BinaryPixelOn );
   thresholdInside->SetUpperThreshold( BinaryPixelOn );
@@ -42,7 +46,6 @@ WatershedSegmentTreeItem::WatershedSegmentTreeItem(CTImageTreeItem * parent,
   adder->SetInput2( thresholdOutside->GetOutput() );
   
   gaussGradMag = GaussGradMagFilterType::New();
-  gaussGradMag->SetInput( parent->getITKImage() );
   gaussGradMag->SetSigma( 2.0 );
   
   watershed = WatershedFilterType::New();
@@ -54,8 +57,9 @@ WatershedSegmentTreeItem::WatershedSegmentTreeItem(CTImageTreeItem * parent,
   thresholdLabel->SetLowerThreshold( 1 );
   thresholdLabel->SetUpperThreshold( 1 );
   thresholdLabel->SetInsideValue( BinaryPixelOn );
-  thresholdLabel->SetOutsideValue( BinaryPixelOff );
+  thresholdLabel->SetOutsideValue( BinaryPixelOff );  
 }
+
 
 bool WatershedSegmentTreeItem::setup() {
   const QString watershedTitle(QObject::tr("Watershed"));

@@ -10,11 +10,9 @@
 #include "ctimagetreemodel.h"
 
 TreeItem::TreeItem(CTImageTreeModel *model):model(model), parentItem(NULL),active(false) {
-    std::cerr << __FUNCTION__ << "[" << this << "]::ctor(model)" << std::endl;
 }
 
 TreeItem::TreeItem(TreeItem * parent):model(parent->model), parentItem(parent),active(false) {
-    std::cerr << __FUNCTION__ << "[" << this << "]::ctor(parent)" << std::endl;
 }
 
 TreeItem::~TreeItem() {

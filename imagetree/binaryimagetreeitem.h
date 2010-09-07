@@ -40,10 +40,12 @@ class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
     void createRandomColor();
     QString name;
     QColor color;
+    
+  protected:    
+    BinaryImageTreeItem() {};
 
   private:
     ConnectorHandle imageKeeper;
-    BinaryImageTreeItem() {};
     friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version);

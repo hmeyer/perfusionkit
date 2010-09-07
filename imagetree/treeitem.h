@@ -10,7 +10,6 @@
 #include <string>
 #include <QAbstractItemModel>
 #include <boost/serialization/access.hpp>
-#include <iostream>
 
 class CTImageTreeModel;
 class BinaryImageTreeItem;
@@ -60,8 +59,7 @@ class TreeItem : boost::noncopyable {
   protected:
     QModelIndex getIndex(int column=0) const;
     CTImageTreeModel *model;
-    TreeItem():model(NULL),parentItem(NULL),active(false) {    
-      std::cerr << __FUNCTION__ << "[" << this << "]::ctor()" << std::endl;};
+    TreeItem():model(NULL),parentItem(NULL),active(false) {};
   private:
     typedef boost::ptr_vector<TreeItem> ChildListType;
     ChildListType childItems;
