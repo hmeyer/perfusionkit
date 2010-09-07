@@ -24,7 +24,8 @@ void CTImageTreeModel::initMaxMemoryUsage() {
 }
 
 
-CTImageTreeModel::~CTImageTreeModel() {}
+CTImageTreeModel::~CTImageTreeModel() {
+}
 
 bool CTImageTreeModel::hasChildren ( const QModelIndex & parent) const {
   return (getItem(parent).childCount() > 0);

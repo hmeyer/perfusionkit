@@ -43,6 +43,13 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     static inline bool isRealHUvalue(CTPixelType value) { return (value!=-2048)?true:false; }
     
     typedef std::map< const ITKVTKTreeItem<BinaryImageType> *, SegmentationValues > SegmentationValueMap;
+    virtual bool isA(const std::type_info &other) const { 
+      if (typeid(CTImageTreeItem)==other) return true;
+      if (typeid(BaseClass)==other) return true;
+      if (typeid(BaseClass::BaseClass)==other) return true;
+      return false;
+    }
+    
     
   protected:
     SegmentationValueMap segmentationValueCache;

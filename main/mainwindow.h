@@ -47,15 +47,19 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
       void on_actionSaveProject_triggered();
       void on_actionOpenProject_triggered();
       void on_treeView_doubleClicked(const QModelIndex &index);
+      
       void treeViewContextMenu(const QPoint &pos);
       void removeSelectedImages();
       void createSegmentForSelectedImage();
       void changeColorForSelectedSegment();
+      void setupSelectedWatershedSegment();
+      void updateSelectedWatershedSegment();
       void on_buttonDraw_clicked();
       void on_buttonThreshold_clicked();
       void on_buttonRegionGrow_clicked();
       void on_buttonDilate_clicked();
       void on_buttonErode_clicked();
+      void on_buttonWatershed_clicked();
       void on_buttonAnalyse_clicked();
 
  protected:

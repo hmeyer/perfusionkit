@@ -17,9 +17,12 @@
 #include "imagedefinitions.h"
 #include "ctimagetreemodel.h"
 #include "ctimagetreeitem.h"
-#include <binaryimagetreeitem.h>
+#include "binaryimagetreeitem.h"
+#include "watershedsegmenttreeitem.h"
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
+
+#include <typeinfo>
 
 
 
@@ -232,6 +235,13 @@ void serialize(Archive & ar, QColor &color, const unsigned int version) {
 
 template<class Archive>
 void CTImageTreeModel::serialize(Archive & ar, const unsigned int version) {
+  ar.register_type(static_cast<TreeItem*>(NULL));
+  ar.register_type(static_cast<ITKVTKTreeItem<BinaryImageType>*>(NULL));
+  ar.register_type(static_cast<ITKVTKTreeItem<CTImageType>*>(NULL));
+  ar.register_type(static_cast<CTImageTreeItem*>(NULL));
+  ar.register_type(static_cast<BinaryImageTreeItem*>(NULL));
+  ar.register_type(static_cast<WatershedSegmentTreeItem*>(NULL));
+  
   beginResetModel(); 
   ar & HeaderFields;
   ar & rootItem;
@@ -244,11 +254,11 @@ void TreeItem::serialize(Archive & ar, const unsigned int version) {
   ar & parentItem;
   ar & childItems;
 }
-    
+  
 template<class TImage>
 template<class Archive>
 void ITKVTKTreeItem<TImage>::serialize(Archive & ar, const unsigned int version) {
-  ar & boost::serialization::base_object<TreeItem>(*this);
+  ar & boost::serialization::base_object<BaseClass>(*this);
 }
 
 template<class Archive>
@@ -260,6 +270,20 @@ void BinaryImageTreeItem::serialize(Archive & ar, const unsigned int version) {
   ar & boost::serialization::base_object<BaseClass>(*this);
   setITKImage( binIm );
   imageKeeper = getVTKConnector();
+}
+
+template<class Archive>
+void WatershedSegmentTreeItem::serialize(Archive & ar, const unsigned int version) {
+  ar & boost::serialization::base_object<BaseClass>(*this);
+  ar & inside;
+  thresholdInside->SetInput( inside->getITKImage() );
+  ar & outside;
+  thresholdOutside->SetInput( outside->getITKImage() );
+  
+  double gaussSigma = gaussGradMag->GetSigma();
+  ar & gaussSigma;
+  gaussGradMag->SetSigma( gaussSigma );
+  gaussGradMag->SetInput( dynamic_cast<CTImageTreeItem*>(parent())->getITKImage() );
 }
 
 boost::filesystem::path normalize( const boost::filesystem::path &p_) {
@@ -314,12 +338,13 @@ boost::filesystem::path fromAtoB( const boost::filesystem::path &a, const boost:
 
 template<class Archive>
 void CTImageTreeItem::load(Archive & ar, const unsigned int version) {
-  ar & boost::serialization::base_object<BaseClass>(*this);
   ar & itemUID;
   size_t fnListLength;
   ar & fnListLength;
   std::string fn;
-  boost::filesystem::path serPath( absoluteDirectory( model->getSerializationPath() ) );
+  std::string serPathString;
+  ar & serPathString;
+  boost::filesystem::path serPath( serPathString );
   for(;fnListLength != 0; --fnListLength) {
     ar & fn;
     boost::filesystem::path fnPath( fn );
@@ -330,16 +355,18 @@ void CTImageTreeItem::load(Archive & ar, const unsigned int version) {
   }
   ar & HeaderFields;
   ar & dict;
+  ar & boost::serialization::base_object<BaseClass>(*this);
   ar & segmentationValueCache;
 }
 
 template<class Archive>
 void CTImageTreeItem::save(Archive & ar, const unsigned int version) const {
-  ar & boost::serialization::base_object<BaseClass>(*this);
   ar & itemUID;
   const size_t fnListLength = fnList.size();
   ar & fnListLength;
   boost::filesystem::path serPath( absoluteDirectory( model->getSerializationPath() ) );
+  std::string serPathString = serPath.string();
+  ar & serPathString;
   BOOST_FOREACH( const std::string &name, fnList ) {
     boost::filesystem::path fnPath( name );
     boost::filesystem::path newFnPath = fromAtoB( serPath, fnPath );
@@ -349,6 +376,7 @@ void CTImageTreeItem::save(Archive & ar, const unsigned int version) const {
   }
   ar & HeaderFields;
   ar & dict;
+  ar & boost::serialization::base_object<BaseClass>(*this);
   ar & segmentationValueCache;
 }
 

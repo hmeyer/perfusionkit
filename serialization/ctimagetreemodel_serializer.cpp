@@ -11,9 +11,9 @@
 #include "binaryimagetreeitem.h"
 #include "serialization_helper.h"
 
-#include <boost/serialization/export.hpp>
-BOOST_CLASS_EXPORT_GUID(CTImageTreeItem, "CTImageTreeItem");
-BOOST_CLASS_EXPORT_GUID(BinaryImageTreeItem, "BinaryImageTreeItem");
+//#include <boost/serialization/export.hpp>
+//BOOST_CLASS_EXPORT_GUID(CTImageTreeItem, "CTImageTreeItem");
+//BOOST_CLASS_EXPORT_GUID(BinaryImageTreeItem, "BinaryImageTreeItem");
 
 
 

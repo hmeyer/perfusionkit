@@ -307,3 +307,48 @@ BinaryImageTreeItem *CTImageTreeItem::generateSegment(void) {
   return NULL;
 }
 
+/*
+
+bool BinaryImageTreeItem::watershedParent(const BinaryImageTreeItem *includedSegment, const BinaryImageTreeItem *excludedSegment) {
+  bool ok;
+  double gaussSigma = QInputDialog::getDouble(NULL, QObject::tr("Watershed"),
+    QObject::tr("Sigma value for Gaussian Smoothing:"), 2.0, 1.0, 10.0, .5, &ok);  
+  if (!ok) return false;
+  
+  LabelImageType::Pointer labelImage;
+  {
+    typedef itk::BinaryThresholdImageFilter< BinaryImageType, LabelImageType > ThresholdFilterType;
+    ThresholdFilterType::Pointer filter = ThresholdFilterType::New();
+    filter->SetInput( excludedSegment->getITKImage() );
+    filter->SetLowerThreshold( BinaryPixelOn );
+    filter->SetUpperThreshold( BinaryPixelOn );
+    filter->SetInsideValue( 1 );
+    filter->SetOutsideValue( 0 );
+    filter->Update();
+    labelImage = filter->GetOutput();
+    typedef itk::ImageRegionConstIterator< ImageType > BinImageIterator;
+    typedef itk::ImageRegionIterator< LabelImageType > LabelImageIterator;
+    BinImageIterator incIt = BinImageIterator( includedSegment->getITKImage(), includedSegment->getITKImage()->GetBufferedRegion() );
+    LabelImageIterator labIt = LabelImageIterator( labelImage, labelImage->GetBufferedRegion() );
+    for(incIt.GoToBegin(), labIt.GoToBegin(); !incIt.IsAtEnd(); ++incIt, ++labIt) {
+      if (incIt.Get() == BinaryPixelOn) labIt.Set(2);
+    }    
+  }
+  
+  CTImageTreeItem::ImageType::Pointer parentImagePointer = dynamic_cast<CTImageTreeItem*>(parent())->getITKImage();
+  typedef itk::GradientMagnitudeRecursiveGaussianImageFilter<CTImageTreeItem::ImageType, CTImageTreeItem::ImageType> GaussGradMagFilterType;
+  GaussGradMagFilterType::Pointer gaussGradMag = GaussGradMagFilterType::New();
+  gaussGradMag->SetInput(parentImagePointer);
+  gaussGradMag->SetSigma( gaussSigma );
+  
+  typedef itk::MorphologicalWatershedFromMarkersImageFilter<CTImageTreeItem::ImageType, LabelImageType> WatershedFilterType;
+  WatershedFilterType::Pointer watershed = WatershedFilterType::New();
+  watershed->SetInput1(gaussGradMag->GetOutput());
+  watershed->SetInput2(labelImage);
+  watershed->Update();
+  ImageType::Pointer result = watershed->GetOutput();
+  setITKImage( result );  
+  return true;
+}
+
+*/

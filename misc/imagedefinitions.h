@@ -6,6 +6,11 @@
 
 const unsigned int ImageDimension = 3;
 
+typedef float RealPixelType;
+typedef itk::Image< RealPixelType, ImageDimension> RealImageType;
+
+typedef unsigned char LabelPixelType;
+typedef itk::Image< LabelPixelType, ImageDimension> LabelImageType;
 //typedef bool BinaryPixelType;
 typedef unsigned char BinaryPixelType;
 const BinaryPixelType BinaryPixelOff = 0;

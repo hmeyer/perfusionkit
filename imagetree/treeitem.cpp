@@ -3,7 +3,10 @@
 #include <iostream>
 #include <QApplication>
 #include <QFont>
-
+#include <QInputDialog>
+#include <typeinfo>
+#include <boost/foreach.hpp>
+#include "binaryimagetreeitem.h"
 #include "ctimagetreemodel.h"
 
 TreeItem::TreeItem(CTImageTreeModel *model):model(model), parentItem(NULL),active(false) {
@@ -167,6 +170,20 @@ bool TreeItem::removeChildren(unsigned int position, unsigned int count) {
   return true;
 }
 
+bool TreeItem::claimChild(TreeItem *child) {
+  if (!child) return false;
+  int childPos = child->childNumber();
+  ChildListType::auto_type childAutoPtr;
+  TreeItem *childParent = child->parent();
+  model->beginResetModel();
+  if (childParent) {
+    childAutoPtr = childParent->childItems.release( childParent->childItems.begin() + childPos );
+  } else { childAutoPtr.reset( child ); }
+  childItems.push_back( childAutoPtr.release() );
+  model->endResetModel();
+  return true;
+}
+
 int TreeItem::childNumber() const {
   if (parentItem != NULL) {
     const ChildListType &pList = parentItem->childItems;
@@ -202,3 +219,38 @@ void TreeItem::clearActiveDown(void) const {
   for(ChildListType::const_iterator i = childItems.begin(); i != childItems.end(); ++i)
     i->clearActiveDown();
 }
+
+const BinaryImageTreeItem* TreeItem::userSelectSegment(const QString &dialogTitle, const QString &dialogMessage) const {
+  const BinaryImageTreeItem *selectedSegment = NULL;
+  std::list<const BinaryImageTreeItem *> segmentList;
+  {
+    std::list<const TreeItem *> itemList;
+    itemList.push_back( this );
+    while(!itemList.empty()) {
+      const TreeItem *currentItem = itemList.back();
+      itemList.pop_back();
+      int cnum = currentItem->childCount();
+      for(int i = 0; i < cnum; i++ ) {
+	itemList.push_back( &currentItem->child(i) );
+      }
+      if (typeid(*currentItem) == typeid(BinaryImageTreeItem))
+	segmentList.push_back(dynamic_cast<const BinaryImageTreeItem*>(currentItem));
+    }
+  }
+  if (!segmentList.empty()) {
+    QStringList nameList;
+    BOOST_FOREACH(const BinaryImageTreeItem *seg, segmentList) {
+      nameList << seg->getName();
+    }
+    bool ok;
+    QString selectedName = QInputDialog::getItem(NULL, dialogTitle, dialogMessage, nameList, 0, false, &ok);
+    BOOST_FOREACH(const BinaryImageTreeItem *seg, segmentList) {
+      if (seg->getName() == selectedName) {
+	selectedSegment = seg;
+	break;
+      }
+    }
+  }
+  return selectedSegment;
+}
+
