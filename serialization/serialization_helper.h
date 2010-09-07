@@ -105,6 +105,8 @@ inline void serialize(Archive & ar, boost::ptr_vector<U> &v, const unsigned int 
   boost::serialization::split_free(ar, v, version);
 }
 
+typedef unsigned long long BitSetStorageType;
+typedef std::bitset< 8 * sizeof( BitSetStorageType ) > BitSetType;
 
 template<class Archive, unsigned Dimension>
 inline void load(Archive & ar, typename itk::SmartPointer< itk::Image<BinaryPixelType, Dimension> > &i, const unsigned int version)
@@ -130,14 +132,13 @@ inline void load(Archive & ar, typename itk::SmartPointer< itk::Image<BinaryPixe
   i->Allocate();
   itk::ImageRegionIterator<ImageType> it(i,region);
   
-  unsigned long long ulongVal = 0;
-  typedef std::bitset< 8 * sizeof( ulongVal ) > UlongBitSet;
-  UlongBitSet bitValues;
+  BitSetStorageType ulongVal = 0;
+  BitSetType bitValues;
   size_t sizeCount = bitValues.size();
   for(it.GoToBegin(); !it.IsAtEnd(); ++it) {
     if (sizeCount == bitValues.size()) {
       ar & ulongVal;
-	  UlongBitSet tb( ulongVal );
+      BitSetType tb( ulongVal );
       std::swap( bitValues, tb );
       sizeCount = 0;
     }
@@ -164,8 +165,8 @@ inline void save(Archive & ar, const typename itk::SmartPointer< itk::Image<Bina
     ar & origin[d];
   }
   itk::ImageRegionConstIterator<ImageType> it(i,region);
-  unsigned long ulongVal;
-  std::bitset< sizeof( ulongVal ) > bitValues;
+  BitSetStorageType ulongVal;
+  BitSetType bitValues;
   size_t sizeCount = 0;
   for(it.GoToBegin(); !it.IsAtEnd(); ++it) {
     bitValues[sizeCount] = (it.Value() == BinaryPixelOn);
