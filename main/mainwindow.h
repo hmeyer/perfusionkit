@@ -48,6 +48,8 @@ class MainWindow : public QMainWindow, private Ui_MainWindow
       void on_actionOpenProject_triggered();
       void on_treeView_doubleClicked(const QModelIndex &index);
       
+      void onSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
+      
       void treeViewContextMenu(const QPoint &pos);
       void removeSelectedImages();
       void createSegmentForSelectedImage();

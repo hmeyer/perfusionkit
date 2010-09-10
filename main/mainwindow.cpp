@@ -17,6 +17,8 @@ MainWindow::MainWindow():imageModel(CTModelHeaderFields),pendingAction(-1) {
   treeView->setModel( &imageModel );
   connect( treeView, SIGNAL( customContextMenuRequested(const QPoint &) ),
     this, SLOT( treeViewContextMenu(const QPoint &) ) );
+  connect( treeView->selectionModel(), SIGNAL(selectionChanged(QItemSelection,QItemSelection)),
+	   this, SLOT(onSelectionChanged(QItemSelection,QItemSelection)));
 }
 
 MainWindow::~MainWindow() {
@@ -457,3 +459,12 @@ void MainWindow::on_actionMemoryUsage_triggered() {
     imageModel.setMaxImageMemoryUsage(maxMemoryUsageInMB * 1024 * 1024);
   }
 }
+
+void MainWindow::onSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected) {
+  int numSelected = treeView->selectionModel()->selectedRows().size();
+  if (numSelected == 0) 
+    statusbar->clearMessage();
+  else
+    statusbar->showMessage( QString::number( numSelected ) + tr(" item(s) selected") );
+}
+
