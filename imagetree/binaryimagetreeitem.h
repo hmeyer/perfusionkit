@@ -42,9 +42,11 @@ class BinaryImageTreeItem : public ITKVTKTreeItem< BinaryImageType > {
     QColor color;
     
   protected:    
-    BinaryImageTreeItem() {};
+    BinaryImageTreeItem():volumeMtime(0) {};
 
   private:
+    long unsigned volumeMtime;
+    double volumeInML;
     ConnectorHandle imageKeeper;
     friend class boost::serialization::access;
     template<class Archive>

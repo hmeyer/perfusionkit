@@ -12,7 +12,7 @@
 #include <QMessageBox>
 
 BinaryImageTreeItem::BinaryImageTreeItem(TreeItem * parent, ImageType::Pointer itkImage, const QString &name)
-  :BaseClass(parent, itkImage), name(name) {
+  :BaseClass(parent, itkImage), name(name), volumeMtime(0) {
     imageKeeper = getVTKConnector();
     createRandomColor();
 }
@@ -188,14 +188,18 @@ void BinaryImageTreeItem::binaryErode(int iterations) {
 double BinaryImageTreeItem::getVolumeInML(void) const {
   ImageType::Pointer itkIm = getITKImage();
   if (itkIm.IsNull()) return -1;
-  unsigned long voxelCount = 0;
-  typedef itk::ImageRegionConstIterator< ImageType > BinImageIterator;
-  BinImageIterator iterator = BinImageIterator( itkIm, itkIm->GetBufferedRegion() );
-  for(iterator.GoToBegin(); !iterator.IsAtEnd(); ++iterator) {
-    if (iterator.Get() == BinaryPixelOn) voxelCount++;
+  if (volumeMtime != itkIm->GetMTime()) {
+    unsigned long voxelCount = 0;
+    typedef itk::ImageRegionConstIterator< ImageType > BinImageIterator;
+    BinImageIterator iterator = BinImageIterator( itkIm, itkIm->GetBufferedRegion() );
+    for(iterator.GoToBegin(); !iterator.IsAtEnd(); ++iterator) {
+      if (iterator.Get() == BinaryPixelOn) voxelCount++;
+    }
+    ImageType::SpacingType spacing = itkIm->GetSpacing();
+    const_cast<BinaryImageTreeItem*>(this)->volumeInML = std::abs(spacing[0] * spacing[1] * spacing[2] * voxelCount / 1000.0);
+    const_cast<BinaryImageTreeItem*>(this)->volumeMtime = itkIm->GetMTime();
   }
-  ImageType::SpacingType spacing = itkIm->GetSpacing();
-  return std::abs(spacing[0] * spacing[1] * spacing[2] * voxelCount / 1000.0);
+  return volumeInML;
 }
 
 
