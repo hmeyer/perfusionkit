@@ -7,6 +7,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/serialization/access.hpp>
 #include <boost/serialization/split_member.hpp>
+#include <boost/date_time/posix_time/ptime.hpp>
 #include "segmentationvalues.h"
 #include "dicomtagtype.h"
 
@@ -21,11 +22,13 @@ class CTImageTreeItem : public ITKVTKTreeItem< CTImageType >
     virtual TreeItem *clone(TreeItem *clonesParent=NULL) const;
     virtual bool setData(int column, const QVariant& value);
     virtual QVariant do_getData_DisplayRole(int column) const;
+    virtual QVariant do_getData_UserRole(int column) const;
     virtual QVariant do_getData_ForegroundRole(int column) const;
     virtual Qt::ItemFlags flags(int column) const;
     virtual int columnCount() const;
     virtual const std::string &getUID() const { return itemUID; }
     double getTime() const;
+    boost::posix_time::ptime getPTime() const;
 
     bool getSegmentationValues( SegmentationValues &values) const;
     

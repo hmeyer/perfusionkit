@@ -106,7 +106,7 @@ ENDIF(WIN32)
 
 SET(Boost_USE_STATIC_LIBS   ON)
 SET(Boost_USE_MULTITHREADED ON)
-FIND_PACKAGE(Boost 1.40.0 REQUIRED COMPONENTS filesystem signals serialization iostreams)
+FIND_PACKAGE(Boost 1.40.0 REQUIRED COMPONENTS filesystem signals serialization iostreams date_time system)
 INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
 
 # use what QVTK built with

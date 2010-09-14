@@ -50,6 +50,7 @@ QVariant TreeItem::data(int column, int role) const {
     case Qt::FontRole: return do_getData_FontRole( column );
     case Qt::ForegroundRole: return do_getData_ForegroundRole( column );
     case Qt::BackgroundRole: return do_getData_BackgroundRole( column );
+    case Qt::UserRole: return do_getData_UserRole( column );
   }
   return QVariant::Invalid;
 }
@@ -77,8 +78,8 @@ class TreeItemCompareFunctor {
     typedef bool result_type;
   TreeItemCompareFunctor(int column, bool ascending=true):col(column),descending(!ascending) {};
   bool operator()(const TreeItem &x, const TreeItem &y) const {
-    const QVariant qx = x.data(col);
-    const QVariant qy = y.data(col);
+    const QVariant qx = x.data(col, Qt::UserRole);
+    const QVariant qy = y.data(col, Qt::UserRole);
     bool okx, oky;
     double dx = qx.toDouble(&okx);
     double dy = qy.toDouble(&oky);

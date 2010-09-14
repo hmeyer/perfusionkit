@@ -30,6 +30,7 @@ class TreeItem : boost::noncopyable {
     virtual int columnCount() const;
     
     virtual QVariant do_getData_DisplayRole(int column) const { return QVariant::Invalid; }
+    virtual QVariant do_getData_UserRole(int column) const { return do_getData_DisplayRole(column); }
     virtual QVariant do_getData_ForegroundRole(int column) const { return QVariant::Invalid; }
     virtual QVariant do_getData_BackgroundRole(int column) const { return QVariant::Invalid; }
     virtual QVariant do_getData_FontRole(int column) const;

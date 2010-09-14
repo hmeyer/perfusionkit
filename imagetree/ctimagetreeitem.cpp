@@ -140,9 +140,21 @@ bool CTImageTreeItem::setData(int column, const QVariant& value) {
   return false;
 }
 
+QVariant CTImageTreeItem::do_getData_UserRole(int column) const {
+  if ((*HeaderFields)[ column ].tag == getAcquisitionDatetimeTag()) {
+    return getTime();
+  }
+  return do_getData_DisplayRole(column);
+}
+
+
 QVariant CTImageTreeItem::do_getData_DisplayRole(int column) const {
   if (column < 0 || column >= int(HeaderFields->size())) return QVariant::Invalid;
   if ((*HeaderFields)[ column ].tag == getNumberOfFramesTag()) return getNumberOfSlices();
+  if ((*HeaderFields)[ column ].tag == getAcquisitionDatetimeTag()) {
+    boost::posix_time::ptime dicomTime = getPTime();
+    return boost::posix_time::to_simple_string(dicomTime).c_str();
+  }
   std::string val;
   itk::ExposeMetaData( dict, (*HeaderFields)[ column ].tag, val );
   return QString::fromAscii( val.c_str() );
@@ -153,8 +165,7 @@ QVariant CTImageTreeItem::do_getData_ForegroundRole(int column) const {
   return QVariant::Invalid;
 }
 
-double CTImageTreeItem::getTime() const {
-  if (imageTime > 0) return imageTime;
+boost::posix_time::ptime CTImageTreeItem::getPTime() const {
   std::string dicomTimeString;
   itk::ExposeMetaData( dict, getAcquisitionDatetimeTag(), dicomTimeString );
   using namespace boost::posix_time;
@@ -164,6 +175,14 @@ double CTImageTreeItem::getTime() const {
   dicomTimeStream.str( dicomTimeString );
   ptime dicomTime;
   dicomTimeStream >> dicomTime;
+  return dicomTime;
+}
+
+
+double CTImageTreeItem::getTime() const {
+  if (imageTime > 0) return imageTime;
+  using namespace boost::posix_time;
+  ptime dicomTime = getPTime();
   time_duration since1900 = dicomTime - ptime(boost::gregorian::date(1900,1,1));
   double secSince1900 = double(since1900.ticks()) / time_duration::ticks_per_second();
   return secSince1900;
