@@ -2,7 +2,7 @@
 #define MORPHOLOGICALWATERSHEDFROMMARKERSFILTER_H
 
 #include <itkImageToImageFilter.h>
-#include <../Review/itkMorphologicalWatershedFromMarkersImageFilter.h>
+#include <itkWatershedImageFilter.h>
 
 template<class TInputImage, class TLabelImage>
 class MorphologicalWatershedFromMarkersFilter : 
@@ -39,34 +39,22 @@ public:
   /** Runtime information support. */
   itkTypeMacro(MorphologicalWatershedFromMarkersImageFilter, 
                ImageToImageFilter);
+	
 	       
+   /** Set the marker image */
+  void SetMarkerImage(const TLabelImage *input)
+    {
+    // Process object is not const-correct so the const casting is required.
+    this->SetNthInput( 1, const_cast<TLabelImage *>(input) );
+    }
+    
   /** Get the marker image */
   const LabelImageType * GetMarkerImage() const
     {
-      return m_filter->GetMarkerImage();
-//    return static_cast<LabelImageType*>(
-//      const_cast<DataObject *>(this->ProcessObject::GetInput(1)));
+    return static_cast<LabelImageType*>(
+      const_cast<itk::DataObject *>(this->itk::ProcessObject::GetInput(1)));
     }  
     
-  /** Set the input image */
-  void SetInput1(const TInputImage *input)
-    {
-    this->SetInput( input );
-    }
-
-  /** Set the marker image */
-  void SetInput2(const TLabelImage *input)
-    {
-    this->SetMarkerImage( input );
-    }
-
-
-void SetInput(const TInputImage* input);
-void SetMarkerImage(const TLabelImage* markers);
-TLabelImage *GetOutput();
-
-
-
 protected:
   MorphologicalWatershedFromMarkersFilter();
   ~MorphologicalWatershedFromMarkersFilter() {};
@@ -83,15 +71,18 @@ protected:
   void EnlargeOutputRequestedRegion(itk::DataObject *itkNotUsed(output));
 
   /** The filter is single threaded. */
-//  void GenerateData();
+  void GenerateData();
+  
   
 private:
   //purposely not implemented
   MorphologicalWatershedFromMarkersFilter(const Self&);
   void operator=(const Self&); //purposely not implemented
+  typedef itk::WatershedImageFilter<TInputImage> InternalWatershedImageFilterType;
+  typename InternalWatershedImageFilterType::Pointer m_internalWatershed;
+  class InternalWatershedProgress;
   
-  typedef itk::MorphologicalWatershedFromMarkersImageFilter<TInputImage, TLabelImage> InternalFilterType;
-  typename InternalFilterType::Pointer m_filter;
+  
 
 }; // end of class
 
