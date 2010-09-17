@@ -9,7 +9,7 @@
 #include <itkBinaryThresholdImageFilter.h>
 #include <itkAddImageFilter.h>
 #include <itkGradientMagnitudeRecursiveGaussianImageFilter.h>
-#include <../Review/itkMorphologicalWatershedFromMarkersImageFilter.h>
+#include "morphologicalwatershedfrommarkersfilter.h"
 
 class WatershedSegmentTreeItem : public BinaryImageTreeItem
 {
@@ -37,7 +37,8 @@ class WatershedSegmentTreeItem : public BinaryImageTreeItem
     AddFilterType::Pointer adder;
     typedef itk::GradientMagnitudeRecursiveGaussianImageFilter<CTImageTreeItem::ImageType, GradMagImageType> GaussGradMagFilterType;
     GaussGradMagFilterType::Pointer gaussGradMag;
-    typedef itk::MorphologicalWatershedFromMarkersImageFilter<GradMagImageType, LabelImageType> WatershedFilterType;
+    typedef MorphologicalWatershedFromMarkersFilter<GradMagImageType, LabelImageType> WatershedFilterType;
+
     WatershedFilterType::Pointer watershed;
     typedef itk::BinaryThresholdImageFilter< LabelImageType, BinaryImageType > ThresholdLab2BinFilterType;
     ThresholdLab2BinFilterType::Pointer thresholdLabel;
