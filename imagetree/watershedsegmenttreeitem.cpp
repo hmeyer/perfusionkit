@@ -49,8 +49,8 @@ void WatershedSegmentTreeItem::initFilters(void) {
   gaussGradMag->SetSigma( 2.0 );
   
   watershed = WatershedFilterType::New();
-  watershed->SetInput1(gaussGradMag->GetOutput());
-  watershed->SetInput2(adder->GetOutput());
+  watershed->SetInput(gaussGradMag->GetOutput());
+  watershed->SetMarkerImage(adder->GetOutput());
   
   thresholdLabel = ThresholdLab2BinFilterType::New();
   thresholdLabel->SetInput( watershed->GetOutput() );
