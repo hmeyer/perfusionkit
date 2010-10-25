@@ -100,12 +100,8 @@ bool WatershedSegmentTreeItem::setup() {
   return true;
 }
 
-#include "../../myLibs/itkbasics.h"
-
 void WatershedSegmentTreeItem::update(void) {
   gaussGradMag->Update();
-  GradMagImageType::Pointer gradMagImage = gaussGradMag->GetOutput();
-  itkBasic::ImageSave( gradMagImage, "/home/hmeyer/Desktop/perf-data/out%04d.png",150,300);
   thresholdLabel->Update();
   ImageType::Pointer result = thresholdLabel->GetOutput();
   setITKImage( result );
