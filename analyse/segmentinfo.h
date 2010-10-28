@@ -22,6 +22,10 @@
 #include <boost/shared_ptr.hpp>
 #include <qwt_plot_curve.h>
 #include <QString>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/max.hpp>
+
 
 class BinaryImageTreeItem;
 class QwtPlotCurve;
@@ -55,6 +59,7 @@ class SegmentInfo {
   double getGammaCenterOfGravity() const;
   double getGammaAUC() const;
   double getGammaBaseline() const;
+  double getMaxStandardError() const;
   inline void setGammaStartIndex(unsigned index) { gammaStartIndex = index; }
   inline void setGammaEndIndex(unsigned index)  { gammaEndIndex = index; }
   inline unsigned getGammaStartIndex() const { return gammaStartIndex; }
@@ -82,6 +87,11 @@ class SegmentInfo {
   QwtPlotCurve patlakCurve;
   QwtPlotCurve patlakRegression;
   bool patlakCreated;
+  boost::accumulators::accumulator_set<
+    double,
+    boost::accumulators::stats<
+      boost::accumulators::tag::max> > standardErrorAccumulator;
+  
 };
 
 #endif // SEGMENTINFO_H

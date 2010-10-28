@@ -107,11 +107,15 @@ double SegmentInfo::getPatlakSlope() const {
 }
 
 
-
+double SegmentInfo::getMaxStandardError() const {
+  return boost::accumulators::max( standardErrorAccumulator );
+}
 
 void SegmentInfo::pushSample(double time, const SegmentationValues &values) {
   dynamic_cast<TimeDensityData&>(sampleCurve.data()).pushPoint(time, values);
   dynamic_cast<GammaFitData&>(gammaCurve.data()).includeTime(time);
+  double standardError = values.stddev / std::sqrt( static_cast<double>(values.sampleCount) );
+  standardErrorAccumulator( standardError );
 }
 
 void SegmentInfo::attachSampleCurves(QwtPlot *plot) {
